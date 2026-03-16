@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portal de Servicios - AEGIS Insurance</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#f4f7f9] font-sans text-[#12334F] overflow-hidden">
+
+    <div class="flex h-screen w-full overflow-hidden">
+        
+        <!-- SIDEBAR (Menú Lateral) -->
+        <aside id="sidebar" class="fixed inset-y-0 left-0 bg-[#12334F] w-64 text-white flex flex-col transition-transform duration-300 z-20 md:relative md:translate-x-0 -translate-x-full">
+            <!-- Logo Area -->
+            <div class="h-20 flex items-center px-6 border-b border-white/10 bg-[#0e273d]">
+                <div class="flex items-center gap-3">
+                    <div class="p-1.5 bg-gradient-to-br from-[#58C9E8] to-[#163f73] rounded-lg shadow-lg">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-white"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-bold tracking-wide uppercase leading-tight">AEGIS</h1>
+                        <p class="text-[#58C9E8] text-[10px] font-medium tracking-widest uppercase">Insurance</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Navigation -->
+            <nav class="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                <p class="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Menú Principal</p>
+                
+                <button data-target="inicio" class="menu-btn w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+                    Inicio
+                </button>
+
+                <button data-target="cotizador" class="menu-btn w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all text-sm font-medium bg-gradient-to-r from-[#163f73] to-[#12334F] border border-[#58C9E8]/30 text-white shadow-md">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-[#58C9E8]"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16.01" y2="14"/><line x1="16" y1="10" x2="16.01" y2="10"/><line x1="16" y1="18" x2="16.01" y2="18"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="12" y1="10" x2="12.01" y2="10"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="8" y1="10" x2="8.01" y2="10"/><line x1="8" y1="18" x2="8.01" y2="18"/></svg>
+                    Cotizador Cumplimiento
+                </button>
+
+                <button data-target="solicitudes" class="menu-btn w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    Mis Solicitudes
+                </button>
+
+                <button data-target="soporte" class="menu-btn w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all text-sm font-medium text-gray-300 hover:bg-white/5 hover:text-white">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="text-gray-400"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="14.83" y1="9.17" x2="18.36" y2="5.64"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/></svg>
+                    Centro de Ayuda
+                </button>
+            </nav>
+
+            <!-- User Area Bottom -->
+            <div class="p-4 border-t border-white/10 bg-[#0e273d]">
+                <div class="flex items-center gap-3 px-2">
+                    <div class="w-8 h-8 rounded-full bg-[#58C9E8] flex items-center justify-center text-[#12334F] font-bold text-sm">
+                        GS
+                    </div>
+                    <div class="text-left flex-1">
+                        <p class="text-sm font-semibold text-white leading-tight">Grupo Sandor</p>
+                        <p class="text-xs text-[#58C9E8]">Cliente Corporativo</p>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Overlay para móviles -->
+        <div id="overlay" class="fixed inset-0 bg-black/50 z-10 hidden md:hidden"></div>
+
+        <!-- MAIN CONTENT AREA -->
+        <div class="flex-1 flex flex-col h-screen overflow-hidden">
+            
+            <!-- Topbar -->
+            <header class="h-20 bg-white shadow-sm border-b border-gray-200 flex items-center justify-between px-4 sm:px-8 z-10 flex-shrink-0">
+                <div class="flex items-center gap-4">
+                    <button id="btn-menu" class="md:hidden text-gray-500 hover:text-[#163f73]">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+                    </button>
+                    <h2 class="text-xl font-bold text-[#163f73] hidden sm:block">Portal de Servicios AEGIS</h2>
+                </div>
+
+                <div class="flex items-center gap-4">
+                    <span id="current-date" class="text-sm text-gray-500 font-medium hidden md:block"></span>
+                    <div class="w-px h-6 bg-gray-300 hidden md:block"></div>
+                    <button class="relative p-2 text-gray-400 hover:text-[#163f73] transition-colors rounded-full hover:bg-gray-100">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+                        <span class="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                    </button>
+                </div>
+            </header>
+
+            <!-- Dynamic Content Container -->
+            <main class="flex-1 overflow-hidden p-4 sm:p-6 bg-[#f4f7f9] relative">
+                
+                <!-- VIEW: Cotizador -->
+                <div id="view-cotizador" class="h-full w-full bg-white rounded-xl shadow-sm border border-gray-200 flex flex-col overflow-hidden">
+                    <div class="bg-[#e8f7fb] text-[#163f73] px-4 py-3 text-sm font-medium border-b border-[#58C9E8]/30 flex justify-between items-center">
+                        <span>Módulo: Generación de Cotizaciones - Cumplimiento</span>
+                        <span class="text-xs bg-white px-2 py-1 rounded shadow-sm">Grupo Sandor</span>
+                    </div>
+                    
+                    <!-- Iframe contenedor de la App de React del Cotizador -->
+                    <iframe 
+                        src="cotizador.html" 
+                        title="Cotizador AEGIS" 
+                        class="w-full h-full flex-1 border-0 bg-gray-50 z-10 relative"
+                        onerror="this.style.display='none'">
+                    </iframe>
+                    
+                    <!-- Fallback en caso de que iframe falle -->
+                    <div class="absolute inset-0 flex items-center justify-center bg-white z-0 text-center p-8 pt-20">
+                        <div>
+                            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-gray-300 mb-4"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16.01" y2="14"/><line x1="16" y1="10" x2="16.01" y2="10"/><line x1="16" y1="18" x2="16.01" y2="18"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="12" y1="10" x2="12.01" y2="10"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="8" y1="10" x2="8.01" y2="10"/><line x1="8" y1="18" x2="8.01" y2="18"/></svg>
+                            <h3 class="text-xl font-bold text-gray-500 mb-2">Cargando Módulo...</h3>
+                            <p class="text-gray-400 text-sm max-w-md mx-auto">
+                                Si ves este mensaje en GitHub Pages, asegúrate de haber subido el archivo del cotizador a la misma carpeta con el nombre exacto de <strong>cotizador.html</strong>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- VIEW: Construcción -->
+                <div id="view-construccion" class="hidden items-center justify-center h-full bg-white rounded-xl border border-gray-200 border-dashed">
+                    <div class="text-center">
+                        <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="mx-auto text-[#58C9E8] mb-4 opacity-50"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                        <h2 class="text-2xl font-bold text-[#163f73]">Módulo en construcción</h2>
+                        <p class="text-gray-500 mt-2">Esta sección del portal estará disponible próximamente.</p>
+                    </div>
+                </div>
+
+            </main>
+        </div>
+    </div>
+
+    <!-- Vanilla JS Interactivity -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('overlay');
+            const btnMenu = document.getElementById('btn-menu');
+            const viewCotizador = document.getElementById('view-cotizador');
+            const viewConstruccion = document.getElementById('view-construccion');
+            const menuButtons = document.querySelectorAll('.menu-btn');
+
+            // Fecha actual
+            const dateSpan = document.getElementById('current-date');
+            if(dateSpan) {
+                dateSpan.textContent = new Date().toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            }
+
+            // Manejo de Menú Móvil
+            function openMenu() {
+                sidebar.classList.remove('-translate-x-full');
+                overlay.classList.remove('hidden');
+            }
+
+            function closeMenu() {
+                sidebar.classList.add('-translate-x-full');
+                overlay.classList.add('hidden');
+            }
+
+            btnMenu.addEventListener('click', openMenu);
+            overlay.addEventListener('click', closeMenu);
+
+            // Manejo de Vistas y Estados del Menú
+            menuButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const targetId = e.currentTarget.getAttribute('data-target');
+                    
+                    // Resetear estilos de todos los botones a inactivo
+                    menuButtons.forEach(b => {
+                        b.classList.remove('bg-gradient-to-r', 'from-[#163f73]', 'to-[#12334F]', 'border', 'border-[#58C9E8]/30', 'text-white', 'shadow-md');
+                        b.classList.add('text-gray-300', 'hover:bg-white/5', 'hover:text-white');
+                        const icon = b.querySelector('svg');
+                        icon.classList.remove('text-[#58C9E8]');
+                        icon.classList.add('text-gray-400');
+                    });
+                    
+                    // Aplicar estilo activo al botón clickeado
+                    e.currentTarget.classList.add('bg-gradient-to-r', 'from-[#163f73]', 'to-[#12334F]', 'border', 'border-[#58C9E8]/30', 'text-white', 'shadow-md');
+                    e.currentTarget.classList.remove('text-gray-300', 'hover:bg-white/5', 'hover:text-white');
+                    const activeIcon = e.currentTarget.querySelector('svg');
+                    activeIcon.classList.add('text-[#58C9E8]');
+                    activeIcon.classList.remove('text-gray-400');
+
+                    // Cambiar visibilidad de las vistas
+                    if (targetId === 'cotizador') {
+                        viewCotizador.classList.remove('hidden');
+                        viewCotizador.classList.add('flex');
+                        viewConstruccion.classList.add('hidden');
+                        viewConstruccion.classList.remove('flex');
+                    } else {
+                        viewCotizador.classList.add('hidden');
+                        viewCotizador.classList.remove('flex');
+                        viewConstruccion.classList.remove('hidden');
+                        viewConstruccion.classList.add('flex');
+                    }
+
+                    closeMenu();
+                });
+            });
+        });
+    </script>
+</body>
+</html>
