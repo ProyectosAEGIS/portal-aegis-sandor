@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal y Cotizador - AEGIS Insurance</title>
+    <title>Portal y Reportes - AEGIS Insurance</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -18,13 +18,20 @@
     <style>
         /* Aseguramos que el body y html no generen scroll extra */
         html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
+        /* Scrollbar personalizado para las tablas */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
     </style>
 </head>
 <body class="bg-gray-50 font-sans text-[#12334F] overflow-hidden">
     <div id="root"></div>
 
     <script type="text/babel">
-        // --- Íconos integrados en formato SVG ---
+        // ==========================================
+        // 1. ÍCONOS SVG (Para todo el Portal)
+        // ==========================================
         const Shield = ({size=24, className="", strokeWidth=2}) => (
             <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
         );
@@ -55,8 +62,6 @@
         const Paperclip = ({size=24, className=""}) => (
             <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
         );
-        
-        // Iconos del Portal
         const Home = ({size=24, className=""}) => (
             <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
         );
@@ -69,23 +74,90 @@
         const LifeBuoy = ({size=24, className=""}) => (
             <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="14.83" y1="9.17" x2="18.36" y2="5.64"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/></svg>
         );
+        const ClockIcon = ({size=24, className=""}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+        );
+        const CheckCircle = ({size=24, className=""}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        );
+        const TrendingUp = ({size=24, className=""}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+        );
+        const Award = ({size=24, className=""}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
+        );
+        const Zap = ({size=24, className=""}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+        );
+        const AlertCircle = ({size=24, className=""}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        );
+        const PieChart = ({size=24, className=""}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
+        );
+        const DollarSign = ({size=24, className=""}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
+        );
+        const Calendar = ({size=24, className=""}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+        );
+        const UploadCloud = ({size=24, className=""}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/></svg>
+        );
+        const Download = ({size=24, className=""}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        );
 
+        // ==========================================
+        // 2. CONFIGURACIÓN Y DATOS INICIALES
+        // ==========================================
+        
+        // URL de Webhook para el Cotizador (Make.com u otros)
+        const WEBHOOK_URL = ""; 
+
+        // TASAS DEL COTIZADOR
         const AMPAROS_BASE = [
-            { id: 1, nombre: 'Seriedad de la Oferta', tasaDefault: 0.18 },
+            { id: 1, nombre: 'Seriedad de la Oferta', tasaDefault: 0.10 },
             { id: 2, nombre: 'Cumplimiento', tasaDefault: 0.18 },
             { id: 3, nombre: 'Buen Manejo del Anticipo', tasaDefault: 0.18 },
             { id: 4, nombre: 'Pagos de Salarios y Prestaciones', tasaDefault: 0.15 },
-            { id: 5, nombre: 'Calidad del Servicio', tasaDefault: 0.20 },
-            { id: 6, nombre: 'Calidad de los Bienes', tasaDefault: 0.40 },
+            { id: 5, nombre: 'Calidad del Servicio', tasaDefault: 0.18 },
+            { id: 6, nombre: 'Calidad de los Bienes', tasaDefault: 0.18 },
             { id: 7, nombre: 'Estabilidad y Calidad', tasaDefault: 0.18 },
-            { id: 8, nombre: 'Calidad y Correcto Funcionamiento', flow: 0.20 }, // Corregido: tasaDefault
+            { id: 8, nombre: 'Calidad y Correcto Funcionamiento', tasaDefault: 0.18 },
             { id: 9, nombre: 'Responsabilidad Civil Extracontractual', tasaDefault: 0.20 }
         ];
-        // Pequeña corrección en el array para no romper
-        AMPAROS_BASE[7].tasaDefault = 0.20;
+
+        // DATOS INICIALES DEMO PARA REPORTE DE PRODUCCIÓN (Grupo Sandor)
+        const defaultProduccionData = [
+            { cliente: "GRUPO SANDOR", id: "101133204", aseguradora: "SEGUROS DEL ESTADO", asegurado: "MEDICARTE S.A.S", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.0, estado: "Completado", valor: 150000 },
+            { cliente: "GRUPO SANDOR", id: "4452077", aseguradora: "SURAMERICANA", asegurado: "DROGUERIAS Y FARMACIAS CRUZ VERDE", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.0, estado: "Completado", valor: 150000 },
+            { cliente: "GRUPO SANDOR", id: "100029109", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "INST. UNIV. COLEGIO MAYOR DE ANTIOQUIA", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.6, estado: "Completado", valor: 150000 },
+            { cliente: "GRUPO SANDOR", id: "101035391", aseguradora: "SEGUROS DEL ESTADO", asegurado: "TRABAJADORES EN MISION AL SERVICIO", ramo: "DISPOSICIÓN LEGAL", ansHoras: 53.0, estado: "Revisión Ext.", valor: 850000 },
+            { cliente: "GRUPO SANDOR", id: "100029162", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "E.S.E. HOSPITAL SAN RAFAEL DE FACATATIVA", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.4, estado: "Completado", valor: 150000 },
+            { cliente: "GRUPO SANDOR", id: "100029109 (A1)", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "INST. UNIV. COLEGIO MAYOR DE ANTIOQUIA", ramo: "SERIEDAD DE OFERTA", ansHoras: 19.5, estado: "Modificada", valor: 0 },
+            { cliente: "GRUPO SANDOR", id: "100029189", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "UNIVERSIDAD NACIONAL DE COLOMBIA", ramo: "CUMPLIMIENTO", ansHoras: 2.0, estado: "Completado", valor: 450000 },
+            { cliente: "GRUPO SANDOR", id: "100029213", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "MINISTERIO DE DEFENSA NACIONAL", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.8, estado: "Completado", valor: 150000 },
+            { cliente: "GRUPO SANDOR", id: "100089147 (A2)", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "ACEITES MANUELITA SA", ramo: "RESPONSABILIDAD CIVIL", ansHoras: 168.6, estado: "Modificada", valor: 1200000 },
+            { cliente: "GRUPO SANDOR", id: "100029260", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "FONDO NACIONAL DEL TURISMO FONTUR", ramo: "CUMPLIMIENTO ESTATAL", ansHoras: 1.2, estado: "Anulada", valor: 0 },
+            { cliente: "GRUPO SANDOR", id: "100007462", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "GRUPO SANDOR SAS", ramo: "RESPONSABILIDAD CIVIL", ansHoras: 1.5, estado: "Completado", valor: 1200000 }
+        ];
+
+        // DATOS INICIALES DEMO PARA REPORTE DE CARTERA (Grupo Sandor)
+        const defaultCarteraData = [
+            { tomador: "GRUPO SANDOR", beneficiario: "INST. UNIV. COLEGIO MAYOR DE ANTIOQUIA", ramo: "CUMPLIMIENTO", poliza: "100029109", dias: 26, total: 92582 },
+            { tomador: "GRUPO SANDOR", beneficiario: "UNIVERSIDAD NACIONAL SEDE ORINOQUIA", ramo: "CUMPLIMIENTO", poliza: "100110019", dias: 23, total: 59500 },
+            { tomador: "GRUPO SANDOR", beneficiario: "MINISTERIO DE DEFENSA NACIONAL", ramo: "CUMPLIMIENTO", poliza: "100029213", dias: 19, total: 53550 },
+            { tomador: "GRUPO SANDOR", beneficiario: "ARMADA NACIONAL BASE NAVAL N° 06", ramo: "CUMPLIMIENTO", poliza: "100029274", dias: 13, total: 12205 },
+            { tomador: "GRUPO SANDOR", beneficiario: "MINISTERIO DE DEFENSA NACIONAL", ramo: "CUMPLIMIENTO", poliza: "100029346", dias: 6, total: 910275 },
+            { tomador: "GRUPO SANDOR", beneficiario: "TERCEROS AFECTADOS", ramo: "RCE", poliza: "100007491", dias: 6, total: 622460 },
+            { tomador: "GRUPO SANDOR", beneficiario: "CLINICA DE NUESTRA SEÑORA DE LA PAZ", ramo: "CUMPLIMIENTO", poliza: "100029372", dias: 5, total: 4655971 },
+            { tomador: "GRUPO SANDOR", beneficiario: "TERCEROS AFECTADOS", ramo: "RCE", poliza: "100007501", dias: 5, total: 1909950 },
+            { tomador: "GRUPO SANDOR", beneficiario: "DEPARTAMENTO DEL ATLANTICO", ramo: "CUMPLIMIENTO", poliza: "100029351", dias: 4, total: 183344 }
+        ];
 
         function formatCurrency(amount) {
-            if (!amount) return "$ 0";
+            if (amount === undefined || amount === null) return "$ 0";
             return new Intl.NumberFormat('es-CO', {
                 style: 'currency',
                 currency: 'COP',
@@ -99,55 +171,42 @@
             return num ? parseInt(num, 10) : 0;
         }
 
-        // URL del Webhook (Apto para Make.com, Zapier, u otras alternativas)
-        const WEBHOOK_URL = ""; // https://hook.us2.make.com/e9st4445ub66eq1fyj2sqtqj67k3fslg
+        function getMedian(arr) {
+            if(arr.length === 0) return 0;
+            const sorted = arr.slice().sort((a, b) => a - b);
+            const mid = Math.floor(sorted.length / 2);
+            return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+        }
 
+        // ==========================================
+        // 3. APLICACIÓN PRINCIPAL (PORTAL)
+        // ==========================================
         function App() {
-            // --- ESTADOS DEL PORTAL ---
+            // --- ESTADOS DE NAVEGACIÓN ---
             const [activeMenu, setActiveMenu] = React.useState('cotizador');
             const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
             const menuItems = [
                 { id: 'inicio', icon: Home, label: 'Inicio' },
                 { id: 'cotizador', icon: Calculator, label: 'Cotizador Cumplimiento' },
+                { id: 'produccion', icon: TrendingUp, label: 'Reporte Producción' },
+                { id: 'cartera', icon: PieChart, label: 'Reporte Cartera' },
                 { id: 'solicitudes', icon: FileText, label: 'Mis Solicitudes' },
                 { id: 'soporte', icon: LifeBuoy, label: 'Centro de Ayuda' },
             ];
 
-            // --- ESTADOS DEL COTIZADOR ---
-            const [consecutivo, setConsecutivo] = React.useState('AEGIS-COT-001');
-            
-            const [interno, setInterno] = React.useState({ 
-                solicitante: '', 
-                solicitanteEmail: '', 
-                asunto: '',
-                tipos: {
-                    garantiaUnica: false,
-                    cumplimientoParticulares: false,
-                    cumplimientoEstatales: false,
-                    disposicionLegal: false,
-                    otros: false
-                },
-                archivos: []
-            });
-
+            // --- ESTADOS Y LÓGICA DEL COTIZADOR ---
+            const [consecutivo, setConsecutivo] = React.useState('SANDOR-COT-001');
+            const [interno, setInterno] = React.useState({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { garantiaUnica: false, cumplimientoParticulares: false, cumplimientoEstatales: false, disposicionLegal: false, otros: false }, archivos: [] });
             const [tomador, setTomador] = React.useState({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
             const [asegurado, setAsegurado] = React.useState({ nombre: '', nit: '' });
             const [contrato, setContrato] = React.useState({ objeto: '', numero: '', valorSinIva: 0, duracion: '' });
-            
             const [costos, setCostos] = React.useState({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
-            
-            const [amparos, setAmparos] = React.useState(
-                AMPAROS_BASE.map(a => ({
-                    ...a, activo: false, desde: '', hasta: '', dias: 0, valorAsegurado: 0, tasa: (a.tasaDefault).toFixed(2), prima: 0
-                }))
-            );
-
+            const [amparos, setAmparos] = React.useState(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, valorAsegurado: 0, tasa: (a.tasaDefault).toFixed(2), prima: 0 })));
             const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-            // --- CÁLCULOS DERIVADOS ---
+            // Cálculos Cotizador
             const valorConIva = contrato.valorSinIva * (1 + (costos.tasaIva / 100));
-            
             const amparosCumplimiento = amparos.slice(0, 8);
             const tieneCumplimiento = amparosCumplimiento.some(a => a.activo);
             const primaCumplimiento = amparosCumplimiento.reduce((acc, curr) => curr.activo ? acc + curr.prima : acc, 0);
@@ -155,7 +214,6 @@
             const subtotalCump = primaCumplimiento + gastosCalculadosCump;
             const ivaCump = subtotalCump * (costos.tasaIva / 100);
             const totalCump = subtotalCump + ivaCump;
-
             const amparoRCE = amparos[8];
             const tieneRCE = amparoRCE.activo;
             const primaRCE = tieneRCE ? amparoRCE.prima : 0;
@@ -163,7 +221,6 @@
             const subtotalRCE = primaRCE + gastosCalculadosRCE;
             const ivaRCE = subtotalRCE * (costos.tasaIva / 100);
             const totalRCE = subtotalRCE + ivaRCE;
-
             const totalGeneral = totalCump + totalRCE;
 
             const generarIdUnico = () => {
@@ -176,48 +233,25 @@
                 const ss = d.getSeconds().toString().padStart(2, '0');
                 return `SANDOR-COT-${yy}${mm}${dd}-${hh}${min}${ss}`;
             };
+            React.useEffect(() => { setConsecutivo(generarIdUnico()); }, []);
+            const avanzarConsecutivo = () => { setConsecutivo(generarIdUnico()); };
 
-            React.useEffect(() => {
-                setConsecutivo(generarIdUnico());
-            }, []);
-
-            const avanzarConsecutivo = () => {
-                setConsecutivo(generarIdUnico());
-            };
-
-            // --- FUNCIONES DEL COTIZADOR ---
             const handleAmparoToggle = (id) => {
                 setAmparos(prev => prev.map(amp => {
                     if (amp.id === id) {
                         const isActivating = !amp.activo;
-                        let newDesde = amp.desde;
-                        let newHasta = amp.hasta;
-                        
+                        let newDesde = amp.desde; let newHasta = amp.hasta;
                         if (isActivating && id !== 1 && !newDesde && !newHasta) {
                             const primerAmparo = prev.find(a => a.id === 1);
-                            if (primerAmparo && primerAmparo.desde && primerAmparo.hasta) {
-                                newDesde = primerAmparo.desde;
-                                newHasta = primerAmparo.hasta;
-                            }
+                            if (primerAmparo && primerAmparo.desde && primerAmparo.hasta) { newDesde = primerAmparo.desde; newHasta = primerAmparo.hasta; }
                         }
-
                         let newDias = amp.dias;
                         if (newDesde && newHasta) {
-                            const d1 = new Date(newDesde);
-                            const d2 = new Date(newHasta);
+                            const d1 = new Date(newDesde); const d2 = new Date(newHasta);
                             const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
                             newDias = diff > 0 ? diff : 0;
                         }
-
-                        return { 
-                            ...amp, 
-                            activo: isActivating, 
-                            desde: newDesde, 
-                            hasta: newHasta, 
-                            dias: newDias,
-                            valorAsegurado: isActivating ? amp.valorAsegurado : 0,
-                            prima: isActivating ? amp.prima : 0
-                        };
+                        return { ...amp, activo: isActivating, desde: newDesde, hasta: newHasta, dias: newDias, valorAsegurado: isActivating ? amp.valorAsegurado : 0, prima: isActivating ? amp.prima : 0 };
                     }
                     return amp;
                 }));
@@ -227,227 +261,172 @@
                 setAmparos(prev => prev.map(amp => {
                     if (amp.id === id) {
                         const updated = { ...amp, [field]: value };
-                        
                         if (field === 'desde' || field === 'hasta') {
                             if (updated.desde && updated.hasta) {
-                                const d1 = new Date(updated.desde);
-                                const d2 = new Date(updated.hasta);
+                                const d1 = new Date(updated.desde); const d2 = new Date(updated.hasta);
                                 const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
                                 updated.dias = diff > 0 ? diff : 0;
                             }
                         }
-
                         if (field === 'valorAsegurado' || field === 'tasa') {
                             const tasaNum = parseFloat(updated.tasa) || 0;
                             updated.prima = updated.valorAsegurado * (tasaNum / 100);
                         }
-
                         return updated;
                     }
                     return amp;
                 }));
             };
 
-            const handleCheckboxTipos = (key) => {
-                setInterno(prev => ({
-                    ...prev,
-                    tipos: { ...prev.tipos, [key]: !prev.tipos[key] }
-                }));
-            };
+            const handleCheckboxTipos = (key) => setInterno(prev => ({ ...prev, tipos: { ...prev.tipos, [key]: !prev.tipos[key] } }));
+            const handleFileChange = (e) => setInterno(prev => ({ ...prev, archivos: Array.from(e.target.files) }));
 
-            const handleFileChange = (e) => {
-                setInterno(prev => ({ ...prev, archivos: Array.from(e.target.files) }));
-            };
-
-            const limpiarFormulario = () => {
+            const limpiarFormularioCotizador = () => {
                 if (window.confirm('¿Está seguro de que desea limpiar todos los datos? Se perderá la cotización actual.')) {
                     setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { garantiaUnica: false, cumplimientoParticulares: false, cumplimientoEstatales: false, disposicionLegal: false, otros: false }, archivos: [] });
                     setTomador({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
                     setAsegurado({ nombre: '', nit: '' });
                     setContrato({ objeto: '', numero: '', valorSinIva: 0, duracion: '' });
                     setCostos({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
-                    setAmparos(AMPAROS_BASE.map(a => ({
-                        ...a, activo: false, desde: '', hasta: '', dias: 0, valorAsegurado: 0, tasa: (a.tasaDefault).toFixed(2), prima: 0
-                    })));
-                    const fileInput = document.getElementById('file-upload');
+                    setAmparos(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, valorAsegurado: 0, tasa: (a.tasaDefault).toFixed(2), prima: 0 })));
+                    const fileInput = document.getElementById('file-upload-cotizador');
                     if(fileInput) fileInput.value = '';
                 }
             };
 
             const exportarCotizacion = () => {
-                const consecutivoActual = consecutivo;
-                
-                let resumen = `📋 COTIZACIÓN - AEGIS INSURANCE (Grupo Sandor)\n\n`;
-                resumen += `Consecutivo: ${consecutivoActual}\n`;
-                resumen += `Asunto: ${interno.asunto || 'N/A'}\n`;
-                resumen += `Solicitante: ${interno.solicitante || 'N/A'}\n`;
-                resumen += `Correo Solicitante: ${interno.solicitanteEmail || 'N/A'}\n\n`;
-                resumen += `TOMADOR/AFIANZADO:\n${tomador.nombre || 'N/A'} - NIT: ${tomador.nit || 'N/A'}\n\n`;
-                resumen += `ASEGURADO/BENEFICIARIO:\n${asegurado.nombre || 'N/A'} - NIT: ${asegurado.nit || 'N/A'}\n\n`;
-                resumen += `CONTRATO:\n${contrato.objeto || 'N/A'}\nValor sin IVA: ${formatCurrency(contrato.valorSinIva)}\n\n`;
-                resumen += `AMPAROS:\n`;
-                
-                amparos.filter(a => a.activo).forEach(a => {
-                    resumen += `✓ ${a.nombre}: ${formatCurrency(a.valorAsegurado)} (Tasa: ${a.tasa}%) = ${formatCurrency(a.prima)}\n`;
-                });
-
-                resumen += `\n💰 LIQUIDACIÓN CUMPLIMIENTO:\n`;
-                resumen += `Prima Neta: ${formatCurrency(primaCumplimiento)}\n`;
-                resumen += `Gastos: ${formatCurrency(gastosCalculadosCump)}\n`;
-                resumen += `IVA: ${formatCurrency(ivaCump)}\n`;
-                resumen += `Total Cumplimiento: ${formatCurrency(totalCump)}\n\n`;
-
-                if (tieneRCE) {
-                    resumen += `💰 LIQUIDACIÓN RCE:\n`;
-                    resumen += `Prima Neta: ${formatCurrency(primaRCE)}\n`;
-                    resumen += `Gastos: ${formatCurrency(gastosCalculadosRCE)}\n`;
-                    resumen += `IVA: ${formatCurrency(ivaRCE)}\n`;
-                    resumen += `Total RCE: ${formatCurrency(totalRCE)}\n\n`;
-                }
-
-                resumen += `TOTAL DOS PÓLIZAS: ${formatCurrency(totalGeneral)}\n`;
-
-                const encabezados = [
-                    'Solicitante', 'Solicitante_Email', 'Consecutivo', 'Asunto', 'Tomador', 'Tomador_NIT', 'Tomador_Email', 
-                    'Asegurado', 'Asegurado_NIT', 'Objeto_Contrato', 'Valor_Sin_IVA', 
-                    ...AMPAROS_BASE.flatMap((_, i) => [`Amp${i+1}_Activo`, `Amp${i+1}_Valor`, `Amp${i+1}_Prima`]),
-                    'Gastos_Cump', 'IVA_Cump', 'Total_Cump', 'Gastos_RCE', 'IVA_RCE', 'Total_RCE', 'Gran_Total', 'Fecha'
-                ];
-
-                const fila = [
-                    interno.solicitante, interno.solicitanteEmail, consecutivo, interno.asunto, tomador.nombre, tomador.nit, tomador.email,
-                    asegurado.nombre, asegurado.nit, contrato.objeto.replace(/\n/g, ' '), contrato.valorSinIva,
-                    ...amparos.flatMap(a => [a.activo ? 'SI' : 'NO', a.valorAsegurado, a.prima]),
-                    gastosCalculadosCump, ivaCump, totalCump, gastosCalculadosRCE, ivaRCE, totalRCE, totalGeneral, new Date().toISOString()
-                ].map(v => `"${(v || '').toString().replace(/"/g, '""')}"`);
-
-                const csvContent = encabezados.join(',') + '\n' + fila.join(',');
-                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-                const url = URL.createObjectURL(blob);
-                const link = document.createElement('a');
-                link.href = url;
-                link.download = `${consecutivoActual}.csv`;
-                
-                navigator.clipboard.writeText(resumen).then(() => {
-                    alert(`✅ ¡Cotización calculada!\n\n1. Resumen copiado al portapapeles.\n2. Se descargará el registro CSV: ${consecutivoActual}`);
-                    link.click();
-                    avanzarConsecutivo();
-                });
+                let resumen = `📋 COTIZACIÓN - AEGIS INSURANCE (Grupo Sandor)\n\nConsecutivo: ${consecutivo}\nSolicitante: ${interno.solicitante}\nTotal: ${formatCurrency(totalGeneral)}\n`;
+                navigator.clipboard.writeText(resumen).then(() => alert(`✅ Resumen copiado. Listos para descargar CSV.`));
             };
 
             const getBase64 = (file) => new Promise((resolve, reject) => {
-                const reader = new FileReader();
-                reader.readAsDataURL(file);
-                reader.onload = () => resolve({
-                    name: file.name,
-                    contentBytes: reader.result.split(',')[1] 
-                });
+                const reader = new FileReader(); reader.readAsDataURL(file);
+                reader.onload = () => resolve({ name: file.name, contentBytes: reader.result.split(',')[1] });
                 reader.onerror = error => reject(error);
             });
 
-            // Función genérica para enviar datos al Webhook configurado
             const enviarSolicitudWebhook = async () => {
-                if (!WEBHOOK_URL) {
-                    alert("Aviso: La URL del Webhook (Make.com u otro) aún no ha sido configurada en el código fuente.");
-                    return;
-                }
-
-                if (!interno.solicitante || !interno.solicitanteEmail || !tomador.nombre || !tomador.email) {
-                    alert("Por favor diligencie al menos el Solicitante, su Correo Electrónico, el Nombre del Tomador y su Correo electrónico.");
-                    return;
-                }
-
+                if (!WEBHOOK_URL) return alert("Aviso: URL del Webhook no configurada.");
+                if (!interno.solicitante || !tomador.nombre) return alert("Diligencie Solicitante y Tomador mínimo.");
                 setIsSubmitting(true);
-                
                 try {
                     const attachments = await Promise.all(interno.archivos.map(getBase64));
-
-                    const payload = {
-                        // --- 0. DATOS DEL SOLICITANTE ---
-                        consecutivo: consecutivo,
-                        solicitante: interno.solicitante,
-                        solicitanteEmail: interno.solicitanteEmail,
-                        asunto: interno.asunto,
-                        tiposSolicitud: Object.keys(interno.tipos).filter(k => interno.tipos[k]).join(', '),
-                        
-                        // --- 1. TOMADOR ---
-                        tomador: tomador.nombre, // Mantenido para compatibilidad
-                        tomadorNombre: tomador.nombre,
-                        tomadorNit: tomador.nit,
-                        tomadorDireccion: tomador.direccion,
-                        tomadorTelefono: tomador.telefono,
-                        tomadorCelular: tomador.celular,
-                        tomadorEmail: tomador.email,
-                        
-                        // --- 2. ASEGURADO ---
-                        asegurado: asegurado.nombre, // Mantenido para compatibilidad
-                        aseguradoNombre: asegurado.nombre,
-                        aseguradoNit: asegurado.nit,
-
-                        // --- 3. CONTRATO ---
-                        contratoObjeto: contrato.objeto,
-                        contratoNumero: contrato.numero,
-                        contratoValorSinIva: contrato.valorSinIva,
-                        contratoValorConIva: valorConIva,
-                        contratoDuracionDias: contrato.duracion,
-
-                        // --- 4. AMPAROS ---
-                        // Enviamos un resumen de texto de los amparos activos para ponerlo en una celda
-                        amparosResumen: amparos.filter(a => a.activo).map(a => `${a.nombre}: ${formatCurrency(a.valorAsegurado)}`).join('\n'),
-
-                        // --- 5. LIQUIDACIÓN CUMPLIMIENTO ---
-                        primaCumplimiento: primaCumplimiento,
-                        gastosCumplimiento: gastosCalculadosCump,
-                        ivaCumplimiento: ivaCump,
-                        totalCumplimiento: totalCump,
-                        valorTotalCumplimiento: formatCurrency(totalCump), // Texto para correo
-
-                        // --- 6. LIQUIDACIÓN RCE ---
-                        primaRCE: primaRCE,
-                        gastosRCE: gastosCalculadosRCE,
-                        ivaRCE: ivaRCE,
-                        totalRCE: totalRCE,
-                        valorTotalRCE: formatCurrency(totalRCE), // Texto para correo
-
-                        // --- TOTALES ---
-                        granTotal: totalGeneral,
-                        valorGranTotal: formatCurrency(totalGeneral), // Texto para correo
-                        
-                        adjuntos: attachments
-                    };
-
-                    const response = await fetch(WEBHOOK_URL, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-
-                    if (response.ok) {
-                        alert("✅ ¡Solicitud enviada exitosamente al equipo de AEGIS!");
-                        avanzarConsecutivo();
-                        limpiarFormulario();
-                    } else {
-                        throw new Error("Error en la respuesta del servidor");
-                    }
-                } catch (error) {
-                    console.error("Error enviando solicitud:", error);
-                    alert("❌ Ocurrió un error al enviar la solicitud. Por favor verifique la conexión e intente nuevamente.");
-                } finally {
-                    setIsSubmitting(false);
-                }
+                    const payload = { consecutivo, solicitante: interno.solicitante, tomador: tomador.nombre, asegurado: asegurado.nombre, valorGranTotal: formatCurrency(totalGeneral), adjuntos: attachments };
+                    const response = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (response.ok) { alert("✅ ¡Solicitud enviada!"); avanzarConsecutivo(); } 
+                    else throw new Error("Error Servidor");
+                } catch (error) { alert("❌ Ocurrió un error."); } finally { setIsSubmitting(false); }
             };
 
-            // Estilos CSS classes
-            const inputClass = "w-full p-2.5 bg-gray-50 border border-gray-200 text-[#12334F] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#58C9E8] focus:border-transparent transition-all";
+
+            // --- ESTADOS Y LÓGICA DE REPORTES (PRODUCCIÓN & CARTERA) ---
+            const [produccionData, setProduccionData] = React.useState(defaultProduccionData);
+            const [carteraData, setCarteraData] = React.useState(defaultCarteraData);
+
+            // Generador de plantillas CSV
+            const downloadTemplate = (type) => {
+                let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
+                if (type === 'produccion') {
+                    csvContent += "Cliente;Poliza;Aseguradora;Asegurado;Ramo;HorasANS;Estado;ValorPrima\n";
+                    csvContent += "Grupo Sandor;12345;Mundial;Alcaldia;Cumplimiento;4.5;Completado;1500000";
+                } else {
+                    csvContent += "Tomador;Beneficiario;Ramo;Poliza;DiasCartera;ValorTotal\n";
+                    csvContent += "Grupo Sandor;Alcaldia;Cumplimiento;12345;12;2500000";
+                }
+                const encodedUri = encodeURI(csvContent);
+                const link = document.createElement("a");
+                link.setAttribute("href", encodedUri);
+                link.setAttribute("download", `Plantilla_AEGIS_${type}.csv`);
+                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+            };
+
+            // Lector de CSV
+            const handleCsvUpload = (e, type) => {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const text = evt.target.result;
+                    const rows = text.split('\n').filter(r => r.trim());
+                    if(rows.length < 2) return alert("El archivo está vacío o no tiene el formato correcto.");
+                    const sep = text.includes(';') ? ';' : ',';
+                    
+                    if (type === 'produccion') {
+                        const parsed = rows.slice(1).map(row => {
+                            const cols = row.split(sep);
+                            return {
+                                cliente: cols[0]?.trim() || 'Desconocido',
+                                id: cols[1]?.trim() || 'S/N',
+                                aseguradora: cols[2]?.trim() || '-',
+                                asegurado: cols[3]?.trim() || '-',
+                                ramo: cols[4]?.trim() || '-',
+                                ansHoras: parseFloat(cols[5]) || 0,
+                                estado: cols[6]?.trim() || 'Pendiente',
+                                valor: parseFloat(cols[7]) || 0
+                            };
+                        });
+                        setProduccionData(parsed);
+                    } else {
+                        const parsed = rows.slice(1).map(row => {
+                            const cols = row.split(sep);
+                            return {
+                                tomador: cols[0]?.trim() || 'Desconocido',
+                                beneficiario: cols[1]?.trim() || '-',
+                                ramo: cols[2]?.trim() || '-',
+                                poliza: cols[3]?.trim() || 'S/N',
+                                dias: parseInt(cols[4], 10) || 0,
+                                total: parseFloat(cols[5]) || 0
+                            };
+                        });
+                        setCarteraData(parsed);
+                    }
+                    e.target.value = ''; // reset
+                };
+                reader.readAsText(file, 'UTF-8');
+            };
+
+            // Cálculos Producción
+            const prodTotal = produccionData.length;
+            const prodMenorUnDia = produccionData.filter(p => p.ansHoras <= 24).length;
+            const prodPorcentaje = prodTotal > 0 ? Math.round((prodMenorUnDia / prodTotal) * 100) : 0;
+            const prodMediana = getMedian(produccionData.map(p => p.ansHoras)).toFixed(1);
+            const prodTotalValor = produccionData.reduce((acc, curr) => acc + curr.valor, 0);
+            
+            const prodSummary = produccionData.reduce((acc, curr) => {
+                if (!acc[curr.cliente]) acc[curr.cliente] = { count: 0, totalValor: 0 };
+                acc[curr.cliente].count += 1;
+                acc[curr.cliente].totalValor += curr.valor;
+                return acc;
+            }, {});
+            const prodSummaryArray = Object.keys(prodSummary).map(k => ({ cliente: k, ...prodSummary[k] })).sort((a, b) => b.totalValor - a.totalValor);
+
+            // Cálculos Cartera
+            const cartTotal = carteraData.length;
+            const cartSumaTotal = carteraData.reduce((acc, curr) => acc + curr.total, 0);
+            const cartSana = carteraData.filter(p => p.dias <= 15).reduce((acc, curr) => acc + curr.total, 0);
+            const cartAntigua = carteraData.filter(p => p.dias > 15).reduce((acc, curr) => acc + curr.total, 0);
+            const cartPorcentajeSana = cartSumaTotal > 0 ? ((cartSana / cartSumaTotal) * 100).toFixed(1) : 0;
+            const cartPromedioDias = cartTotal > 0 ? (carteraData.reduce((acc, curr) => acc + curr.dias, 0) / cartTotal).toFixed(1) : 0;
+
+            const cartSummary = carteraData.reduce((acc, curr) => {
+                if (!acc[curr.tomador]) acc[curr.tomador] = { count: 0, total: 0 };
+                acc[curr.tomador].count += 1;
+                acc[curr.tomador].total += curr.total;
+                return acc;
+            }, {});
+            const cartSummaryArray = Object.keys(cartSummary).map(k => ({ tomador: k, ...cartSummary[k] })).sort((a, b) => b.total - a.total);
+
+
+            // Estilos Reutilizables
+            const inputClass = "w-full p-2.5 bg-gray-50 border border-gray-200 text-[#12334F] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#58C9E8] transition-all";
             const labelClass = "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5";
             const sectionClass = "bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6";
 
             return (
                 <div className="fixed inset-0 flex bg-[#f4f7f9] overflow-hidden w-full h-full">
                     
-                    {/* SIDEBAR (Menú Lateral del Portal) */}
+                    {/* SIDEBAR CORPORATIVO */}
                     <aside className={`fixed inset-y-0 left-0 bg-[#12334F] w-64 text-white flex flex-col transition-transform duration-300 z-40 md:relative md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                        {/* Logo Area */}
                         <div className="h-20 flex items-center px-6 border-b border-white/10 bg-[#0e273d] flex-shrink-0">
                             <div className="flex items-center gap-3">
                                 <div className="p-1.5 bg-gradient-to-br from-[#58C9E8] to-[#163f73] rounded-lg shadow-lg">
@@ -460,10 +439,8 @@
                             </div>
                         </div>
 
-                        {/* Navegación */}
                         <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
                             <p className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Menú Principal</p>
-                            
                             {menuItems.map(item => {
                                 const Icon = item.icon;
                                 const isActive = activeMenu === item.id;
@@ -472,9 +449,7 @@
                                         key={item.id}
                                         onClick={() => { setActiveMenu(item.id); setIsMobileMenuOpen(false); }}
                                         className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all text-sm font-medium ${
-                                            isActive 
-                                            ? 'bg-gradient-to-r from-[#163f73] to-[#12334F] border border-[#58C9E8]/30 text-white shadow-md' 
-                                            : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                                            isActive ? 'bg-gradient-to-r from-[#163f73] to-[#12334F] border border-[#58C9E8]/30 text-white shadow-md' : 'text-gray-300 hover:bg-white/5 hover:text-white'
                                         }`}
                                     >
                                         <Icon size={18} className={isActive ? 'text-[#58C9E8]' : 'text-gray-400'} />
@@ -484,12 +459,9 @@
                             })}
                         </nav>
 
-                        {/* Área de Usuario */}
                         <div className="p-4 border-t border-white/10 bg-[#0e273d] flex-shrink-0">
                             <div className="flex items-center gap-3 px-2">
-                                <div className="w-8 h-8 rounded-full bg-[#58C9E8] flex items-center justify-center text-[#12334F] font-bold text-sm">
-                                    GS
-                                </div>
+                                <div className="w-8 h-8 rounded-full bg-[#58C9E8] flex items-center justify-center text-[#12334F] font-bold text-sm">GS</div>
                                 <div className="text-left flex-1">
                                     <p className="text-sm font-semibold text-white leading-tight">Grupo Sandor</p>
                                     <p className="text-xs text-[#58C9E8]">Cliente Corporativo</p>
@@ -498,15 +470,11 @@
                         </div>
                     </aside>
 
-                    {/* Overlay para móviles */}
-                    {isMobileMenuOpen && (
-                        <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={() => setIsMobileMenuOpen(false)}></div>
-                    )}
+                    {isMobileMenuOpen && <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={() => setIsMobileMenuOpen(false)}></div>}
 
-                    {/* COLUMNA PRINCIPAL */}
+                    {/* CONTENEDOR PRINCIPAL */}
                     <div className="flex-1 flex flex-col h-full overflow-hidden">
                         
-                        {/* Topbar del Portal */}
                         <header className="h-20 bg-white shadow-sm border-b border-gray-200 flex items-center justify-between px-4 sm:px-8 z-10 flex-shrink-0">
                             <div className="flex items-center gap-4">
                                 <button className="md:hidden text-gray-500 hover:text-[#163f73] p-1" onClick={() => setIsMobileMenuOpen(true)}>
@@ -514,252 +482,105 @@
                                 </button>
                                 <h2 className="text-xl font-bold text-[#163f73] hidden sm:block">Portal de Servicios AEGIS</h2>
                             </div>
-
                             <div className="flex items-center gap-4">
                                 <span className="text-sm text-gray-500 font-medium hidden md:block">
                                     {new Date().toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
                                 </span>
                                 <div className="w-px h-6 bg-gray-300 hidden md:block"></div>
-                                <button className="relative p-2 text-gray-400 hover:text-[#163f73] transition-colors rounded-full hover:bg-gray-100">
-                                    <Bell size={20} />
-                                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                                </button>
+                                <button className="relative p-2 text-gray-400 hover:text-[#163f73] transition-colors rounded-full hover:bg-gray-100"><Bell size={20} /></button>
                             </div>
                         </header>
 
-                        {/* ÁREA DE CONTENIDO (Scrollable) */}
                         <main className="flex-1 overflow-y-auto bg-[#f4f7f9] relative w-full">
                             
-                            {/* VISTA 1: COTIZADOR */}
+                            {/* ========================================================= */}
+                            {/* VISTA 1: COTIZADOR                                        */}
+                            {/* ========================================================= */}
                             <div className={activeMenu === 'cotizador' ? 'block pb-20' : 'hidden'}>
-                                {/* Header Interno del Cotizador */}
                                 <div className="bg-[#163f73] text-white py-6 px-8 shadow-sm mb-8 md:m-4 md:rounded-xl">
                                     <div className="w-full flex flex-col md:flex-row justify-between items-center gap-4">
                                         <div className="flex items-center gap-3">
-                                            <div className="p-2 bg-white/10 rounded-lg">
-                                                <Calculator size={32} className="text-[#58C9E8]" strokeWidth={2} />
-                                            </div>
-                                            <div>
-                                                <h1 className="text-2xl font-bold tracking-wide">Módulo de Cotización</h1>
-                                                <p className="text-[#58C9E8] text-sm font-medium">CUMPLIMIENTO & RCE</p>
-                                            </div>
+                                            <div className="p-2 bg-white/10 rounded-lg"><Calculator size={32} className="text-[#58C9E8]" strokeWidth={2} /></div>
+                                            <div><h1 className="text-2xl font-bold tracking-wide">Módulo de Cotización</h1><p className="text-[#58C9E8] text-sm font-medium">CUMPLIMIENTO & RCE</p></div>
                                         </div>
-                                        <div className="text-right hidden md:block">
-                                            <p className="text-gray-300 text-sm">Operación Exclusiva</p>
-                                            <p className="font-bold text-white">Grupo Sandor</p>
-                                        </div>
+                                        <div className="text-right hidden md:block"><p className="text-gray-300 text-sm">Operación Exclusiva</p><p className="font-bold text-white">Grupo Sandor</p></div>
                                     </div>
                                 </div>
 
                                 <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto">
-                                    
-                                    {/* SECCIÓN 0: DATOS DEL SOLICITANTE */}
+                                    {/* 0. DATOS SOLICITANTE */}
                                     <div className={sectionClass}>
-                                        <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2">
-                                            <User size={20} className="text-[#58C9E8]" /> 0. Datos del solicitante
-                                        </h3>
+                                        <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2"><User size={20} className="text-[#58C9E8]" /> 0. Datos del solicitante</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                            <div>
-                                                <label className={labelClass}>Nombre de quien diligencia *</label>
-                                                <input type="text" className={inputClass} placeholder="Ej. Juan Pérez (Grupo Sandor)" 
-                                                    value={interno.solicitante} onChange={e => setInterno({...interno, solicitante: e.target.value})} />
-                                            </div>
-                                            <div>
-                                                <label className={labelClass}>Correo electrónico del solicitante *</label>
-                                                <input type="email" className={inputClass} placeholder="Ej. juan@gruposandor.com" 
-                                                    value={interno.solicitanteEmail} onChange={e => setInterno({...interno, solicitanteEmail: e.target.value})} />
-                                            </div>
-                                            <div>
-                                                <label className={labelClass}>Asunto de Solicitud *</label>
-                                                <input type="text" className={inputClass} placeholder="Ej. Emisión Póliza Cumplimiento Contrato 123" 
-                                                    value={interno.asunto} onChange={e => setInterno({...interno, asunto: e.target.value})} />
-                                            </div>
-                                            <div>
-                                                <label className={labelClass}>Consecutivo Interno</label>
-                                                <input type="text" className={`${inputClass} bg-[#e8f7fb] text-[#163f73] font-bold cursor-not-allowed`} disabled value={consecutivo} />
-                                            </div>
+                                            <div><label className={labelClass}>Nombre de quien diligencia *</label><input type="text" className={inputClass} placeholder="Ej. Juan Pérez" value={interno.solicitante} onChange={e => setInterno({...interno, solicitante: e.target.value})} /></div>
+                                            <div><label className={labelClass}>Correo electrónico *</label><input type="email" className={inputClass} placeholder="Ej. juan@gruposandor.com" value={interno.solicitanteEmail} onChange={e => setInterno({...interno, solicitanteEmail: e.target.value})} /></div>
+                                            <div><label className={labelClass}>Asunto *</label><input type="text" className={inputClass} value={interno.asunto} onChange={e => setInterno({...interno, asunto: e.target.value})} /></div>
+                                            <div><label className={labelClass}>Consecutivo</label><input type="text" className={`${inputClass} bg-[#e8f7fb] font-bold cursor-not-allowed`} disabled value={consecutivo} /></div>
                                         </div>
-
-                                        <div className="mb-4">
-                                            <label className={labelClass}>Tipo de Solicitud</label>
-                                            <div className="flex flex-wrap gap-4 mt-2">
-                                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                                                    <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.garantiaUnica} onChange={() => handleCheckboxTipos('garantiaUnica')} />
-                                                    Garantía Única
-                                                </label>
-                                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                                                    <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.cumplimientoParticulares} onChange={() => handleCheckboxTipos('cumplimientoParticulares')} />
-                                                    Cumplimiento Particulares
-                                                </label>
-                                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                                                    <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.cumplimientoEstatales} onChange={() => handleCheckboxTipos('cumplimientoEstatales')} />
-                                                    Cumplimiento Estatales
-                                                </label>
-                                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                                                    <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.disposicionLegal} onChange={() => handleCheckboxTipos('disposicionLegal')} />
-                                                    Disposición Legal
-                                                </label>
-                                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                                                    <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.otros} onChange={() => handleCheckboxTipos('otros')} />
-                                                    Otros
-                                                </label>
-                                            </div>
-                                        </div>
-
                                         <div className="bg-[#e8f7fb]/30 p-4 rounded-lg border border-[#e8f7fb]">
-                                            <label className={labelClass}>Adjuntar Documentos Soporte (Pliegos, Contratos, etc.)</label>
+                                            <label className={labelClass}>Adjuntar Documentos (Contratos)</label>
                                             <div className="mt-2 flex items-center gap-3">
-                                                <label className="cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                                    <Paperclip size={16} className="text-gray-500" />
-                                                    Seleccionar Archivos
-                                                    <input id="file-upload" type="file" multiple className="sr-only" onChange={handleFileChange} />
+                                                <label className="cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 flex items-center gap-2">
+                                                    <Paperclip size={16} className="text-gray-500" /> Seleccionar Archivos
+                                                    <input id="file-upload-cotizador" type="file" multiple className="sr-only" onChange={handleFileChange} />
                                                 </label>
-                                                <span className="text-sm text-gray-500">
-                                                    {interno.archivos.length === 0 ? "Ningún archivo seleccionado" : `${interno.archivos.length} archivo(s) listos para enviar.`}
-                                                </span>
+                                                <span className="text-sm text-gray-500">{interno.archivos.length === 0 ? "Ningún archivo" : `${interno.archivos.length} archivo(s)`}</span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* SECCIÓN 1: TOMADOR */}
+                                    {/* 1. TOMADOR */}
                                     <div className={sectionClass}>
-                                        <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2">
-                                            <Building size={20} className="text-[#58C9E8]" /> 1. Tomador / Afianzado
-                                        </h3>
+                                        <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2"><Building size={20} className="text-[#58C9E8]" /> 1. Tomador</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div className="md:col-span-2">
-                                                <label className={labelClass}>Razón Social / Nombre *</label>
-                                                <input type="text" className={inputClass} value={tomador.nombre} onChange={e => setTomador({...tomador, nombre: e.target.value})} />
-                                            </div>
-                                            <div>
-                                                <label className={labelClass}>NIT *</label>
-                                                <input type="text" className={inputClass} value={tomador.nit} onChange={e => setTomador({...tomador, nit: e.target.value})} />
-                                            </div>
-                                            <div className="md:col-span-3">
-                                                <label className={labelClass}>Dirección</label>
-                                                <input type="text" className={inputClass} value={tomador.direccion} onChange={e => setTomador({...tomador, direccion: e.target.value})} />
-                                            </div>
-                                            <div>
-                                                <label className={labelClass}>Teléfono</label>
-                                                <input type="text" className={inputClass} value={tomador.telefono} onChange={e => setTomador({...tomador, telefono: e.target.value})} />
-                                            </div>
-                                            <div>
-                                                <label className={labelClass}>Celular</label>
-                                                <input type="text" className={inputClass} value={tomador.celular} onChange={e => setTomador({...tomador, celular: e.target.value})} />
-                                            </div>
-                                            <div>
-                                                <label className={labelClass}>E-mail *</label>
-                                                <input type="email" className={inputClass} value={tomador.email} onChange={e => setTomador({...tomador, email: e.target.value})} />
-                                            </div>
+                                            <div className="md:col-span-2"><label className={labelClass}>Razón Social *</label><input type="text" className={inputClass} value={tomador.nombre} onChange={e => setTomador({...tomador, nombre: e.target.value})} /></div>
+                                            <div><label className={labelClass}>NIT *</label><input type="text" className={inputClass} value={tomador.nit} onChange={e => setTomador({...tomador, nit: e.target.value})} /></div>
                                         </div>
                                     </div>
 
-                                    {/* SECCIÓN 2: BENEFICIARIO */}
+                                    {/* 2. BENEFICIARIO */}
                                     <div className={sectionClass}>
-                                        <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2">
-                                            <Shield size={20} className="text-[#58C9E8]" /> 2. Asegurado / Beneficiario
-                                        </h3>
+                                        <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2"><Shield size={20} className="text-[#58C9E8]" /> 2. Asegurado</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div className="md:col-span-2">
-                                                <label className={labelClass}>Razón Social / Nombre *</label>
-                                                <input type="text" className={inputClass} value={asegurado.nombre} onChange={e => setAsegurado({...asegurado, nombre: e.target.value})} />
-                                            </div>
-                                            <div>
-                                                <label className={labelClass}>NIT *</label>
-                                                <input type="text" className={inputClass} value={asegurado.nit} onChange={e => setAsegurado({...asegurado, nit: e.target.value})} />
-                                            </div>
+                                            <div className="md:col-span-2"><label className={labelClass}>Razón Social *</label><input type="text" className={inputClass} value={asegurado.nombre} onChange={e => setAsegurado({...asegurado, nombre: e.target.value})} /></div>
+                                            <div><label className={labelClass}>NIT *</label><input type="text" className={inputClass} value={asegurado.nit} onChange={e => setAsegurado({...asegurado, nit: e.target.value})} /></div>
                                         </div>
                                     </div>
 
-                                    {/* SECCIÓN 3: CONTRATO */}
+                                    {/* 3. CONTRATO */}
                                     <div className={sectionClass}>
-                                        <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2">
-                                            <FileText size={20} className="text-[#58C9E8]" /> 3. Datos del Contrato
-                                        </h3>
+                                        <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2"><FileText size={20} className="text-[#58C9E8]" /> 3. Contrato</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                            <div className="md:col-span-4 relative">
-                                                <label className={labelClass}>Objeto del Contrato *</label>
-                                                <textarea rows="3" maxLength="1000" className={inputClass} value={contrato.objeto} onChange={e => setContrato({...contrato, objeto: e.target.value})}></textarea>
-                                                <span className="absolute bottom-2 right-3 text-xs text-gray-400 font-medium">{contrato.objeto.length}/1000</span>
-                                            </div>
-                                            <div>
-                                                <label className={labelClass}>Número Contrato</label>
-                                                <input type="text" className={inputClass} value={contrato.numero} onChange={e => setContrato({...contrato, numero: e.target.value})} />
-                                            </div>
-                                            <div>
-                                                <label className={labelClass}>Valor SIN IVA *</label>
-                                                <input type="text" className={inputClass} value={contrato.valorSinIva === 0 ? '' : contrato.valorSinIva.toLocaleString('es-CO')} 
-                                                    onChange={e => setContrato({...contrato, valorSinIva: parseCurrency(e.target.value)})} placeholder="Ej. 10,000,000" />
-                                            </div>
-                                            <div>
-                                                <label className={labelClass}>Valor CON IVA</label>
-                                                <input type="text" className={`${inputClass} bg-[#e8f7fb] text-[#163f73] font-semibold`} disabled value={formatCurrency(valorConIva)} />
-                                            </div>
-                                            <div>
-                                                <label className={labelClass}>Duración (Días)</label>
-                                                <input type="number" className={inputClass} value={contrato.duracion} onChange={e => setContrato({...contrato, duracion: e.target.value})} />
-                                            </div>
+                                            <div className="md:col-span-4"><label className={labelClass}>Objeto *</label><textarea rows="2" className={inputClass} value={contrato.objeto} onChange={e => setContrato({...contrato, objeto: e.target.value})}></textarea></div>
+                                            <div><label className={labelClass}>Número</label><input type="text" className={inputClass} value={contrato.numero} onChange={e => setContrato({...contrato, numero: e.target.value})} /></div>
+                                            <div><label className={labelClass}>Valor SIN IVA</label><input type="text" className={inputClass} value={contrato.valorSinIva?contrato.valorSinIva.toLocaleString('es-CO'):''} onChange={e => setContrato({...contrato, valorSinIva: parseCurrency(e.target.value)})} /></div>
+                                            <div><label className={labelClass}>Valor CON IVA</label><input type="text" className={`${inputClass} bg-[#e8f7fb] font-semibold`} disabled value={formatCurrency(valorConIva)} /></div>
+                                            <div><label className={labelClass}>Duración (Días)</label><input type="number" className={inputClass} value={contrato.duracion} onChange={e => setContrato({...contrato, duracion: e.target.value})} /></div>
                                         </div>
                                     </div>
 
-                                    {/* SECCIÓN 4: AMPAROS */}
+                                    {/* 4. AMPAROS */}
                                     <div className={sectionClass}>
-                                        <h3 className="text-lg font-bold text-[#163f73] mb-2 flex items-center gap-2 border-b border-gray-100 pb-2">
-                                            <Calculator size={20} className="text-[#58C9E8]" /> 4. Amparos y Garantías
-                                        </h3>
-                                        <p className="text-sm text-gray-500 mb-4">Marque los amparos, asigne valores y las primas se calcularán automáticamente.</p>
-                                        
+                                        <h3 className="text-lg font-bold text-[#163f73] mb-2 flex items-center gap-2 border-b border-gray-100 pb-2"><Calculator size={20} className="text-[#58C9E8]" /> 4. Amparos y Garantías</h3>
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-left min-w-[900px]">
                                                 <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
                                                     <tr>
-                                                        <th className="px-4 py-3 font-semibold rounded-tl-lg">Amparo</th>
-                                                        <th className="px-4 py-3 font-semibold w-32">Desde</th>
-                                                        <th className="px-4 py-3 font-semibold w-32">Hasta</th>
-                                                        <th className="px-2 py-3 font-semibold text-center w-16">Días</th>
-                                                        <th className="px-4 py-3 font-semibold w-40 text-right">Valor Asegurado</th>
-                                                        <th className="px-2 py-3 font-semibold text-center w-24">Tasa %</th>
-                                                        <th className="px-4 py-3 font-semibold w-32 text-right rounded-tr-lg">Prima</th>
+                                                        <th className="px-4 py-3 font-semibold">Amparo</th><th className="px-4 py-3 font-semibold w-32">Desde</th><th className="px-4 py-3 font-semibold w-32">Hasta</th>
+                                                        <th className="px-2 py-3 font-semibold text-center w-16">Días</th><th className="px-4 py-3 font-semibold w-40 text-right">Valor Asegurado</th>
+                                                        <th className="px-2 py-3 font-semibold text-center w-24">Tasa %</th><th className="px-4 py-3 font-semibold w-32 text-right">Prima</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-100">
                                                     {amparos.map(amp => (
-                                                        <tr key={amp.id} className={amp.activo ? "bg-blue-50/30 transition-colors" : "transition-colors hover:bg-gray-50/50"}>
-                                                            <td className="px-4 py-3">
-                                                                <label className="flex items-center gap-3 cursor-pointer">
-                                                                    <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded border-gray-300 focus:ring-[#58C9E8]" 
-                                                                        checked={amp.activo} onChange={() => handleAmparoToggle(amp.id)} />
-                                                                    <span className={`text-sm font-medium ${amp.activo ? 'text-[#163f73]' : 'text-gray-600'}`}>
-                                                                        {amp.nombre}
-                                                                    </span>
-                                                                </label>
-                                                            </td>
-                                                            <td className="px-2 py-3">
-                                                                <input type="date" className="w-full p-1.5 text-xs border rounded bg-white disabled:bg-gray-100 disabled:text-gray-400" 
-                                                                    disabled={!amp.activo} value={amp.desde} onChange={e => handleAmparoField(amp.id, 'desde', e.target.value)} />
-                                                            </td>
-                                                            <td className="px-2 py-3">
-                                                                <input type="date" className="w-full p-1.5 text-xs border rounded bg-white disabled:bg-gray-100 disabled:text-gray-400" 
-                                                                    disabled={!amp.activo} value={amp.hasta} onChange={e => handleAmparoField(amp.id, 'hasta', e.target.value)} />
-                                                            </td>
-                                                            <td className="px-2 py-3 text-center">
-                                                                <span className={`text-sm font-bold ${amp.activo && amp.dias > 0 ? 'text-[#12334F]' : 'text-gray-400'}`}>{amp.dias || '-'}</span>
-                                                            </td>
-                                                            <td className="px-4 py-3">
-                                                                <input type="text" className="w-full p-1.5 text-sm text-right font-semibold border rounded bg-white disabled:bg-gray-100 focus:ring-1 focus:ring-[#58C9E8] outline-none" 
-                                                                    disabled={!amp.activo} 
-                                                                    value={amp.valorAsegurado === 0 ? '' : amp.valorAsegurado.toLocaleString('es-CO')} 
-                                                                    onChange={e => handleAmparoField(amp.id, 'valorAsegurado', parseCurrency(e.target.value))} placeholder="$ 0" />
-                                                            </td>
-                                                            <td className="px-2 py-3">
-                                                                <input type="text" className={`w-full p-1.5 text-xs text-center border rounded font-medium cursor-not-allowed ${amp.activo ? 'bg-gray-100 text-gray-700' : 'bg-gray-50 text-gray-400'}`} 
-                                                                    disabled value={amp.tasa} />
-                                                            </td>
-                                                            <td className="px-4 py-3 text-right">
-                                                                <span className={`text-sm font-bold ${amp.activo && amp.prima > 0 ? 'text-[#163f73]' : 'text-gray-400'}`}>
-                                                                    {formatCurrency(amp.prima)}
-                                                                </span>
-                                                            </td>
+                                                        <tr key={amp.id} className={amp.activo ? "bg-blue-50/30" : "hover:bg-gray-50"}>
+                                                            <td className="px-4 py-3"><label className="flex items-center gap-3 cursor-pointer"><input type="checkbox" className="w-4 h-4 text-[#58C9E8]" checked={amp.activo} onChange={() => handleAmparoToggle(amp.id)} /><span className="text-sm font-medium">{amp.nombre}</span></label></td>
+                                                            <td className="px-2 py-3"><input type="date" className="w-full p-1.5 text-xs border rounded" disabled={!amp.activo} value={amp.desde} onChange={e => handleAmparoField(amp.id, 'desde', e.target.value)} /></td>
+                                                            <td className="px-2 py-3"><input type="date" className="w-full p-1.5 text-xs border rounded" disabled={!amp.activo} value={amp.hasta} onChange={e => handleAmparoField(amp.id, 'hasta', e.target.value)} /></td>
+                                                            <td className="px-2 py-3 text-center"><span className="text-sm font-bold">{amp.dias || '-'}</span></td>
+                                                            <td className="px-4 py-3"><input type="text" className="w-full p-1.5 text-sm text-right font-semibold border rounded" disabled={!amp.activo} value={amp.valorAsegurado?amp.valorAsegurado.toLocaleString('es-CO'):''} onChange={e => handleAmparoField(amp.id, 'valorAsegurado', parseCurrency(e.target.value))} /></td>
+                                                            <td className="px-2 py-3"><input type="text" className="w-full p-1.5 text-xs text-center border rounded bg-gray-50" disabled value={amp.tasa} /></td>
+                                                            <td className="px-4 py-3 text-right"><span className="text-sm font-bold text-[#163f73]">{formatCurrency(amp.prima)}</span></td>
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -767,98 +588,221 @@
                                         </div>
                                     </div>
 
-                                    {/* SECCIÓN 5: RESUMEN FINANCIERO Y ACCIONES */}
+                                    {/* 5. TOTALES */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                        
-                                        {/* Ajustes Extra */}
-                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 h-fit">
-                                            <h3 className="text-md font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">Ajustes Adicionales</h3>
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"><h3 className="font-bold text-gray-500 mb-4">Ajustes Adicionales</h3>
                                             <div className="space-y-4">
-                                                <div>
-                                                    <label className={labelClass}>Gastos de Expedición (Cumplimiento)</label>
-                                                    <input type="text" className={inputClass} 
-                                                        value={costos.gastosCump === 0 ? '' : costos.gastosCump.toLocaleString('es-CO')} 
-                                                        onChange={e => setCostos({...costos, gastosCump: parseCurrency(e.target.value)})} />
-                                                </div>
-                                                <div>
-                                                    <label className={labelClass}>Gastos de Expedición (RCE)</label>
-                                                    <input type="text" className={inputClass} 
-                                                        value={costos.gastosRCE === 0 ? '' : costos.gastosRCE.toLocaleString('es-CO')} 
-                                                        onChange={e => setCostos({...costos, gastosRCE: parseCurrency(e.target.value)})} />
-                                                </div>
-                                                <div>
-                                                    <label className={labelClass}>Tasa IVA (%) General</label>
-                                                    <input type="number" className={`${inputClass} bg-gray-100 text-gray-500 font-semibold cursor-not-allowed`} value={costos.tasaIva} disabled />
-                                                </div>
+                                                <div><label className={labelClass}>Gastos Cumplimiento</label><input type="text" className={inputClass} value={costos.gastosCump?costos.gastosCump.toLocaleString('es-CO'):''} onChange={e => setCostos({...costos, gastosCump: parseCurrency(e.target.value)})} /></div>
+                                                <div><label className={labelClass}>Gastos RCE</label><input type="text" className={inputClass} value={costos.gastosRCE?costos.gastosRCE.toLocaleString('es-CO'):''} onChange={e => setCostos({...costos, gastosRCE: parseCurrency(e.target.value)})} /></div>
                                             </div>
                                         </div>
-
-                                        {/* Tarjeta de Total Liquidación Final (Dividida) */}
-                                        <div className="bg-[#12334F] rounded-xl p-6 shadow-lg border border-[#163f73] text-white flex flex-col gap-4">
-                                            <h3 className="text-md font-bold text-[#58C9E8] uppercase tracking-wider border-b border-[#163f73] pb-2">Liquidación Final</h3>
-                                            
-                                            {/* Bloque Cumplimiento */}
-                                            <div className="bg-[#163f73] rounded-lg p-4 shadow-sm">
-                                                <h4 className="font-bold text-white mb-2 border-b border-[#12334F] pb-1">Póliza de Cumplimiento</h4>
-                                                <div className="space-y-1 text-sm text-gray-300">
-                                                    <div className="flex justify-between"><span>Prima:</span> <span>{formatCurrency(primaCumplimiento)}</span></div>
-                                                    <div className="flex justify-between"><span>Gastos de Expedición:</span> <span>{formatCurrency(gastosCalculadosCump)}</span></div>
-                                                    <div className="flex justify-between"><span>IVA ({costos.tasaIva}%):</span> <span>{formatCurrency(ivaCump)}</span></div>
-                                                    <div className="flex justify-between font-bold text-[#58C9E8] pt-1 border-t border-[#12334F] mt-1">
-                                                        <span>Total Cumplimiento:</span> <span>{formatCurrency(totalCump)}</span>
-                                                    </div>
-                                                </div>
+                                        <div className="bg-[#12334F] rounded-xl p-6 shadow-lg border border-[#163f73] text-white">
+                                            <h3 className="font-bold text-[#58C9E8] mb-4">Liquidación Final</h3>
+                                            <div className="bg-[#163f73] rounded-lg p-4 mb-3">
+                                                <div className="flex justify-between font-bold"><span>Total Cumplimiento:</span><span>{formatCurrency(totalCump)}</span></div>
                                             </div>
-
-                                            {/* Bloque RCE */}
-                                            <div className="bg-[#163f73] rounded-lg p-4 shadow-sm">
-                                                <h4 className="font-bold text-white mb-2 border-b border-[#12334F] pb-1">Póliza de Responsabilidad Civil (RCE)</h4>
-                                                <div className="space-y-1 text-sm text-gray-300">
-                                                    <div className="flex justify-between"><span>Prima:</span> <span>{formatCurrency(primaRCE)}</span></div>
-                                                    <div className="flex justify-between"><span>Gastos de Expedición:</span> <span>{formatCurrency(gastosCalculadosRCE)}</span></div>
-                                                    <div className="flex justify-between"><span>IVA ({costos.tasaIva}%):</span> <span>{formatCurrency(ivaRCE)}</span></div>
-                                                    <div className="flex justify-between font-bold text-[#58C9E8] pt-1 border-t border-[#12334F] mt-1">
-                                                        <span>Total RCE:</span> <span>{formatCurrency(totalRCE)}</span>
-                                                    </div>
-                                                </div>
+                                            <div className="bg-[#163f73] rounded-lg p-4 mb-3">
+                                                <div className="flex justify-between font-bold"><span>Total RCE:</span><span>{formatCurrency(totalRCE)}</span></div>
                                             </div>
-
-                                            {/* Gran Total */}
-                                            <div className="bg-[#58C9E8] rounded-lg p-4 text-[#12334F] mt-2 shadow-sm">
-                                                <div className="flex justify-between items-center">
-                                                    <span className="text-lg font-bold uppercase tracking-wide">Total Dos Pólizas:</span>
-                                                    <span className="text-2xl font-black">{formatCurrency(totalGeneral)}</span>
-                                                </div>
+                                            <div className="bg-[#58C9E8] rounded-lg p-4 text-[#12334F] font-bold text-xl flex justify-between">
+                                                <span>GRAN TOTAL:</span><span>{formatCurrency(totalGeneral)}</span>
                                             </div>
                                         </div>
-
                                     </div>
 
-                                    {/* BARRA DE ACCIONES FLOTANTE */}
+                                    {/* BOTONES COTIZADOR */}
                                     <div className="mt-8 flex flex-wrap justify-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                                        <button onClick={limpiarFormulario} className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors border border-red-200" disabled={isSubmitting}>
-                                            <Trash2 size={18} /> Limpiar Datos
-                                        </button>
-                                        <button onClick={exportarCotizacion} className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-[#12334F] bg-gray-100 hover:bg-gray-200 transition-colors border border-gray-300" disabled={isSubmitting}>
-                                            <Save size={18} /> Resumen + Excel
-                                        </button>
-                                        <button onClick={() => window.print()} className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-[#12334F] bg-[#e8f7fb] hover:bg-[#d0f0fa] transition-colors border border-[#58C9E8]" disabled={isSubmitting}>
-                                            <Printer size={18} /> Imprimir / PDF
-                                        </button>
-                                        <button onClick={enviarSolicitudWebhook} className="flex items-center gap-2 px-8 py-3 rounded-lg font-bold text-white bg-[#163f73] hover:bg-[#12334F] transition-colors shadow-md disabled:opacity-50" disabled={isSubmitting}>
-                                            {isSubmitting ? (
-                                                <span className="flex items-center gap-2"><svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Enviando...</span>
-                                            ) : (
-                                                <><Send size={18} /> Enviar Solicitud a AEGIS</>
-                                            )}
+                                        <button onClick={limpiarFormularioCotizador} className="px-6 py-3 text-red-600 bg-red-50 rounded-lg flex items-center gap-2 font-medium hover:bg-red-100"><Trash2 size={18} /> Limpiar</button>
+                                        <button onClick={exportarCotizacion} className="px-6 py-3 text-[#12334F] bg-gray-100 rounded-lg flex items-center gap-2 font-medium hover:bg-gray-200"><Save size={18} /> Resumen</button>
+                                        <button onClick={enviarSolicitudWebhook} className="px-8 py-3 text-white bg-[#163f73] rounded-lg flex items-center gap-2 font-bold hover:bg-[#12334F]">
+                                            {isSubmitting ? "Enviando..." : <><Send size={18} /> Enviar a AEGIS</>}
                                         </button>
                                     </div>
-
                                 </div>
                             </div>
 
-                            {/* VISTA 2: MÓDULOS EN CONSTRUCCIÓN (Inicio, Solicitudes, Soporte) */}
-                            <div className={activeMenu !== 'cotizador' ? 'flex h-full items-center justify-center p-6' : 'hidden'}>
+                            {/* ========================================================= */}
+                            {/* VISTA 2: REPORTE PRODUCCIÓN                               */}
+                            {/* ========================================================= */}
+                            <div className={activeMenu === 'produccion' ? 'block pb-20' : 'hidden'}>
+                                <div className="bg-[#163f73] text-white py-6 px-8 shadow-sm mb-6 md:m-4 md:mb-6 md:rounded-xl flex flex-col md:flex-row justify-between items-center gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-white/10 rounded-lg"><TrendingUp size={32} className="text-[#58C9E8]" strokeWidth={2} /></div>
+                                        <div><h1 className="text-2xl font-bold tracking-wide">Reporte de Producción y ANS</h1><p className="text-[#58C9E8] text-sm font-medium">MÉTRICAS OPERATIVAS</p></div>
+                                    </div>
+                                    <div className="text-right hidden md:block"><p className="text-gray-300 text-sm">Cliente Principal</p><p className="font-bold text-white">Grupo Sandor</p></div>
+                                </div>
+
+                                <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto space-y-6">
+                                    
+                                    {/* TOOLBAR CARGA DE ARCHIVOS */}
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                                        <div>
+                                            <h3 className="text-lg font-bold text-[#163f73] flex items-center gap-2"><UploadCloud size={20} className="text-[#58C9E8]"/> Actualizar Datos del Reporte</h3>
+                                            <p className="text-sm text-gray-500">Carga un archivo CSV para actualizar las gráficas de producción en tiempo real.</p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-3">
+                                            <button onClick={() => downloadTemplate('produccion')} className="px-4 py-2.5 text-sm font-medium text-[#163f73] bg-[#e8f7fb] rounded-lg border border-[#58C9E8]/30 hover:bg-[#d0f0fa] transition-colors flex items-center gap-2">
+                                                <Download size={16} /> Plantilla CSV
+                                            </button>
+                                            <label className="cursor-pointer px-4 py-2.5 text-sm font-medium text-white bg-[#163f73] rounded-lg hover:bg-[#12334F] transition-colors shadow-sm flex items-center gap-2">
+                                                <FileText size={16} /> Cargar Archivo
+                                                <input type="file" accept=".csv" className="hidden" onChange={(e) => handleCsvUpload(e, 'produccion')} />
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    {/* MÉTRICAS KPI */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
+                                            <div className="p-3 bg-blue-50 rounded-lg text-[#163f73]"><FileText size={28} /></div>
+                                            <div><p className="text-sm text-gray-500 font-medium">Total Solicitudes</p><h4 className="text-3xl font-bold text-[#12334F] mt-1">{prodTotal}</h4></div>
+                                        </div>
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
+                                            <div className="p-3 bg-[#e8f7fb] rounded-lg text-[#58C9E8]"><CheckCircle size={28} /></div>
+                                            <div><p className="text-sm text-gray-500 font-medium">Entregas &lt; 24 Horas</p><h4 className="text-3xl font-bold text-[#163f73] mt-1">{prodMenorUnDia} <span className="text-sm font-normal text-green-600">({prodPorcentaje}%)</span></h4></div>
+                                        </div>
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
+                                            <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600"><ClockIcon size={28} /></div>
+                                            <div><p className="text-sm text-gray-500 font-medium">Tiempo Típico (Mediana)</p><h4 className="text-3xl font-bold text-[#12334F] mt-1">{prodMediana} <span className="text-lg text-gray-500 font-normal">hrs</span></h4></div>
+                                        </div>
+                                    </div>
+
+                                    {/* TABLAS PRODUCCIÓN */}
+                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                                            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center"><h4 className="font-bold text-[#163f73]">Detalle de Pólizas</h4></div>
+                                            <div className="overflow-auto max-h-[400px]">
+                                                <table className="w-full text-left text-sm">
+                                                    <thead className="bg-white sticky top-0 shadow-sm text-xs text-gray-500 uppercase"><tr className="border-b">
+                                                        <th className="p-4">Asegurado / Ramo</th><th className="p-4 text-center">Horas ANS</th><th className="p-4">Estado</th>
+                                                    </tr></thead>
+                                                    <tbody className="divide-y divide-gray-100">
+                                                        {produccionData.map((p, i) => (
+                                                            <tr key={i} className="hover:bg-gray-50">
+                                                                <td className="p-4"><div className="font-bold text-[#12334F]">{p.asegurado}</div><div className="text-[10px] text-gray-400 mt-1 uppercase">{p.ramo} - {p.id}</div></td>
+                                                                <td className="p-4 text-center"><span className={`font-bold ${p.ansHoras<=24?'text-[#58C9E8]':'text-orange-500'}`}>{p.ansHoras}h</span></td>
+                                                                <td className="p-4"><span className="text-xs bg-gray-100 px-2 py-1 rounded">{p.estado}</span></td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                                            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center"><h4 className="font-bold text-[#163f73]">Resumen de Valor (Opcional)</h4></div>
+                                            <div className="overflow-auto max-h-[400px] p-6">
+                                                <div className="bg-[#12334F] rounded-xl p-6 text-center text-white mb-6">
+                                                    <p className="text-sm text-gray-400 uppercase tracking-wider mb-2">Volumen de Primas Procesado</p>
+                                                    <p className="text-4xl font-black text-[#58C9E8]">{formatCurrency(prodTotalValor)}</p>
+                                                </div>
+                                                <div className="space-y-4">
+                                                    {prodSummaryArray.map((s, i) => (
+                                                        <div key={i} className="flex justify-between items-center border-b border-gray-100 pb-3">
+                                                            <div><p className="font-bold text-[#163f73]">{s.cliente}</p><p className="text-xs text-gray-500">{s.count} pólizas emitidas</p></div>
+                                                            <div className="font-bold text-gray-700">{formatCurrency(s.totalValor)}</div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* ========================================================= */}
+                            {/* VISTA 3: REPORTE CARTERA                                  */}
+                            {/* ========================================================= */}
+                            <div className={activeMenu === 'cartera' ? 'block pb-20' : 'hidden'}>
+                                <div className="bg-[#163f73] text-white py-6 px-8 shadow-sm mb-6 md:m-4 md:mb-6 md:rounded-xl flex flex-col md:flex-row justify-between items-center gap-4">
+                                    <div className="flex items-center gap-3">
+                                        <div className="p-2 bg-white/10 rounded-lg"><PieChart size={32} className="text-[#58C9E8]" strokeWidth={2} /></div>
+                                        <div><h1 className="text-2xl font-bold tracking-wide">Reporte de Cartera</h1><p className="text-[#58C9E8] text-sm font-medium">FINANZAS Y RECAUDO</p></div>
+                                    </div>
+                                    <div className="text-right hidden md:block"><p className="text-gray-300 text-sm">Cliente Principal</p><p className="font-bold text-white">Grupo Sandor</p></div>
+                                </div>
+
+                                <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto space-y-6">
+                                    
+                                    {/* TOOLBAR CARGA DE ARCHIVOS */}
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                                        <div>
+                                            <h3 className="text-lg font-bold text-[#163f73] flex items-center gap-2"><UploadCloud size={20} className="text-[#58C9E8]"/> Cargar Cartera Contable</h3>
+                                            <p className="text-sm text-gray-500">Actualiza las deudas y edades de cartera subiendo un archivo CSV.</p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-3">
+                                            <button onClick={() => downloadTemplate('cartera')} className="px-4 py-2.5 text-sm font-medium text-[#163f73] bg-[#e8f7fb] rounded-lg border border-[#58C9E8]/30 hover:bg-[#d0f0fa] transition-colors flex items-center gap-2">
+                                                <Download size={16} /> Plantilla CSV
+                                            </button>
+                                            <label className="cursor-pointer px-4 py-2.5 text-sm font-medium text-white bg-[#163f73] rounded-lg hover:bg-[#12334F] transition-colors shadow-sm flex items-center gap-2">
+                                                <DollarSign size={16} /> Cargar Archivo
+                                                <input type="file" accept=".csv" className="hidden" onChange={(e) => handleCsvUpload(e, 'cartera')} />
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    {/* MÉTRICAS KPI */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div className="bg-[#163f73] text-white rounded-xl p-6 shadow-sm flex items-center gap-4 relative overflow-hidden">
+                                            <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                            <div className="p-3 bg-[#58C9E8]/20 rounded-lg text-[#58C9E8] z-10"><DollarSign size={32} /></div>
+                                            <div className="z-10"><p className="text-sm text-gray-300 font-medium">Valor Total Adeudado</p><h4 className="text-3xl font-black text-[#58C9E8] mt-1">{formatCurrency(cartSumaTotal)}</h4></div>
+                                        </div>
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
+                                            <div className="p-3 bg-[#e8f7fb] rounded-lg text-[#58C9E8]"><Calendar size={28} /></div>
+                                            <div><p className="text-sm text-gray-500 font-medium">Antigüedad Promedio</p><h4 className="text-3xl font-bold text-[#163f73] mt-1">{cartPromedioDias} <span className="text-lg text-gray-500 font-normal">días</span></h4></div>
+                                        </div>
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
+                                            <div className="p-3 bg-orange-50 rounded-lg text-orange-500"><AlertCircle size={28} /></div>
+                                            <div><p className="text-sm text-gray-500 font-medium">Cartera Mayor a 15 Días</p><h4 className="text-2xl font-bold text-[#12334F] mt-1">{formatCurrency(cartAntigua)}</h4><p className="text-xs text-gray-400 mt-1">Requiere gestión</p></div>
+                                        </div>
+                                    </div>
+
+                                    {/* TABLAS CARTERA */}
+                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                                        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                                            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center"><h4 className="font-bold text-[#163f73]">Detalle de Cuentas por Cobrar</h4><span className="text-xs px-2 py-1 bg-[#e8f7fb] text-[#163f73] rounded">{cartTotal} Pólizas</span></div>
+                                            <div className="overflow-auto max-h-[400px]">
+                                                <table className="w-full text-left text-sm">
+                                                    <thead className="bg-white sticky top-0 shadow-sm text-xs text-gray-500 uppercase"><tr className="border-b">
+                                                        <th className="p-4">Tomador / Beneficiario</th><th className="p-4 text-center">Póliza</th><th className="p-4 text-center">Edad (Días)</th><th className="p-4 text-right">Valor Deuda</th>
+                                                    </tr></thead>
+                                                    <tbody className="divide-y divide-gray-100">
+                                                        {carteraData.sort((a,b) => b.dias - a.dias).map((p, i) => (
+                                                            <tr key={i} className="hover:bg-gray-50">
+                                                                <td className="p-4"><div className="font-bold text-[#12334F]">{p.tomador}</div><div className="text-[10px] text-gray-400 mt-1 truncate max-w-[200px]">{p.beneficiario}</div></td>
+                                                                <td className="p-4 text-center"><span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded">{p.poliza}</span></td>
+                                                                <td className="p-4 text-center"><div className={`inline-block px-2 py-1 rounded text-xs font-bold ${p.dias>15?'bg-orange-100 text-orange-700':'bg-[#e8f7fb] text-[#163f73]'}`}>{p.dias}</div></td>
+                                                                <td className="p-4 text-right font-bold text-gray-700">{formatCurrency(p.total)}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
+                                            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50"><h4 className="font-bold text-[#163f73]">Salud de la Cartera</h4></div>
+                                            <div className="p-6 flex-1 flex flex-col items-center justify-center text-center space-y-6">
+                                                <div className="relative w-32 h-32 flex items-center justify-center rounded-full border-[8px] border-gray-100">
+                                                    <svg className="absolute inset-0 w-full h-full transform -rotate-90">
+                                                        <circle cx="60" cy="60" r="56" fill="transparent" stroke="#58C9E8" strokeWidth="8" strokeDasharray={`${cartPorcentajeSana * 3.51} 351`} className="transition-all duration-1000"/>
+                                                    </svg>
+                                                    <div className="text-2xl font-black text-[#163f73]">{cartPorcentajeSana}%</div>
+                                                </div>
+                                                <div>
+                                                    <h3 className="font-bold text-[#12334F]">Corriente (0 - 15 días)</h3>
+                                                    <p className="text-gray-500 text-sm mt-1">{formatCurrency(cartSana)} del total adeudado está al día.</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* ========================================================= */}
+                            {/* VISTA 4: MÓDULOS EN CONSTRUCCIÓN                          */}
+                            {/* ========================================================= */}
+                            <div className={['inicio', 'solicitudes', 'soporte'].includes(activeMenu) ? 'flex h-full items-center justify-center p-6' : 'hidden'}>
                                 <div className="bg-white rounded-xl border border-gray-200 border-dashed w-full max-w-2xl p-12 text-center shadow-sm">
                                     <Shield size={64} className="mx-auto text-[#58C9E8] mb-4 opacity-50" />
                                     <h2 className="text-2xl font-bold text-[#163f73]">Módulo en construcción</h2>
