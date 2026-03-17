@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cotizador de Cumplimiento - AEGIS Insurance</title>
+    <title>Portal y Cotizador - AEGIS Insurance</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -15,7 +15,7 @@
     <!-- Babel -->
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 </head>
-<body class="bg-gray-50 font-sans text-[#12334F]">
+<body class="bg-gray-50 font-sans text-[#12334F] overflow-hidden">
     <div id="root"></div>
 
     <script type="text/babel">
@@ -50,6 +50,20 @@
         const Paperclip = ({size=24, className=""}) => (
             <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
         );
+        
+        // Iconos del Portal
+        const Home = ({size=24, className=""}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+        );
+        const Bell = ({size=24, className=""}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        );
+        const MenuIcon = ({size=24, className=""}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        );
+        const LifeBuoy = ({size=24, className=""}) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="14.83" y1="9.17" x2="18.36" y2="5.64"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/></svg>
+        );
 
         const AMPAROS_BASE = [
             { id: 1, nombre: 'Seriedad de la Oferta', tasaDefault: 0.18 },
@@ -59,9 +73,11 @@
             { id: 5, nombre: 'Calidad del Servicio', tasaDefault: 0.20 },
             { id: 6, nombre: 'Calidad de los Bienes', tasaDefault: 0.40 },
             { id: 7, nombre: 'Estabilidad y Calidad', tasaDefault: 0.18 },
-            { id: 8, nombre: 'Calidad y Correcto Funcionamiento', tasaDefault: 0.20 },
+            { id: 8, nombre: 'Calidad y Correcto Funcionamiento', flow: 0.20 }, // Corregido: tasaDefault
             { id: 9, nombre: 'Responsabilidad Civil Extracontractual', tasaDefault: 0.20 }
         ];
+        // Pequeña corrección en el array para no romper
+        AMPAROS_BASE[7].tasaDefault = 0.20;
 
         function formatCurrency(amount) {
             if (!amount) return "$ 0";
@@ -78,11 +94,22 @@
             return num ? parseInt(num, 10) : 0;
         }
 
-        // URL del Webhook de Power Automate (Reemplazar con la URL generada en Power Automate)
-        const WEBHOOK_URL = ""; 
+        // URL del Webhook de Power Automate
+        const WEBHOOK_URL = "https://prod-12.westus.logic.azure.com:443/workflows/tu-codigo-largo-aqui..."; 
 
         function App() {
-            // ESTADO PRINCIPAL
+            // --- ESTADOS DEL PORTAL ---
+            const [activeMenu, setActiveMenu] = React.useState('cotizador');
+            const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
+            const menuItems = [
+                { id: 'inicio', icon: Home, label: 'Inicio' },
+                { id: 'cotizador', icon: Calculator, label: 'Cotizador Cumplimiento' },
+                { id: 'solicitudes', icon: FileText, label: 'Mis Solicitudes' },
+                { id: 'soporte', icon: LifeBuoy, label: 'Centro de Ayuda' },
+            ];
+
+            // --- ESTADOS DEL COTIZADOR ---
             const [consecutivo, setConsecutivo] = React.useState('AEGIS-COT-001');
             
             const [interno, setInterno] = React.useState({ 
@@ -103,7 +130,6 @@
             const [asegurado, setAsegurado] = React.useState({ nombre: '', nit: '' });
             const [contrato, setContrato] = React.useState({ objeto: '', numero: '', valorSinIva: 0, duracion: '' });
             
-            // Costos separados para Cumplimiento y RCE
             const [costos, setCostos] = React.useState({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
             
             const [amparos, setAmparos] = React.useState(
@@ -114,10 +140,9 @@
 
             const [isSubmitting, setIsSubmitting] = React.useState(false);
 
-            // CÁLCULOS DERIVADOS FINANCIEROS
+            // --- CÁLCULOS DERIVADOS ---
             const valorConIva = contrato.valorSinIva * (1 + (costos.tasaIva / 100));
             
-            // Póliza 1: Cumplimiento (Ítems 1 al 8)
             const amparosCumplimiento = amparos.slice(0, 8);
             const tieneCumplimiento = amparosCumplimiento.some(a => a.activo);
             const primaCumplimiento = amparosCumplimiento.reduce((acc, curr) => curr.activo ? acc + curr.prima : acc, 0);
@@ -126,7 +151,6 @@
             const ivaCump = subtotalCump * (costos.tasaIva / 100);
             const totalCump = subtotalCump + ivaCump;
 
-            // Póliza 2: RCE (Ítem 9)
             const amparoRCE = amparos[8];
             const tieneRCE = amparoRCE.activo;
             const primaRCE = tieneRCE ? amparoRCE.prima : 0;
@@ -135,10 +159,8 @@
             const ivaRCE = subtotalRCE * (costos.tasaIva / 100);
             const totalRCE = subtotalRCE + ivaRCE;
 
-            // Gran Total
             const totalGeneral = totalCump + totalRCE;
 
-            // CONSECUTIVO LÓGICA (Basado en Marca de Tiempo Única)
             const generarIdUnico = () => {
                 const d = new Date();
                 const yy = d.getFullYear().toString().slice(-2);
@@ -147,7 +169,6 @@
                 const hh = d.getHours().toString().padStart(2, '0');
                 const min = d.getMinutes().toString().padStart(2, '0');
                 const ss = d.getSeconds().toString().padStart(2, '0');
-                // Formato: SANDOR-COT-YYMMDD-HHMMSS
                 return `SANDOR-COT-${yy}${mm}${dd}-${hh}${min}${ss}`;
             };
 
@@ -156,11 +177,10 @@
             }, []);
 
             const avanzarConsecutivo = () => {
-                // Al enviar o limpiar, genera un nuevo ID único instantáneo
                 setConsecutivo(generarIdUnico());
             };
 
-            // MANEJADORES DE EVENTOS
+            // --- FUNCIONES DEL COTIZADOR ---
             const handleAmparoToggle = (id) => {
                 setAmparos(prev => prev.map(amp => {
                     if (amp.id === id) {
@@ -249,7 +269,6 @@
                 }
             };
 
-            // 1. Exportación local
             const exportarCotizacion = () => {
                 const consecutivoActual = consecutivo;
                 
@@ -311,7 +330,6 @@
                 });
             };
 
-            // 2. Envío a Power Automate
             const getBase64 = (file) => new Promise((resolve, reject) => {
                 const reader = new FileReader();
                 reader.readAsDataURL(file);
@@ -324,7 +342,7 @@
 
             const enviarPowerAutomate = async () => {
                 if (!WEBHOOK_URL) {
-                    alert("Aviso: La URL del Webhook de Power Automate aún no ha sido configurada en el código fuente (Constante WEBHOOK_URL). Por favor siga los pasos del manual para agregarla.");
+                    alert("Aviso: La URL del Webhook de Power Automate aún no ha sido configurada en el código fuente.");
                     return;
                 }
 
@@ -380,336 +398,431 @@
             const sectionClass = "bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6";
 
             return (
-                <div className="min-h-screen pb-20">
-                    {/* HEADER CORPORATIVO */}
-                    <header className="bg-[#163f73] text-white py-6 px-8 shadow-md mb-8">
-                        <div className="w-full flex flex-col md:flex-row justify-between items-center gap-4">
+                <div className="flex h-screen bg-[#f4f7f9] overflow-hidden w-full">
+                    
+                    {/* SIDEBAR (Menú Lateral del Portal) */}
+                    <aside className={`fixed inset-y-0 left-0 bg-[#12334F] w-64 text-white flex flex-col transition-transform duration-300 z-40 md:relative md:translate-x-0 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+                        {/* Logo Area */}
+                        <div className="h-20 flex items-center px-6 border-b border-white/10 bg-[#0e273d] flex-shrink-0">
                             <div className="flex items-center gap-3">
-                                <div className="p-2 bg-white/10 rounded-lg">
-                                    <Shield size={36} className="text-[#58C9E8]" strokeWidth={2.5} />
+                                <div className="p-1.5 bg-gradient-to-br from-[#58C9E8] to-[#163f73] rounded-lg shadow-lg">
+                                    <Shield size={28} className="text-white" strokeWidth={2.5} />
                                 </div>
                                 <div>
-                                    <h1 className="text-2xl font-bold tracking-wide uppercase">AEGIS <span className="font-light">Insurance</span></h1>
-                                    <p className="text-[#58C9E8] text-sm font-medium tracking-widest">PROTECCIÓN & RESPALDO</p>
+                                    <h1 className="text-lg font-bold tracking-wide uppercase leading-tight">AEGIS</h1>
+                                    <p className="text-[#58C9E8] text-[10px] font-medium tracking-widest uppercase">Insurance</p>
                                 </div>
                             </div>
-                            <div className="text-right">
-                                <h2 className="text-xl font-semibold">Cotizador de Cumplimiento</h2>
-                                <p className="text-gray-300">Cliente: <span className="font-bold text-white">Grupo Sandor</span></p>
+                        </div>
+
+                        {/* Navegación */}
+                        <nav className="flex-1 px-4 py-6 space-y-2 overflow-y-auto">
+                            <p className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Menú Principal</p>
+                            
+                            {menuItems.map(item => {
+                                const Icon = item.icon;
+                                const isActive = activeMenu === item.id;
+                                return (
+                                    <button 
+                                        key={item.id}
+                                        onClick={() => { setActiveMenu(item.id); setIsMobileMenuOpen(false); }}
+                                        className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-all text-sm font-medium ${
+                                            isActive 
+                                            ? 'bg-gradient-to-r from-[#163f73] to-[#12334F] border border-[#58C9E8]/30 text-white shadow-md' 
+                                            : 'text-gray-300 hover:bg-white/5 hover:text-white'
+                                        }`}
+                                    >
+                                        <Icon size={18} className={isActive ? 'text-[#58C9E8]' : 'text-gray-400'} />
+                                        {item.label}
+                                    </button>
+                                );
+                            })}
+                        </nav>
+
+                        {/* Área de Usuario */}
+                        <div className="p-4 border-t border-white/10 bg-[#0e273d] flex-shrink-0">
+                            <div className="flex items-center gap-3 px-2">
+                                <div className="w-8 h-8 rounded-full bg-[#58C9E8] flex items-center justify-center text-[#12334F] font-bold text-sm">
+                                    GS
+                                </div>
+                                <div className="text-left flex-1">
+                                    <p className="text-sm font-semibold text-white leading-tight">Grupo Sandor</p>
+                                    <p className="text-xs text-[#58C9E8]">Cliente Corporativo</p>
+                                </div>
                             </div>
                         </div>
-                    </header>
+                    </aside>
 
-                    <main className="w-full px-4 sm:px-6 lg:px-8">
+                    {/* Overlay para móviles */}
+                    {isMobileMenuOpen && (
+                        <div className="fixed inset-0 bg-black/50 z-30 md:hidden" onClick={() => setIsMobileMenuOpen(false)}></div>
+                    )}
+
+                    {/* COLUMNA PRINCIPAL */}
+                    <div className="flex-1 flex flex-col h-screen overflow-hidden">
                         
-                        {/* SECCIÓN 0: DATOS DEL SOLICITANTE */}
-                        <div className={sectionClass}>
-                            <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2">
-                                <User size={20} className="text-[#58C9E8]" /> 0. Datos del solicitante
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                                <div>
-                                    <label className={labelClass}>Nombre de quien diligencia *</label>
-                                    <input type="text" className={inputClass} placeholder="Ej. Juan Pérez (Grupo Sandor)" 
-                                        value={interno.solicitante} onChange={e => setInterno({...interno, solicitante: e.target.value})} />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>Correo electrónico del solicitante *</label>
-                                    <input type="email" className={inputClass} placeholder="Ej. juan@gruposandor.com" 
-                                        value={interno.solicitanteEmail} onChange={e => setInterno({...interno, solicitanteEmail: e.target.value})} />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>Asunto de Solicitud *</label>
-                                    <input type="text" className={inputClass} placeholder="Ej. Emisión Póliza Cumplimiento Contrato 123" 
-                                        value={interno.asunto} onChange={e => setInterno({...interno, asunto: e.target.value})} />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>Consecutivo Interno</label>
-                                    <input type="text" className={`${inputClass} bg-[#e8f7fb] text-[#163f73] font-bold cursor-not-allowed`} disabled value={consecutivo} />
-                                </div>
+                        {/* Topbar del Portal */}
+                        <header className="h-20 bg-white shadow-sm border-b border-gray-200 flex items-center justify-between px-4 sm:px-8 z-10 flex-shrink-0">
+                            <div className="flex items-center gap-4">
+                                <button className="md:hidden text-gray-500 hover:text-[#163f73] p-1" onClick={() => setIsMobileMenuOpen(true)}>
+                                    <MenuIcon size={26} />
+                                </button>
+                                <h2 className="text-xl font-bold text-[#163f73] hidden sm:block">Portal de Servicios AEGIS</h2>
                             </div>
 
-                            <div className="mb-4">
-                                <label className={labelClass}>Tipo de Solicitud</label>
-                                <div className="flex flex-wrap gap-4 mt-2">
-                                    <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                                        <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.garantiaUnica} onChange={() => handleCheckboxTipos('garantiaUnica')} />
-                                        Garantía Única
-                                    </label>
-                                    <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                                        <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.cumplimientoParticulares} onChange={() => handleCheckboxTipos('cumplimientoParticulares')} />
-                                        Cumplimiento Particulares
-                                    </label>
-                                    <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                                        <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.cumplimientoEstatales} onChange={() => handleCheckboxTipos('cumplimientoEstatales')} />
-                                        Cumplimiento Estatales
-                                    </label>
-                                    <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                                        <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.disposicionLegal} onChange={() => handleCheckboxTipos('disposicionLegal')} />
-                                        Disposición Legal
-                                    </label>
-                                    <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                                        <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.otros} onChange={() => handleCheckboxTipos('otros')} />
-                                        Otros
-                                    </label>
-                                </div>
+                            <div className="flex items-center gap-4">
+                                <span className="text-sm text-gray-500 font-medium hidden md:block">
+                                    {new Date().toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                </span>
+                                <div className="w-px h-6 bg-gray-300 hidden md:block"></div>
+                                <button className="relative p-2 text-gray-400 hover:text-[#163f73] transition-colors rounded-full hover:bg-gray-100">
+                                    <Bell size={20} />
+                                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                                </button>
                             </div>
+                        </header>
 
-                            <div className="bg-[#e8f7fb]/30 p-4 rounded-lg border border-[#e8f7fb]">
-                                <label className={labelClass}>Adjuntar Documentos Soporte (Pliegos, Contratos, etc.)</label>
-                                <div className="mt-2 flex items-center gap-3">
-                                    <label className="cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
-                                        <Paperclip size={16} className="text-gray-500" />
-                                        Seleccionar Archivos
-                                        <input id="file-upload" type="file" multiple className="sr-only" onChange={handleFileChange} />
-                                    </label>
-                                    <span className="text-sm text-gray-500">
-                                        {interno.archivos.length === 0 ? "Ningún archivo seleccionado" : `${interno.archivos.length} archivo(s) listos para enviar.`}
-                                    </span>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* SECCIÓN 1: TOMADOR */}
-                        <div className={sectionClass}>
-                            <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2">
-                                <Building size={20} className="text-[#58C9E8]" /> 1. Tomador / Afianzado
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="md:col-span-2">
-                                    <label className={labelClass}>Razón Social / Nombre *</label>
-                                    <input type="text" className={inputClass} value={tomador.nombre} onChange={e => setTomador({...tomador, nombre: e.target.value})} />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>NIT *</label>
-                                    <input type="text" className={inputClass} value={tomador.nit} onChange={e => setTomador({...tomador, nit: e.target.value})} />
-                                </div>
-                                <div className="md:col-span-3">
-                                    <label className={labelClass}>Dirección</label>
-                                    <input type="text" className={inputClass} value={tomador.direccion} onChange={e => setTomador({...tomador, direccion: e.target.value})} />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>Teléfono</label>
-                                    <input type="text" className={inputClass} value={tomador.telefono} onChange={e => setTomador({...tomador, telefono: e.target.value})} />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>Celular</label>
-                                    <input type="text" className={inputClass} value={tomador.celular} onChange={e => setTomador({...tomador, celular: e.target.value})} />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>E-mail *</label>
-                                    <input type="email" className={inputClass} value={tomador.email} onChange={e => setTomador({...tomador, email: e.target.value})} />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* SECCIÓN 2: BENEFICIARIO */}
-                        <div className={sectionClass}>
-                            <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2">
-                                <Shield size={20} className="text-[#58C9E8]" /> 2. Asegurado / Beneficiario
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                <div className="md:col-span-2">
-                                    <label className={labelClass}>Razón Social / Nombre *</label>
-                                    <input type="text" className={inputClass} value={asegurado.nombre} onChange={e => setAsegurado({...asegurado, nombre: e.target.value})} />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>NIT *</label>
-                                    <input type="text" className={inputClass} value={asegurado.nit} onChange={e => setAsegurado({...asegurado, nit: e.target.value})} />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* SECCIÓN 3: CONTRATO */}
-                        <div className={sectionClass}>
-                            <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2">
-                                <FileText size={20} className="text-[#58C9E8]" /> 3. Datos del Contrato
-                            </h3>
-                            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                <div className="md:col-span-4 relative">
-                                    <label className={labelClass}>Objeto del Contrato *</label>
-                                    <textarea rows="3" maxLength="1000" className={inputClass} value={contrato.objeto} onChange={e => setContrato({...contrato, objeto: e.target.value})}></textarea>
-                                    <span className="absolute bottom-2 right-3 text-xs text-gray-400 font-medium">{contrato.objeto.length}/1000</span>
-                                </div>
-                                <div>
-                                    <label className={labelClass}>Número Contrato</label>
-                                    <input type="text" className={inputClass} value={contrato.numero} onChange={e => setContrato({...contrato, numero: e.target.value})} />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>Valor SIN IVA *</label>
-                                    <input type="text" className={inputClass} value={contrato.valorSinIva === 0 ? '' : contrato.valorSinIva.toLocaleString('es-CO')} 
-                                        onChange={e => setContrato({...contrato, valorSinIva: parseCurrency(e.target.value)})} placeholder="Ej. 10,000,000" />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>Valor CON IVA</label>
-                                    <input type="text" className={`${inputClass} bg-[#e8f7fb] text-[#163f73] font-semibold`} disabled value={formatCurrency(valorConIva)} />
-                                </div>
-                                <div>
-                                    <label className={labelClass}>Duración (Días)</label>
-                                    <input type="number" className={inputClass} value={contrato.duracion} onChange={e => setContrato({...contrato, duracion: e.target.value})} />
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* SECCIÓN 4: AMPAROS */}
-                        <div className={sectionClass}>
-                            <h3 className="text-lg font-bold text-[#163f73] mb-2 flex items-center gap-2 border-b border-gray-100 pb-2">
-                                <Calculator size={20} className="text-[#58C9E8]" /> 4. Amparos y Garantías
-                            </h3>
-                            <p className="text-sm text-gray-500 mb-4">Marque los amparos, asigne valores y las primas se calcularán automáticamente.</p>
+                        {/* ÁREA DE CONTENIDO (Scrollable) */}
+                        <main className="flex-1 overflow-y-auto bg-[#f4f7f9] relative w-full">
                             
-                            <div className="overflow-x-auto">
-                                <table className="w-full text-left min-w-[900px]">
-                                    <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
-                                        <tr>
-                                            <th className="px-4 py-3 font-semibold rounded-tl-lg">Amparo</th>
-                                            <th className="px-4 py-3 font-semibold w-32">Desde</th>
-                                            <th className="px-4 py-3 font-semibold w-32">Hasta</th>
-                                            <th className="px-2 py-3 font-semibold text-center w-16">Días</th>
-                                            <th className="px-4 py-3 font-semibold w-40 text-right">Valor Asegurado</th>
-                                            <th className="px-2 py-3 font-semibold text-center w-24">Tasa %</th>
-                                            <th className="px-4 py-3 font-semibold w-32 text-right rounded-tr-lg">Prima</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-gray-100">
-                                        {amparos.map(amp => (
-                                            <tr key={amp.id} className={amp.activo ? "bg-blue-50/30 transition-colors" : "transition-colors hover:bg-gray-50/50"}>
-                                                <td className="px-4 py-3">
-                                                    <label className="flex items-center gap-3 cursor-pointer">
-                                                        <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded border-gray-300 focus:ring-[#58C9E8]" 
-                                                            checked={amp.activo} onChange={() => handleAmparoToggle(amp.id)} />
-                                                        <span className={`text-sm font-medium ${amp.activo ? 'text-[#163f73]' : 'text-gray-600'}`}>
-                                                            {amp.nombre}
-                                                        </span>
-                                                    </label>
-                                                </td>
-                                                <td className="px-2 py-3">
-                                                    <input type="date" className="w-full p-1.5 text-xs border rounded bg-white disabled:bg-gray-100 disabled:text-gray-400" 
-                                                        disabled={!amp.activo} value={amp.desde} onChange={e => handleAmparoField(amp.id, 'desde', e.target.value)} />
-                                                </td>
-                                                <td className="px-2 py-3">
-                                                    <input type="date" className="w-full p-1.5 text-xs border rounded bg-white disabled:bg-gray-100 disabled:text-gray-400" 
-                                                        disabled={!amp.activo} value={amp.hasta} onChange={e => handleAmparoField(amp.id, 'hasta', e.target.value)} />
-                                                </td>
-                                                <td className="px-2 py-3 text-center">
-                                                    <span className={`text-sm font-bold ${amp.activo && amp.dias > 0 ? 'text-[#12334F]' : 'text-gray-400'}`}>{amp.dias || '-'}</span>
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <input type="text" className="w-full p-1.5 text-sm text-right font-semibold border rounded bg-white disabled:bg-gray-100 focus:ring-1 focus:ring-[#58C9E8] outline-none" 
-                                                        disabled={!amp.activo} 
-                                                        value={amp.valorAsegurado === 0 ? '' : amp.valorAsegurado.toLocaleString('es-CO')} 
-                                                        onChange={e => handleAmparoField(amp.id, 'valorAsegurado', parseCurrency(e.target.value))} placeholder="$ 0" />
-                                                </td>
-                                                <td className="px-2 py-3">
-                                                    <input type="text" className={`w-full p-1.5 text-xs text-center border rounded font-medium cursor-not-allowed ${amp.activo ? 'bg-gray-100 text-gray-700' : 'bg-gray-50 text-gray-400'}`} 
-                                                        disabled value={amp.tasa} />
-                                                </td>
-                                                <td className="px-4 py-3 text-right">
-                                                    <span className={`text-sm font-bold ${amp.activo && amp.prima > 0 ? 'text-[#163f73]' : 'text-gray-400'}`}>
-                                                        {formatCurrency(amp.prima)}
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-
-                        {/* SECCIÓN 5: RESUMEN FINANCIERO Y ACCIONES */}
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            
-                            {/* Ajustes Extra */}
-                            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 h-fit">
-                                <h3 className="text-md font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">Ajustes Adicionales</h3>
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className={labelClass}>Gastos de Expedición (Cumplimiento)</label>
-                                        <input type="text" className={inputClass} 
-                                            value={costos.gastosCump === 0 ? '' : costos.gastosCump.toLocaleString('es-CO')} 
-                                            onChange={e => setCostos({...costos, gastosCump: parseCurrency(e.target.value)})} />
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Gastos de Expedición (RCE)</label>
-                                        <input type="text" className={inputClass} 
-                                            value={costos.gastosRCE === 0 ? '' : costos.gastosRCE.toLocaleString('es-CO')} 
-                                            onChange={e => setCostos({...costos, gastosRCE: parseCurrency(e.target.value)})} />
-                                    </div>
-                                    <div>
-                                        <label className={labelClass}>Tasa IVA (%) General</label>
-                                        <input type="number" className={`${inputClass} bg-gray-100 text-gray-500 font-semibold cursor-not-allowed`} value={costos.tasaIva} disabled />
-                                    </div>
-                                </div>
-                            </div>
-
-                            {/* Tarjeta de Total Liquidación Final (Dividida) */}
-                            <div className="bg-[#12334F] rounded-xl p-6 shadow-lg border border-[#163f73] text-white flex flex-col gap-4">
-                                <h3 className="text-md font-bold text-[#58C9E8] uppercase tracking-wider border-b border-[#163f73] pb-2">Liquidación Final</h3>
-                                
-                                {/* Bloque Cumplimiento */}
-                                <div className="bg-[#163f73] rounded-lg p-4 shadow-sm">
-                                    <h4 className="font-bold text-white mb-2 border-b border-[#12334F] pb-1">Póliza de Cumplimiento</h4>
-                                    <div className="space-y-1 text-sm text-gray-300">
-                                        <div className="flex justify-between"><span>Prima:</span> <span>{formatCurrency(primaCumplimiento)}</span></div>
-                                        <div className="flex justify-between"><span>Gastos de Expedición:</span> <span>{formatCurrency(gastosCalculadosCump)}</span></div>
-                                        <div className="flex justify-between"><span>IVA ({costos.tasaIva}%):</span> <span>{formatCurrency(ivaCump)}</span></div>
-                                        <div className="flex justify-between font-bold text-[#58C9E8] pt-1 border-t border-[#12334F] mt-1">
-                                            <span>Total Cumplimiento:</span> <span>{formatCurrency(totalCump)}</span>
+                            {/* VISTA 1: COTIZADOR */}
+                            <div className={activeMenu === 'cotizador' ? 'block pb-20' : 'hidden'}>
+                                {/* Header Interno del Cotizador */}
+                                <div className="bg-[#163f73] text-white py-6 px-8 shadow-sm mb-8 md:m-4 md:rounded-xl">
+                                    <div className="w-full flex flex-col md:flex-row justify-between items-center gap-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="p-2 bg-white/10 rounded-lg">
+                                                <Calculator size={32} className="text-[#58C9E8]" strokeWidth={2} />
+                                            </div>
+                                            <div>
+                                                <h1 className="text-2xl font-bold tracking-wide">Módulo de Cotización</h1>
+                                                <p className="text-[#58C9E8] text-sm font-medium">CUMPLIMIENTO & RCE</p>
+                                            </div>
+                                        </div>
+                                        <div className="text-right hidden md:block">
+                                            <p className="text-gray-300 text-sm">Operación Exclusiva</p>
+                                            <p className="font-bold text-white">Grupo Sandor</p>
                                         </div>
                                     </div>
                                 </div>
 
-                                {/* Bloque RCE */}
-                                <div className="bg-[#163f73] rounded-lg p-4 shadow-sm">
-                                    <h4 className="font-bold text-white mb-2 border-b border-[#12334F] pb-1">Póliza de Responsabilidad Civil (RCE)</h4>
-                                    <div className="space-y-1 text-sm text-gray-300">
-                                        <div className="flex justify-between"><span>Prima:</span> <span>{formatCurrency(primaRCE)}</span></div>
-                                        <div className="flex justify-between"><span>Gastos de Expedición:</span> <span>{formatCurrency(gastosCalculadosRCE)}</span></div>
-                                        <div className="flex justify-between"><span>IVA ({costos.tasaIva}%):</span> <span>{formatCurrency(ivaRCE)}</span></div>
-                                        <div className="flex justify-between font-bold text-[#58C9E8] pt-1 border-t border-[#12334F] mt-1">
-                                            <span>Total RCE:</span> <span>{formatCurrency(totalRCE)}</span>
+                                <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto">
+                                    
+                                    {/* SECCIÓN 0: DATOS DEL SOLICITANTE */}
+                                    <div className={sectionClass}>
+                                        <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2">
+                                            <User size={20} className="text-[#58C9E8]" /> 0. Datos del solicitante
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                            <div>
+                                                <label className={labelClass}>Nombre de quien diligencia *</label>
+                                                <input type="text" className={inputClass} placeholder="Ej. Juan Pérez (Grupo Sandor)" 
+                                                    value={interno.solicitante} onChange={e => setInterno({...interno, solicitante: e.target.value})} />
+                                            </div>
+                                            <div>
+                                                <label className={labelClass}>Correo electrónico del solicitante *</label>
+                                                <input type="email" className={inputClass} placeholder="Ej. juan@gruposandor.com" 
+                                                    value={interno.solicitanteEmail} onChange={e => setInterno({...interno, solicitanteEmail: e.target.value})} />
+                                            </div>
+                                            <div>
+                                                <label className={labelClass}>Asunto de Solicitud *</label>
+                                                <input type="text" className={inputClass} placeholder="Ej. Emisión Póliza Cumplimiento Contrato 123" 
+                                                    value={interno.asunto} onChange={e => setInterno({...interno, asunto: e.target.value})} />
+                                            </div>
+                                            <div>
+                                                <label className={labelClass}>Consecutivo Interno</label>
+                                                <input type="text" className={`${inputClass} bg-[#e8f7fb] text-[#163f73] font-bold cursor-not-allowed`} disabled value={consecutivo} />
+                                            </div>
+                                        </div>
+
+                                        <div className="mb-4">
+                                            <label className={labelClass}>Tipo de Solicitud</label>
+                                            <div className="flex flex-wrap gap-4 mt-2">
+                                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                                    <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.garantiaUnica} onChange={() => handleCheckboxTipos('garantiaUnica')} />
+                                                    Garantía Única
+                                                </label>
+                                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                                    <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.cumplimientoParticulares} onChange={() => handleCheckboxTipos('cumplimientoParticulares')} />
+                                                    Cumplimiento Particulares
+                                                </label>
+                                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                                    <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.cumplimientoEstatales} onChange={() => handleCheckboxTipos('cumplimientoEstatales')} />
+                                                    Cumplimiento Estatales
+                                                </label>
+                                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                                    <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.disposicionLegal} onChange={() => handleCheckboxTipos('disposicionLegal')} />
+                                                    Disposición Legal
+                                                </label>
+                                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                                    <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.otros} onChange={() => handleCheckboxTipos('otros')} />
+                                                    Otros
+                                                </label>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-[#e8f7fb]/30 p-4 rounded-lg border border-[#e8f7fb]">
+                                            <label className={labelClass}>Adjuntar Documentos Soporte (Pliegos, Contratos, etc.)</label>
+                                            <div className="mt-2 flex items-center gap-3">
+                                                <label className="cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 flex items-center gap-2">
+                                                    <Paperclip size={16} className="text-gray-500" />
+                                                    Seleccionar Archivos
+                                                    <input id="file-upload" type="file" multiple className="sr-only" onChange={handleFileChange} />
+                                                </label>
+                                                <span className="text-sm text-gray-500">
+                                                    {interno.archivos.length === 0 ? "Ningún archivo seleccionado" : `${interno.archivos.length} archivo(s) listos para enviar.`}
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Gran Total */}
-                                <div className="bg-[#58C9E8] rounded-lg p-4 text-[#12334F] mt-2 shadow-sm">
-                                    <div className="flex justify-between items-center">
-                                        <span className="text-lg font-bold uppercase tracking-wide">Total Dos Pólizas:</span>
-                                        <span className="text-2xl font-black">{formatCurrency(totalGeneral)}</span>
+                                    {/* SECCIÓN 1: TOMADOR */}
+                                    <div className={sectionClass}>
+                                        <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2">
+                                            <Building size={20} className="text-[#58C9E8]" /> 1. Tomador / Afianzado
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="md:col-span-2">
+                                                <label className={labelClass}>Razón Social / Nombre *</label>
+                                                <input type="text" className={inputClass} value={tomador.nombre} onChange={e => setTomador({...tomador, nombre: e.target.value})} />
+                                            </div>
+                                            <div>
+                                                <label className={labelClass}>NIT *</label>
+                                                <input type="text" className={inputClass} value={tomador.nit} onChange={e => setTomador({...tomador, nit: e.target.value})} />
+                                            </div>
+                                            <div className="md:col-span-3">
+                                                <label className={labelClass}>Dirección</label>
+                                                <input type="text" className={inputClass} value={tomador.direccion} onChange={e => setTomador({...tomador, direccion: e.target.value})} />
+                                            </div>
+                                            <div>
+                                                <label className={labelClass}>Teléfono</label>
+                                                <input type="text" className={inputClass} value={tomador.telefono} onChange={e => setTomador({...tomador, telefono: e.target.value})} />
+                                            </div>
+                                            <div>
+                                                <label className={labelClass}>Celular</label>
+                                                <input type="text" className={inputClass} value={tomador.celular} onChange={e => setTomador({...tomador, celular: e.target.value})} />
+                                            </div>
+                                            <div>
+                                                <label className={labelClass}>E-mail *</label>
+                                                <input type="email" className={inputClass} value={tomador.email} onChange={e => setTomador({...tomador, email: e.target.value})} />
+                                            </div>
+                                        </div>
                                     </div>
+
+                                    {/* SECCIÓN 2: BENEFICIARIO */}
+                                    <div className={sectionClass}>
+                                        <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2">
+                                            <Shield size={20} className="text-[#58C9E8]" /> 2. Asegurado / Beneficiario
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div className="md:col-span-2">
+                                                <label className={labelClass}>Razón Social / Nombre *</label>
+                                                <input type="text" className={inputClass} value={asegurado.nombre} onChange={e => setAsegurado({...asegurado, nombre: e.target.value})} />
+                                            </div>
+                                            <div>
+                                                <label className={labelClass}>NIT *</label>
+                                                <input type="text" className={inputClass} value={asegurado.nit} onChange={e => setAsegurado({...asegurado, nit: e.target.value})} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* SECCIÓN 3: CONTRATO */}
+                                    <div className={sectionClass}>
+                                        <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2">
+                                            <FileText size={20} className="text-[#58C9E8]" /> 3. Datos del Contrato
+                                        </h3>
+                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                                            <div className="md:col-span-4 relative">
+                                                <label className={labelClass}>Objeto del Contrato *</label>
+                                                <textarea rows="3" maxLength="1000" className={inputClass} value={contrato.objeto} onChange={e => setContrato({...contrato, objeto: e.target.value})}></textarea>
+                                                <span className="absolute bottom-2 right-3 text-xs text-gray-400 font-medium">{contrato.objeto.length}/1000</span>
+                                            </div>
+                                            <div>
+                                                <label className={labelClass}>Número Contrato</label>
+                                                <input type="text" className={inputClass} value={contrato.numero} onChange={e => setContrato({...contrato, numero: e.target.value})} />
+                                            </div>
+                                            <div>
+                                                <label className={labelClass}>Valor SIN IVA *</label>
+                                                <input type="text" className={inputClass} value={contrato.valorSinIva === 0 ? '' : contrato.valorSinIva.toLocaleString('es-CO')} 
+                                                    onChange={e => setContrato({...contrato, valorSinIva: parseCurrency(e.target.value)})} placeholder="Ej. 10,000,000" />
+                                            </div>
+                                            <div>
+                                                <label className={labelClass}>Valor CON IVA</label>
+                                                <input type="text" className={`${inputClass} bg-[#e8f7fb] text-[#163f73] font-semibold`} disabled value={formatCurrency(valorConIva)} />
+                                            </div>
+                                            <div>
+                                                <label className={labelClass}>Duración (Días)</label>
+                                                <input type="number" className={inputClass} value={contrato.duracion} onChange={e => setContrato({...contrato, duracion: e.target.value})} />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* SECCIÓN 4: AMPAROS */}
+                                    <div className={sectionClass}>
+                                        <h3 className="text-lg font-bold text-[#163f73] mb-2 flex items-center gap-2 border-b border-gray-100 pb-2">
+                                            <Calculator size={20} className="text-[#58C9E8]" /> 4. Amparos y Garantías
+                                        </h3>
+                                        <p className="text-sm text-gray-500 mb-4">Marque los amparos, asigne valores y las primas se calcularán automáticamente.</p>
+                                        
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left min-w-[900px]">
+                                                <thead className="bg-gray-50 text-xs uppercase tracking-wider text-gray-500">
+                                                    <tr>
+                                                        <th className="px-4 py-3 font-semibold rounded-tl-lg">Amparo</th>
+                                                        <th className="px-4 py-3 font-semibold w-32">Desde</th>
+                                                        <th className="px-4 py-3 font-semibold w-32">Hasta</th>
+                                                        <th className="px-2 py-3 font-semibold text-center w-16">Días</th>
+                                                        <th className="px-4 py-3 font-semibold w-40 text-right">Valor Asegurado</th>
+                                                        <th className="px-2 py-3 font-semibold text-center w-24">Tasa %</th>
+                                                        <th className="px-4 py-3 font-semibold w-32 text-right rounded-tr-lg">Prima</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-100">
+                                                    {amparos.map(amp => (
+                                                        <tr key={amp.id} className={amp.activo ? "bg-blue-50/30 transition-colors" : "transition-colors hover:bg-gray-50/50"}>
+                                                            <td className="px-4 py-3">
+                                                                <label className="flex items-center gap-3 cursor-pointer">
+                                                                    <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded border-gray-300 focus:ring-[#58C9E8]" 
+                                                                        checked={amp.activo} onChange={() => handleAmparoToggle(amp.id)} />
+                                                                    <span className={`text-sm font-medium ${amp.activo ? 'text-[#163f73]' : 'text-gray-600'}`}>
+                                                                        {amp.nombre}
+                                                                    </span>
+                                                                </label>
+                                                            </td>
+                                                            <td className="px-2 py-3">
+                                                                <input type="date" className="w-full p-1.5 text-xs border rounded bg-white disabled:bg-gray-100 disabled:text-gray-400" 
+                                                                    disabled={!amp.activo} value={amp.desde} onChange={e => handleAmparoField(amp.id, 'desde', e.target.value)} />
+                                                            </td>
+                                                            <td className="px-2 py-3">
+                                                                <input type="date" className="w-full p-1.5 text-xs border rounded bg-white disabled:bg-gray-100 disabled:text-gray-400" 
+                                                                    disabled={!amp.activo} value={amp.hasta} onChange={e => handleAmparoField(amp.id, 'hasta', e.target.value)} />
+                                                            </td>
+                                                            <td className="px-2 py-3 text-center">
+                                                                <span className={`text-sm font-bold ${amp.activo && amp.dias > 0 ? 'text-[#12334F]' : 'text-gray-400'}`}>{amp.dias || '-'}</span>
+                                                            </td>
+                                                            <td className="px-4 py-3">
+                                                                <input type="text" className="w-full p-1.5 text-sm text-right font-semibold border rounded bg-white disabled:bg-gray-100 focus:ring-1 focus:ring-[#58C9E8] outline-none" 
+                                                                    disabled={!amp.activo} 
+                                                                    value={amp.valorAsegurado === 0 ? '' : amp.valorAsegurado.toLocaleString('es-CO')} 
+                                                                    onChange={e => handleAmparoField(amp.id, 'valorAsegurado', parseCurrency(e.target.value))} placeholder="$ 0" />
+                                                            </td>
+                                                            <td className="px-2 py-3">
+                                                                <input type="text" className={`w-full p-1.5 text-xs text-center border rounded font-medium cursor-not-allowed ${amp.activo ? 'bg-gray-100 text-gray-700' : 'bg-gray-50 text-gray-400'}`} 
+                                                                    disabled value={amp.tasa} />
+                                                            </td>
+                                                            <td className="px-4 py-3 text-right">
+                                                                <span className={`text-sm font-bold ${amp.activo && amp.prima > 0 ? 'text-[#163f73]' : 'text-gray-400'}`}>
+                                                                    {formatCurrency(amp.prima)}
+                                                                </span>
+                                                            </td>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    {/* SECCIÓN 5: RESUMEN FINANCIERO Y ACCIONES */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                        
+                                        {/* Ajustes Extra */}
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 h-fit">
+                                            <h3 className="text-md font-bold text-gray-500 uppercase tracking-wider mb-4 border-b border-gray-100 pb-2">Ajustes Adicionales</h3>
+                                            <div className="space-y-4">
+                                                <div>
+                                                    <label className={labelClass}>Gastos de Expedición (Cumplimiento)</label>
+                                                    <input type="text" className={inputClass} 
+                                                        value={costos.gastosCump === 0 ? '' : costos.gastosCump.toLocaleString('es-CO')} 
+                                                        onChange={e => setCostos({...costos, gastosCump: parseCurrency(e.target.value)})} />
+                                                </div>
+                                                <div>
+                                                    <label className={labelClass}>Gastos de Expedición (RCE)</label>
+                                                    <input type="text" className={inputClass} 
+                                                        value={costos.gastosRCE === 0 ? '' : costos.gastosRCE.toLocaleString('es-CO')} 
+                                                        onChange={e => setCostos({...costos, gastosRCE: parseCurrency(e.target.value)})} />
+                                                </div>
+                                                <div>
+                                                    <label className={labelClass}>Tasa IVA (%) General</label>
+                                                    <input type="number" className={`${inputClass} bg-gray-100 text-gray-500 font-semibold cursor-not-allowed`} value={costos.tasaIva} disabled />
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        {/* Tarjeta de Total Liquidación Final (Dividida) */}
+                                        <div className="bg-[#12334F] rounded-xl p-6 shadow-lg border border-[#163f73] text-white flex flex-col gap-4">
+                                            <h3 className="text-md font-bold text-[#58C9E8] uppercase tracking-wider border-b border-[#163f73] pb-2">Liquidación Final</h3>
+                                            
+                                            {/* Bloque Cumplimiento */}
+                                            <div className="bg-[#163f73] rounded-lg p-4 shadow-sm">
+                                                <h4 className="font-bold text-white mb-2 border-b border-[#12334F] pb-1">Póliza de Cumplimiento</h4>
+                                                <div className="space-y-1 text-sm text-gray-300">
+                                                    <div className="flex justify-between"><span>Prima:</span> <span>{formatCurrency(primaCumplimiento)}</span></div>
+                                                    <div className="flex justify-between"><span>Gastos de Expedición:</span> <span>{formatCurrency(gastosCalculadosCump)}</span></div>
+                                                    <div className="flex justify-between"><span>IVA ({costos.tasaIva}%):</span> <span>{formatCurrency(ivaCump)}</span></div>
+                                                    <div className="flex justify-between font-bold text-[#58C9E8] pt-1 border-t border-[#12334F] mt-1">
+                                                        <span>Total Cumplimiento:</span> <span>{formatCurrency(totalCump)}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Bloque RCE */}
+                                            <div className="bg-[#163f73] rounded-lg p-4 shadow-sm">
+                                                <h4 className="font-bold text-white mb-2 border-b border-[#12334F] pb-1">Póliza de Responsabilidad Civil (RCE)</h4>
+                                                <div className="space-y-1 text-sm text-gray-300">
+                                                    <div className="flex justify-between"><span>Prima:</span> <span>{formatCurrency(primaRCE)}</span></div>
+                                                    <div className="flex justify-between"><span>Gastos de Expedición:</span> <span>{formatCurrency(gastosCalculadosRCE)}</span></div>
+                                                    <div className="flex justify-between"><span>IVA ({costos.tasaIva}%):</span> <span>{formatCurrency(ivaRCE)}</span></div>
+                                                    <div className="flex justify-between font-bold text-[#58C9E8] pt-1 border-t border-[#12334F] mt-1">
+                                                        <span>Total RCE:</span> <span>{formatCurrency(totalRCE)}</span>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            {/* Gran Total */}
+                                            <div className="bg-[#58C9E8] rounded-lg p-4 text-[#12334F] mt-2 shadow-sm">
+                                                <div className="flex justify-between items-center">
+                                                    <span className="text-lg font-bold uppercase tracking-wide">Total Dos Pólizas:</span>
+                                                    <span className="text-2xl font-black">{formatCurrency(totalGeneral)}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                    {/* BARRA DE ACCIONES FLOTANTE */}
+                                    <div className="mt-8 flex flex-wrap justify-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
+                                        <button onClick={limpiarFormulario} className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors border border-red-200" disabled={isSubmitting}>
+                                            <Trash2 size={18} /> Limpiar Datos
+                                        </button>
+                                        <button onClick={exportarCotizacion} className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-[#12334F] bg-gray-100 hover:bg-gray-200 transition-colors border border-gray-300" disabled={isSubmitting}>
+                                            <Save size={18} /> Resumen + Excel
+                                        </button>
+                                        <button onClick={() => window.print()} className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-[#12334F] bg-[#e8f7fb] hover:bg-[#d0f0fa] transition-colors border border-[#58C9E8]" disabled={isSubmitting}>
+                                            <Printer size={18} /> Imprimir / PDF
+                                        </button>
+                                        <button onClick={enviarPowerAutomate} className="flex items-center gap-2 px-8 py-3 rounded-lg font-bold text-white bg-[#163f73] hover:bg-[#12334F] transition-colors shadow-md disabled:opacity-50" disabled={isSubmitting}>
+                                            {isSubmitting ? (
+                                                <span className="flex items-center gap-2"><svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Enviando...</span>
+                                            ) : (
+                                                <><Send size={18} /> Enviar Solicitud a AEGIS</>
+                                            )}
+                                        </button>
+                                    </div>
+
                                 </div>
                             </div>
 
-                        </div>
+                            {/* VISTA 2: MÓDULOS EN CONSTRUCCIÓN (Inicio, Solicitudes, Soporte) */}
+                            <div className={activeMenu !== 'cotizador' ? 'flex h-full items-center justify-center p-6' : 'hidden'}>
+                                <div className="bg-white rounded-xl border border-gray-200 border-dashed w-full max-w-2xl p-12 text-center shadow-sm">
+                                    <Shield size={64} className="mx-auto text-[#58C9E8] mb-4 opacity-50" />
+                                    <h2 className="text-2xl font-bold text-[#163f73]">Módulo en construcción</h2>
+                                    <p className="text-gray-500 mt-2">Esta sección ({menuItems.find(m => m.id === activeMenu)?.label}) estará disponible próximamente en su portal.</p>
+                                </div>
+                            </div>
 
-                        {/* BARRA DE ACCIONES FLOTANTE */}
-                        <div className="mt-8 flex flex-wrap justify-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                            <button onClick={limpiarFormulario} className="flex items-center gap-2 px-6 py-3 rounded-lg font-medium text-red-600 bg-red-50 hover:bg-red-100 transition-colors border border-red-200" disabled={isSubmitting}>
-                                <Trash2 size={18} /> Limpiar Datos
-                            </button>
-                            <button onClick={exportarCotizacion} className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-[#12334F] bg-gray-100 hover:bg-gray-200 transition-colors border border-gray-300" disabled={isSubmitting}>
-                                <Save size={18} /> Resumen + Excel
-                            </button>
-                            <button onClick={() => window.print()} className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-[#12334F] bg-[#e8f7fb] hover:bg-[#d0f0fa] transition-colors border border-[#58C9E8]" disabled={isSubmitting}>
-                                <Printer size={18} /> Imprimir / PDF
-                            </button>
-                            {/* BOTON ENVÍO POWER AUTOMATE */}
-                            <button onClick={enviarPowerAutomate} className="flex items-center gap-2 px-8 py-3 rounded-lg font-bold text-white bg-[#163f73] hover:bg-[#12334F] transition-colors shadow-md disabled:opacity-50" disabled={isSubmitting}>
-                                {isSubmitting ? (
-                                    <span className="flex items-center gap-2"><svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Enviando...</span>
-                                ) : (
-                                    <><Send size={18} /> Enviar Solicitud a AEGIS</>
-                                )}
-                            </button>
-                        </div>
-
-                    </main>
-
-                    <footer className="mt-12 text-center text-sm text-gray-400">
-                        <p>&copy; {new Date().getFullYear()} AEGIS Insurance. Todos los derechos reservados.</p>
-                        <p className="mt-1">Herramienta de cotización de uso interno para la gestión de Grupo Sandor.</p>
-                    </footer>
+                        </main>
+                    </div>
                 </div>
             );
         }
