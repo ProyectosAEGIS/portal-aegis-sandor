@@ -99,8 +99,8 @@
             return num ? parseInt(num, 10) : 0;
         }
 
-        // URL del Webhook de Power Automate
-        const WEBHOOK_URL = "https://prod-12.westus.logic.azure.com:443/workflows/tu-codigo-largo-aqui..."; 
+        // URL del Webhook (Apto para Make.com, Zapier, u otras alternativas)
+        const WEBHOOK_URL = ""; // https://hook.us2.make.com/e9st4445ub66eq1fyj2sqtqj67k3fslg
 
         function App() {
             // --- ESTADOS DEL PORTAL ---
@@ -345,9 +345,10 @@
                 reader.onerror = error => reject(error);
             });
 
-            const enviarPowerAutomate = async () => {
+            // Función genérica para enviar datos al Webhook configurado
+            const enviarSolicitudWebhook = async () => {
                 if (!WEBHOOK_URL) {
-                    alert("Aviso: La URL del Webhook de Power Automate aún no ha sido configurada en el código fuente.");
+                    alert("Aviso: La URL del Webhook (Make.com u otro) aún no ha sido configurada en el código fuente.");
                     return;
                 }
 
@@ -384,8 +385,9 @@
                     });
 
                     if (response.ok) {
-                        alert("✅ ¡Solicitud enviada exitosamente al Director de Cumplimiento de AEGIS!");
+                        alert("✅ ¡Solicitud enviada exitosamente al equipo de AEGIS!");
                         avanzarConsecutivo();
+                        limpiarFormulario();
                     } else {
                         throw new Error("Error en la respuesta del servidor");
                     }
@@ -805,7 +807,7 @@
                                         <button onClick={() => window.print()} className="flex items-center gap-2 px-6 py-3 rounded-lg font-bold text-[#12334F] bg-[#e8f7fb] hover:bg-[#d0f0fa] transition-colors border border-[#58C9E8]" disabled={isSubmitting}>
                                             <Printer size={18} /> Imprimir / PDF
                                         </button>
-                                        <button onClick={enviarPowerAutomate} className="flex items-center gap-2 px-8 py-3 rounded-lg font-bold text-white bg-[#163f73] hover:bg-[#12334F] transition-colors shadow-md disabled:opacity-50" disabled={isSubmitting}>
+                                        <button onClick={enviarSolicitudWebhook} className="flex items-center gap-2 px-8 py-3 rounded-lg font-bold text-white bg-[#163f73] hover:bg-[#12334F] transition-colors shadow-md disabled:opacity-50" disabled={isSubmitting}>
                                             {isSubmitting ? (
                                                 <span className="flex items-center gap-2"><svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg> Enviando...</span>
                                             ) : (
