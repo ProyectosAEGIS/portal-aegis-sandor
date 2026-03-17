@@ -363,18 +363,56 @@
                     const attachments = await Promise.all(interno.archivos.map(getBase64));
 
                     const payload = {
+                        // --- 0. DATOS DEL SOLICITANTE ---
                         consecutivo: consecutivo,
                         solicitante: interno.solicitante,
                         solicitanteEmail: interno.solicitanteEmail,
                         asunto: interno.asunto,
                         tiposSolicitud: Object.keys(interno.tipos).filter(k => interno.tipos[k]).join(', '),
-                        tomador: tomador.nombre,
+                        
+                        // --- 1. TOMADOR ---
+                        tomador: tomador.nombre, // Mantenido para compatibilidad
+                        tomadorNombre: tomador.nombre,
                         tomadorNit: tomador.nit,
+                        tomadorDireccion: tomador.direccion,
+                        tomadorTelefono: tomador.telefono,
+                        tomadorCelular: tomador.celular,
                         tomadorEmail: tomador.email,
-                        asegurado: asegurado.nombre,
-                        valorTotalCumplimiento: formatCurrency(totalCump),
-                        valorTotalRCE: formatCurrency(totalRCE),
-                        valorGranTotal: formatCurrency(totalGeneral),
+                        
+                        // --- 2. ASEGURADO ---
+                        asegurado: asegurado.nombre, // Mantenido para compatibilidad
+                        aseguradoNombre: asegurado.nombre,
+                        aseguradoNit: asegurado.nit,
+
+                        // --- 3. CONTRATO ---
+                        contratoObjeto: contrato.objeto,
+                        contratoNumero: contrato.numero,
+                        contratoValorSinIva: contrato.valorSinIva,
+                        contratoValorConIva: valorConIva,
+                        contratoDuracionDias: contrato.duracion,
+
+                        // --- 4. AMPAROS ---
+                        // Enviamos un resumen de texto de los amparos activos para ponerlo en una celda
+                        amparosResumen: amparos.filter(a => a.activo).map(a => `${a.nombre}: ${formatCurrency(a.valorAsegurado)}`).join('\n'),
+
+                        // --- 5. LIQUIDACIÓN CUMPLIMIENTO ---
+                        primaCumplimiento: primaCumplimiento,
+                        gastosCumplimiento: gastosCalculadosCump,
+                        ivaCumplimiento: ivaCump,
+                        totalCumplimiento: totalCump,
+                        valorTotalCumplimiento: formatCurrency(totalCump), // Texto para correo
+
+                        // --- 6. LIQUIDACIÓN RCE ---
+                        primaRCE: primaRCE,
+                        gastosRCE: gastosCalculadosRCE,
+                        ivaRCE: ivaRCE,
+                        totalRCE: totalRCE,
+                        valorTotalRCE: formatCurrency(totalRCE), // Texto para correo
+
+                        // --- TOTALES ---
+                        granTotal: totalGeneral,
+                        valorGranTotal: formatCurrency(totalGeneral), // Texto para correo
+                        
                         adjuntos: attachments
                     };
 
