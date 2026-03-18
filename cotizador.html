@@ -16,9 +16,7 @@
     <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <style>
-        /* Aseguramos que el body y html no generen scroll extra */
         html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; }
-        /* Scrollbar personalizado para las tablas */
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: #f1f1f1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
@@ -30,83 +28,33 @@
 
     <script type="text/babel">
         // ==========================================
-        // 1. ÍCONOS SVG (Para todo el Portal)
+        // 1. ÍCONOS SVG (Completos para todas las vistas)
         // ==========================================
-        const Shield = ({size=24, className="", strokeWidth=2}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        );
-        const Calculator = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16.01" y2="14"/><line x1="16" y1="10" x2="16.01" y2="10"/><line x1="16" y1="18" x2="16.01" y2="18"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="12" y1="10" x2="12.01" y2="10"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="8" y1="10" x2="8.01" y2="10"/><line x1="8" y1="18" x2="8.01" y2="18"/></svg>
-        );
-        const User = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-        );
-        const Building = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>
-        );
-        const FileText = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-        );
-        const Save = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
-        );
-        const Printer = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
-        );
-        const Trash2 = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>
-        );
-        const Send = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-        );
-        const Paperclip = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>
-        );
-        const Home = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-        );
-        const Bell = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
-        );
-        const MenuIcon = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
-        );
-        const LifeBuoy = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="14.83" y1="9.17" x2="18.36" y2="5.64"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/></svg>
-        );
-        const ClockIcon = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-        );
-        const CheckCircle = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-        );
-        const TrendingUp = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
-        );
-        const Award = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>
-        );
-        const Zap = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
-        );
-        const AlertCircle = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-        );
-        const PieChart = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>
-        );
-        const DollarSign = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-        );
-        const Calendar = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-        );
-        const UploadCloud = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/></svg>
-        );
-        const Download = ({size=24, className=""}) => (
-            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-        );
+        const Shield = ({size=24, className="", strokeWidth=2}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={strokeWidth} strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
+        const Calculator = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16.01" y2="14"/><line x1="16" y1="10" x2="16.01" y2="10"/><line x1="16" y1="18" x2="16.01" y2="18"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="12" y1="10" x2="12.01" y2="10"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="8" y1="10" x2="8.01" y2="10"/><line x1="8" y1="18" x2="8.01" y2="18"/></svg>;
+        const User = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
+        const Building = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><path d="M9 22v-4h6v4"/><path d="M8 6h.01"/><path d="M16 6h.01"/><path d="M12 6h.01"/><path d="M12 10h.01"/><path d="M12 14h.01"/><path d="M16 10h.01"/><path d="M16 14h.01"/><path d="M8 10h.01"/><path d="M8 14h.01"/></svg>;
+        const FileText = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>;
+        const Save = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>;
+        const Printer = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>;
+        const Trash2 = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"/><line x1="10" y1="11" x2="10" y2="17"/><line x1="14" y1="11" x2="14" y2="17"/></svg>;
+        const Send = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>;
+        const Paperclip = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/></svg>;
+        const Home = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>;
+        const Bell = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>;
+        const MenuIcon = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>;
+        const LifeBuoy = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="14.83" y1="9.17" x2="18.36" y2="5.64"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/></svg>;
+        const ClockIcon = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>;
+        const CheckCircle = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>;
+        const TrendingUp = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>;
+        const Award = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>;
+        const Zap = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
+        const AlertCircle = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
+        const PieChart = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/></svg>;
+        const DollarSign = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>;
+        const Calendar = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
+        const UploadCloud = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/></svg>;
+        const Download = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
 
         // ==========================================
         // 2. CONFIGURACIÓN Y DATOS INICIALES
@@ -128,42 +76,58 @@
             { id: 9, nombre: 'Responsabilidad Civil Extracontractual', tasaDefault: 0.20 }
         ];
 
-        // DATOS INICIALES DEMO PARA REPORTE DE PRODUCCIÓN (Grupo Sandor)
+        // DATOS INICIALES DEMO PARA REPORTE DE PRODUCCIÓN (Misma estructura standalone)
         const defaultProduccionData = [
-            { cliente: "GRUPO SANDOR", id: "101133204", aseguradora: "SEGUROS DEL ESTADO", asegurado: "MEDICARTE S.A.S", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.0, estado: "Completado", valor: 150000 },
-            { cliente: "GRUPO SANDOR", id: "4452077", aseguradora: "SURAMERICANA", asegurado: "DROGUERIAS Y FARMACIAS CRUZ VERDE", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.0, estado: "Completado", valor: 150000 },
-            { cliente: "GRUPO SANDOR", id: "100029109", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "INST. UNIV. COLEGIO MAYOR DE ANTIOQUIA", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.6, estado: "Completado", valor: 150000 },
-            { cliente: "GRUPO SANDOR", id: "101035391", aseguradora: "SEGUROS DEL ESTADO", asegurado: "TRABAJADORES EN MISION AL SERVICIO", ramo: "DISPOSICIÓN LEGAL", ansHoras: 53.0, estado: "Revisión Ext.", valor: 850000 },
-            { cliente: "GRUPO SANDOR", id: "100029162", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "E.S.E. HOSPITAL SAN RAFAEL DE FACATATIVA", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.4, estado: "Completado", valor: 150000 },
-            { cliente: "GRUPO SANDOR", id: "100029109 (A1)", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "INST. UNIV. COLEGIO MAYOR DE ANTIOQUIA", ramo: "SERIEDAD DE OFERTA", ansHoras: 19.5, estado: "Modificada", valor: 0 },
-            { cliente: "GRUPO SANDOR", id: "100029189", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "UNIVERSIDAD NACIONAL DE COLOMBIA", ramo: "CUMPLIMIENTO", ansHoras: 2.0, estado: "Completado", valor: 450000 },
-            { cliente: "GRUPO SANDOR", id: "100029213", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "MINISTERIO DE DEFENSA NACIONAL", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.8, estado: "Completado", valor: 150000 },
-            { cliente: "GRUPO SANDOR", id: "100089147 (A2)", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "ACEITES MANUELITA SA", ramo: "RESPONSABILIDAD CIVIL", ansHoras: 168.6, estado: "Modificada", valor: 1200000 },
-            { cliente: "GRUPO SANDOR", id: "100029260", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "FONDO NACIONAL DEL TURISMO FONTUR", ramo: "CUMPLIMIENTO ESTATAL", ansHoras: 1.2, estado: "Anulada", valor: 0 },
-            { cliente: "GRUPO SANDOR", id: "100007462", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "GRUPO SANDOR SAS", ramo: "RESPONSABILIDAD CIVIL", ansHoras: 1.5, estado: "Completado", valor: 1200000 }
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "101133204", aseguradora: "SEGUROS DEL ESTADO", asegurado: "MEDICARTE S.A.S", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.0, estado: "Completado", valor: 150000 },
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "4452077", aseguradora: "SURAMERICANA", asegurado: "DROGUERIAS Y FARMACIAS CRUZ VERDE S.A.S", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.0, estado: "Completado", valor: 150000 },
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "100029109", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "INST. UNIV. COLEGIO MAYOR DE ANTIOQUIA", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.6, estado: "Completado", valor: 150000 },
+            { cliente: "SERVICIOS TEMPORALES ELITE SAS", id: "101035391", aseguradora: "SEGUROS DEL ESTADO", asegurado: "TRABAJADORES EN MISION AL SERVICIO", ramo: "DISPOSICIÓN LEGAL", ansHoras: 53.0, estado: "Revisión Ext.", valor: 850000 },
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "100029162", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "E.S.E. HOSPITAL SAN RAFAEL DE FACATATIVA", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.4, estado: "Completado", valor: 150000 },
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "100029109 (A1)", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "INST. UNIV. COLEGIO MAYOR DE ANTIOQUIA", ramo: "SERIEDAD DE OFERTA", ansHoras: 19.5, estado: "Modificada", valor: 0 },
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "100029109 (A2)", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "INST. UNIV. COLEGIO MAYOR DE ANTIOQUIA", ramo: "SERIEDAD DE OFERTA", ansHoras: 19.5, estado: "Anulada", valor: 0 },
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "100029189", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "UNIVERSIDAD NACIONAL DE COLOMBIA", ramo: "CUMPLIMIENTO", ansHoras: 2.0, estado: "Completado", valor: 450000 },
+            { cliente: "SARUPETROL SAS", id: "100029213", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "MINISTERIO DE DEFENSA NACIONAL", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.8, estado: "Completado", valor: 150000 },
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "100089147 (A2)", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "ACEITES MANUELITA SA", ramo: "RESPONSABILIDAD CIVIL", ansHoras: 168.6, estado: "Modificada", valor: 1200000 },
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "100349421 (A2)", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "ACEITES MANUELITA SA", ramo: "CUMPLIMIENTO", ansHoras: 168.6, estado: "Modificada", valor: 450000 },
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "28611 (A1)", aseguradora: "BERKLEY", asegurado: "HOSPITAL UNIVERSITARIO NACIONAL", ramo: "RESPONSABILIDAD CIVIL", ansHoras: 172.1, estado: "Modificada", valor: 1200000 },
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "99251 (A1)", aseguradora: "BERKLEY", asegurado: "HOSPITAL UNIVERSITARIO NACIONAL", ramo: "CUMPLIMIENTO", ansHoras: 172.1, estado: "Modificada", valor: 450000 },
+            { cliente: "MASTER SERVICE GROUP S A S", id: "100029260", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "FONDO NACIONAL DEL TURISMO FONTUR", ramo: "CUMPLIMIENTO ESTATAL", ansHoras: 1.2, estado: "Anulada", valor: 0 },
+            { cliente: "MASTER SERVICE GROUP S A S", id: "100007462", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "MASTER SERVICE GROUP S A S", ramo: "RESPONSABILIDAD CIVIL", ansHoras: 1.5, estado: "Completado", valor: 1200000 },
+            { cliente: "MASTER SERVICE GROUP S A S", id: "100029261", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "FONDO NACIONAL DEL TURISMO FONTUR", ramo: "CUMPLIMIENTO", ansHoras: 1.5, estado: "Completado", valor: 450000 },
+            { cliente: "CONSORCIO ECOASEO", id: "100029266", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "ARMADA NACIONAL BASE NAVAL N° 06", ramo: "SERIEDAD DE OFERTA", ansHoras: 1.1, estado: "Completado", valor: 150000 },
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "100029272", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "MEDICARTE S.A.S.", ramo: "SERIEDAD DE OFERTA", ansHoras: 7.2, estado: "Anulada", valor: 0 },
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "100029277", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "DROGUERIAS Y FARMACIAS CRUZ VERDE", ramo: "SERIEDAD DE OFERTA", ansHoras: 71.1, estado: "Revisión Ext.", valor: 150000 },
+            { cliente: "CONSORCIO ECOASEO", id: "100029266 (A1)", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "ARMADA NACIONAL BASE NAVAL N° 06", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.8, estado: "Completado", valor: 150000 },
+            { cliente: "CONSORCIO ECOASEO", id: "100029274", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "ARMADA NACIONAL BASE NAVAL N° 06", ramo: "SERIEDAD DE OFERTA", ansHoras: 1.1, estado: "Completado", valor: 150000 },
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "100007479", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "ELITE FACILITY MANAGEMENT SAS", ramo: "RESPONSABILIDAD CIVIL", ansHoras: 1.1, estado: "Completado", valor: 1200000 },
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "100029312", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "CLINICA PSIQUIATRICA SAN JUAN DE DIOS", ramo: "CUMPLIMIENTO", ansHoras: 1.1, estado: "Completado", valor: 450000 },
+            { cliente: "CONSORCIO ECOASEO", id: "100029274 (A1)", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "ARMADA NACIONAL BASE NAVAL N° 06", ramo: "SERIEDAD DE OFERTA", ansHoras: 3.8, estado: "Completado", valor: 0 },
+            { cliente: "SARUPETROL SAS", id: "100029318", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "UNIVERSIDAD NACIONAL DE COLOMBIA", ramo: "CUMPLIMIENTO", ansHoras: 5.3, estado: "Completado", valor: 450000 },
+            { cliente: "SARUPETROL SAS", id: "100029319", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "UNIVERSIDAD NACIONAL DE COLOMBIA", ramo: "CUMPLIMIENTO", ansHoras: 2.8, estado: "Completado", valor: 450000 },
+            { cliente: "CONSORCIO SERVIPLUS", id: "100029351", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "DEPARTAMENTO DEL ATLANTICO", ramo: "SERIEDAD DE OFERTA", ansHoras: 22.9, estado: "Completado", valor: 150000 },
+            { cliente: "SARUPETROL SAS", id: "100007491", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "SARUPETROL SAS", ramo: "RESPONSABILIDAD CIVIL", ansHoras: 3.2, estado: "Completado", valor: 1200000 },
+            { cliente: "SARUPETROL SAS", id: "100029346", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "MINISTERIO DE DEFENSA NACIONAL", ramo: "CUMPLIMIENTO ESTATAL", ansHoras: 3.2, estado: "Revisión", valor: 450000 },
+            { cliente: "CONSORCIO SERVIPLUS", id: "100029356", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "DEPARTAMENTO DEL ATLANTICO", ramo: "SERIEDAD DE OFERTA", ansHoras: 3.0, estado: "Completado", valor: 150000 },
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "100029362", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "MUNICIPIO DE IBAGUE TOLIMA", ramo: "SERIEDAD DE OFERTA", ansHoras: 19.9, estado: "Completado", valor: 150000 }
         ];
 
-        // DATOS INICIALES DEMO PARA REPORTE DE CARTERA (Grupo Sandor)
+        // DATOS INICIALES DEMO PARA REPORTE DE CARTERA
         const defaultCarteraData = [
-            { tomador: "GRUPO SANDOR", beneficiario: "INST. UNIV. COLEGIO MAYOR DE ANTIOQUIA", ramo: "CUMPLIMIENTO", poliza: "100029109", dias: 26, total: 92582 },
-            { tomador: "GRUPO SANDOR", beneficiario: "UNIVERSIDAD NACIONAL SEDE ORINOQUIA", ramo: "CUMPLIMIENTO", poliza: "100110019", dias: 23, total: 59500 },
-            { tomador: "GRUPO SANDOR", beneficiario: "MINISTERIO DE DEFENSA NACIONAL", ramo: "CUMPLIMIENTO", poliza: "100029213", dias: 19, total: 53550 },
-            { tomador: "GRUPO SANDOR", beneficiario: "ARMADA NACIONAL BASE NAVAL N° 06", ramo: "CUMPLIMIENTO", poliza: "100029274", dias: 13, total: 12205 },
-            { tomador: "GRUPO SANDOR", beneficiario: "MINISTERIO DE DEFENSA NACIONAL", ramo: "CUMPLIMIENTO", poliza: "100029346", dias: 6, total: 910275 },
-            { tomador: "GRUPO SANDOR", beneficiario: "TERCEROS AFECTADOS", ramo: "RCE", poliza: "100007491", dias: 6, total: 622460 },
-            { tomador: "GRUPO SANDOR", beneficiario: "CLINICA DE NUESTRA SEÑORA DE LA PAZ", ramo: "CUMPLIMIENTO", poliza: "100029372", dias: 5, total: 4655971 },
-            { tomador: "GRUPO SANDOR", beneficiario: "TERCEROS AFECTADOS", ramo: "RCE", poliza: "100007501", dias: 5, total: 1909950 },
-            { tomador: "GRUPO SANDOR", beneficiario: "DEPARTAMENTO DEL ATLANTICO", ramo: "CUMPLIMIENTO", poliza: "100029351", dias: 4, total: 183344 }
+            { tomador: "SARUPETROL SAS", beneficiario: "INST. UNIV. COLEGIO MAYOR DE ANTIOQUIA", ramo: "CUMPLIMIENTO", poliza: "100029109", dias: 26, total: 92582 },
+            { tomador: "ELITE FACILITY MANAGEMENT SAS", beneficiario: "UNIVERSIDAD NACIONAL SEDE ORINOQUIA", ramo: "CUMPLIMIENTO", poliza: "100110019", dias: 23, total: 59500 },
+            { tomador: "SARUPETROL SAS", beneficiario: "MINISTERIO DE DEFENSA NACIONAL", ramo: "CUMPLIMIENTO", poliza: "100029213", dias: 19, total: 53550 },
+            { tomador: "SARUPETROL SAS", beneficiario: "ARMADA NACIONAL BASE NAVAL N° 06", ramo: "CUMPLIMIENTO", poliza: "100029274", dias: 13, total: 12205 },
+            { tomador: "SARUPETROL SAS", beneficiario: "MINISTERIO DE DEFENSA NACIONAL", ramo: "CUMPLIMIENTO", poliza: "100029346", dias: 6, total: 910275 },
+            { tomador: "SARUPETROL SAS", beneficiario: "TERCEROS AFECTADOS", ramo: "RCE", poliza: "100007491", dias: 6, total: 622460 },
+            { tomador: "ELITE FACILITY MANAGEMENT SAS", beneficiario: "CLINICA DE NUESTRA SEÑORA DE LA PAZ", ramo: "CUMPLIMIENTO", poliza: "100029372", dias: 5, total: 4655971 },
+            { tomador: "ELITE FACILITY MANAGEMENT SAS", beneficiario: "TERCEROS AFECTADOS", ramo: "RCE", poliza: "100007501", dias: 5, total: 1909950 },
+            { tomador: "CONSORCIO SERVIPLUS", beneficiario: "DEPARTAMENTO DEL ATLANTICO", ramo: "CUMPLIMIENTO", poliza: "100029351", dias: 4, total: 183344 },
+            { tomador: "CONSORCIO SERVIPLUS", beneficiario: "DEPARTAMENTO DEL ATLANTICO", ramo: "CUMPLIMIENTO", poliza: "100029356", dias: 4, total: 1779897 },
         ];
 
         function formatCurrency(amount) {
             if (amount === undefined || amount === null) return "$ 0";
-            return new Intl.NumberFormat('es-CO', {
-                style: 'currency',
-                currency: 'COP',
-                minimumFractionDigits: 0,
-                maximumFractionDigits: 0
-            }).format(amount);
+            return new Intl.NumberFormat('es-CO', { style: 'currency', currency: 'COP', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(amount);
         }
 
         function parseCurrency(val) {
@@ -223,18 +187,44 @@
             const totalRCE = subtotalRCE + ivaRCE;
             const totalGeneral = totalCump + totalRCE;
 
-            const generarIdUnico = () => {
-                const d = new Date();
-                const yy = d.getFullYear().toString().slice(-2);
-                const mm = (d.getMonth() + 1).toString().padStart(2, '0');
-                const dd = d.getDate().toString().padStart(2, '0');
-                const hh = d.getHours().toString().padStart(2, '0');
-                const min = d.getMinutes().toString().padStart(2, '0');
-                const ss = d.getSeconds().toString().padStart(2, '0');
-                return `SANDOR-COT-${yy}${mm}${dd}-${hh}${min}${ss}`;
+            React.useEffect(() => { setConsecutivo(`SANDOR-COT-${new Date().toISOString().replace(/\D/g, '').slice(2,14)}`); }, []);
+            const avanzarConsecutivo = () => setConsecutivo(`SANDOR-COT-${new Date().toISOString().replace(/\D/g, '').slice(2,14)}`);
+
+            // Funciones Faltantes Reparadas
+            const handleCheckboxTipos = (key) => {
+                setInterno(prev => ({
+                    ...prev,
+                    tipos: { ...prev.tipos, [key]: !prev.tipos[key] }
+                }));
             };
-            React.useEffect(() => { setConsecutivo(generarIdUnico()); }, []);
-            const avanzarConsecutivo = () => { setConsecutivo(generarIdUnico()); };
+
+            const handleFileChange = (e) => {
+                setInterno(prev => ({ ...prev, archivos: Array.from(e.target.files) }));
+            };
+
+            const limpiarFormularioCotizador = () => {
+                if (window.confirm('¿Está seguro de que desea limpiar todos los datos? Se perderá la cotización actual.')) {
+                    setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { garantiaUnica: false, cumplimientoParticulares: false, cumplimientoEstatales: false, disposicionLegal: false, otros: false }, archivos: [] });
+                    setTomador({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
+                    setAsegurado({ nombre: '', nit: '' });
+                    setContrato({ objeto: '', numero: '', valorSinIva: 0, duracion: '' });
+                    setCostos({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
+                    setAmparos(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, valorAsegurado: 0, tasa: (a.tasaDefault).toFixed(2), prima: 0 })));
+                    const fileInputs = document.querySelectorAll('input[type="file"]');
+                    fileInputs.forEach(input => input.value = '');
+                }
+            };
+
+            const exportarCotizacion = () => {
+                let resumen = `📋 COTIZACIÓN - AEGIS INSURANCE (Grupo Sandor)\n\n`;
+                resumen += `Consecutivo: ${consecutivo}\n`;
+                resumen += `Solicitante: ${interno.solicitante}\n`;
+                resumen += `Tomador: ${tomador.nombre}\n`;
+                resumen += `Gran Total: ${formatCurrency(totalGeneral)}\n`;
+                navigator.clipboard.writeText(resumen).then(() => {
+                    alert(`✅ ¡Resumen de la cotización copiado al portapapeles!`);
+                }).catch(() => alert(`Cotización finalizada. Gran Total: ${formatCurrency(totalGeneral)}`));
+            };
 
             const handleAmparoToggle = (id) => {
                 setAmparos(prev => prev.map(amp => {
@@ -247,8 +237,7 @@
                         }
                         let newDias = amp.dias;
                         if (newDesde && newHasta) {
-                            const d1 = new Date(newDesde); const d2 = new Date(newHasta);
-                            const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
+                            const diff = Math.ceil((new Date(newHasta) - new Date(newDesde)) / (1000 * 60 * 60 * 24));
                             newDias = diff > 0 ? diff : 0;
                         }
                         return { ...amp, activo: isActivating, desde: newDesde, hasta: newHasta, dias: newDias, valorAsegurado: isActivating ? amp.valorAsegurado : 0, prima: isActivating ? amp.prima : 0 };
@@ -261,42 +250,17 @@
                 setAmparos(prev => prev.map(amp => {
                     if (amp.id === id) {
                         const updated = { ...amp, [field]: value };
-                        if (field === 'desde' || field === 'hasta') {
-                            if (updated.desde && updated.hasta) {
-                                const d1 = new Date(updated.desde); const d2 = new Date(updated.hasta);
-                                const diff = Math.ceil((d2 - d1) / (1000 * 60 * 60 * 24));
-                                updated.dias = diff > 0 ? diff : 0;
-                            }
+                        if ((field === 'desde' || field === 'hasta') && updated.desde && updated.hasta) {
+                            const diff = Math.ceil((new Date(updated.hasta) - new Date(updated.desde)) / (1000 * 60 * 60 * 24));
+                            updated.dias = diff > 0 ? diff : 0;
                         }
                         if (field === 'valorAsegurado' || field === 'tasa') {
-                            const tasaNum = parseFloat(updated.tasa) || 0;
-                            updated.prima = updated.valorAsegurado * (tasaNum / 100);
+                            updated.prima = updated.valorAsegurado * ((parseFloat(updated.tasa) || 0) / 100);
                         }
                         return updated;
                     }
                     return amp;
                 }));
-            };
-
-            const handleCheckboxTipos = (key) => setInterno(prev => ({ ...prev, tipos: { ...prev.tipos, [key]: !prev.tipos[key] } }));
-            const handleFileChange = (e) => setInterno(prev => ({ ...prev, archivos: Array.from(e.target.files) }));
-
-            const limpiarFormularioCotizador = () => {
-                if (window.confirm('¿Está seguro de que desea limpiar todos los datos? Se perderá la cotización actual.')) {
-                    setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { garantiaUnica: false, cumplimientoParticulares: false, cumplimientoEstatales: false, disposicionLegal: false, otros: false }, archivos: [] });
-                    setTomador({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
-                    setAsegurado({ nombre: '', nit: '' });
-                    setContrato({ objeto: '', numero: '', valorSinIva: 0, duracion: '' });
-                    setCostos({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
-                    setAmparos(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, valorAsegurado: 0, tasa: (a.tasaDefault).toFixed(2), prima: 0 })));
-                    const fileInput = document.getElementById('file-upload-cotizador');
-                    if(fileInput) fileInput.value = '';
-                }
-            };
-
-            const exportarCotizacion = () => {
-                let resumen = `📋 COTIZACIÓN - AEGIS INSURANCE (Grupo Sandor)\n\nConsecutivo: ${consecutivo}\nSolicitante: ${interno.solicitante}\nTotal: ${formatCurrency(totalGeneral)}\n`;
-                navigator.clipboard.writeText(resumen).then(() => alert(`✅ Resumen copiado. Listos para descargar CSV.`));
             };
 
             const getBase64 = (file) => new Promise((resolve, reject) => {
@@ -306,81 +270,57 @@
             });
 
             const enviarSolicitudWebhook = async () => {
-                if (!WEBHOOK_URL) return alert("Aviso: URL del Webhook no configurada.");
+                if (!WEBHOOK_URL) return alert("Aviso: URL del Webhook no configurada en el código.");
                 if (!interno.solicitante || !tomador.nombre) return alert("Diligencie Solicitante y Tomador mínimo.");
                 setIsSubmitting(true);
                 try {
                     const attachments = await Promise.all(interno.archivos.map(getBase64));
-                    const payload = { consecutivo, solicitante: interno.solicitante, tomador: tomador.nombre, asegurado: asegurado.nombre, valorGranTotal: formatCurrency(totalGeneral), adjuntos: attachments };
+                    const payload = {
+                        consecutivo, solicitante: interno.solicitante, solicitanteEmail: interno.solicitanteEmail, asunto: interno.asunto, tiposSolicitud: Object.keys(interno.tipos).filter(k => interno.tipos[k]).join(', '),
+                        tomador: tomador.nombre, tomadorNombre: tomador.nombre, tomadorNit: tomador.nit, tomadorDireccion: tomador.direccion, tomadorTelefono: tomador.telefono, tomadorCelular: tomador.celular, tomadorEmail: tomador.email,
+                        asegurado: asegurado.nombre, aseguradoNombre: asegurado.nombre, aseguradoNit: asegurado.nit,
+                        contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, contratoValorSinIva: contrato.valorSinIva, contratoValorConIva: valorConIva, contratoDuracionDias: contrato.duracion,
+                        amparosResumen: amparos.filter(a => a.activo).map(a => `${a.nombre}: ${formatCurrency(a.valorAsegurado)}`).join('\n'),
+                        primaCumplimiento, gastosCumplimiento: gastosCalculadosCump, ivaCumplimiento: ivaCump, totalCumplimiento: totalCump, valorTotalCumplimiento: formatCurrency(totalCump),
+                        primaRCE, gastosRCE: gastosCalculadosRCE, ivaRCE: ivaRCE, totalRCE, valorTotalRCE: formatCurrency(totalRCE),
+                        granTotal: totalGeneral, valorGranTotal: formatCurrency(totalGeneral), adjuntos: attachments
+                    };
                     const response = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                    if (response.ok) { alert("✅ ¡Solicitud enviada!"); avanzarConsecutivo(); } 
+                    if (response.ok) { alert("✅ ¡Solicitud enviada!"); avanzarConsecutivo(); limpiarFormularioCotizador(); } 
                     else throw new Error("Error Servidor");
                 } catch (error) { alert("❌ Ocurrió un error."); } finally { setIsSubmitting(false); }
             };
-
 
             // --- ESTADOS Y LÓGICA DE REPORTES (PRODUCCIÓN & CARTERA) ---
             const [produccionData, setProduccionData] = React.useState(defaultProduccionData);
             const [carteraData, setCarteraData] = React.useState(defaultCarteraData);
 
-            // Generador de plantillas CSV
             const downloadTemplate = (type) => {
                 let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-                if (type === 'produccion') {
-                    csvContent += "Cliente;Poliza;Aseguradora;Asegurado;Ramo;HorasANS;Estado;ValorPrima\n";
-                    csvContent += "Grupo Sandor;12345;Mundial;Alcaldia;Cumplimiento;4.5;Completado;1500000";
-                } else {
-                    csvContent += "Tomador;Beneficiario;Ramo;Poliza;DiasCartera;ValorTotal\n";
-                    csvContent += "Grupo Sandor;Alcaldia;Cumplimiento;12345;12;2500000";
-                }
-                const encodedUri = encodeURI(csvContent);
-                const link = document.createElement("a");
-                link.setAttribute("href", encodedUri);
-                link.setAttribute("download", `Plantilla_AEGIS_${type}.csv`);
-                document.body.appendChild(link); link.click(); document.body.removeChild(link);
+                if (type === 'produccion') csvContent += "Cliente;Poliza;Aseguradora;Asegurado;Ramo;HorasANS;Estado;ValorPrima\nGrupo Sandor;12345;Mundial;Alcaldia;Cumplimiento;4.5;Completado;1500000";
+                else csvContent += "Tomador;Beneficiario;Ramo;Poliza;DiasCartera;ValorTotal\nGrupo Sandor;Alcaldia;Cumplimiento;12345;12;2500000";
+                const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", `Plantilla_AEGIS_${type}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
             };
 
-            // Lector de CSV
             const handleCsvUpload = (e, type) => {
-                const file = e.target.files[0];
-                if (!file) return;
+                const file = e.target.files[0]; if (!file) return;
                 const reader = new FileReader();
                 reader.onload = (evt) => {
-                    const text = evt.target.result;
-                    const rows = text.split('\n').filter(r => r.trim());
-                    if(rows.length < 2) return alert("El archivo está vacío o no tiene el formato correcto.");
+                    const text = evt.target.result; const rows = text.split('\n').filter(r => r.trim());
+                    if(rows.length < 2) return alert("El archivo está vacío o sin formato.");
                     const sep = text.includes(';') ? ';' : ',';
-                    
                     if (type === 'produccion') {
-                        const parsed = rows.slice(1).map(row => {
+                        setProduccionData(rows.slice(1).map(row => {
                             const cols = row.split(sep);
-                            return {
-                                cliente: cols[0]?.trim() || 'Desconocido',
-                                id: cols[1]?.trim() || 'S/N',
-                                aseguradora: cols[2]?.trim() || '-',
-                                asegurado: cols[3]?.trim() || '-',
-                                ramo: cols[4]?.trim() || '-',
-                                ansHoras: parseFloat(cols[5]) || 0,
-                                estado: cols[6]?.trim() || 'Pendiente',
-                                valor: parseFloat(cols[7]) || 0
-                            };
-                        });
-                        setProduccionData(parsed);
+                            return { cliente: cols[0]?.trim() || '-', id: cols[1]?.trim() || '-', aseguradora: cols[2]?.trim() || '-', asegurado: cols[3]?.trim() || '-', ramo: cols[4]?.trim() || '-', ansHoras: parseFloat(cols[5]) || 0, estado: cols[6]?.trim() || '-', valor: parseFloat(cols[7]) || 0 };
+                        }));
                     } else {
-                        const parsed = rows.slice(1).map(row => {
+                        setCarteraData(rows.slice(1).map(row => {
                             const cols = row.split(sep);
-                            return {
-                                tomador: cols[0]?.trim() || 'Desconocido',
-                                beneficiario: cols[1]?.trim() || '-',
-                                ramo: cols[2]?.trim() || '-',
-                                poliza: cols[3]?.trim() || 'S/N',
-                                dias: parseInt(cols[4], 10) || 0,
-                                total: parseFloat(cols[5]) || 0
-                            };
-                        });
-                        setCarteraData(parsed);
+                            return { tomador: cols[0]?.trim() || '-', beneficiario: cols[1]?.trim() || '-', ramo: cols[2]?.trim() || '-', poliza: cols[3]?.trim() || '-', dias: parseInt(cols[4]) || 0, total: parseFloat(cols[5]) || 0 };
+                        }));
                     }
-                    e.target.value = ''; // reset
+                    e.target.value = '';
                 };
                 reader.readAsText(file, 'UTF-8');
             };
@@ -394,8 +334,7 @@
             
             const prodSummary = produccionData.reduce((acc, curr) => {
                 if (!acc[curr.cliente]) acc[curr.cliente] = { count: 0, totalValor: 0 };
-                acc[curr.cliente].count += 1;
-                acc[curr.cliente].totalValor += curr.valor;
+                acc[curr.cliente].count += 1; acc[curr.cliente].totalValor += curr.valor;
                 return acc;
             }, {});
             const prodSummaryArray = Object.keys(prodSummary).map(k => ({ cliente: k, ...prodSummary[k] })).sort((a, b) => b.totalValor - a.totalValor);
@@ -410,14 +349,11 @@
 
             const cartSummary = carteraData.reduce((acc, curr) => {
                 if (!acc[curr.tomador]) acc[curr.tomador] = { count: 0, total: 0 };
-                acc[curr.tomador].count += 1;
-                acc[curr.tomador].total += curr.total;
+                acc[curr.tomador].count += 1; acc[curr.tomador].total += curr.total;
                 return acc;
             }, {});
             const cartSummaryArray = Object.keys(cartSummary).map(k => ({ tomador: k, ...cartSummary[k] })).sort((a, b) => b.total - a.total);
 
-
-            // Estilos Reutilizables
             const inputClass = "w-full p-2.5 bg-gray-50 border border-gray-200 text-[#12334F] rounded-lg focus:outline-none focus:ring-2 focus:ring-[#58C9E8] transition-all";
             const labelClass = "block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1.5";
             const sectionClass = "bg-white rounded-xl p-6 shadow-sm border border-gray-100 mb-6";
@@ -508,7 +444,6 @@
                                 </div>
 
                                 <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto">
-                                    {/* 0. DATOS SOLICITANTE */}
                                     <div className={sectionClass}>
                                         <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2"><User size={20} className="text-[#58C9E8]" /> 0. Datos del solicitante</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -517,41 +452,55 @@
                                             <div><label className={labelClass}>Asunto *</label><input type="text" className={inputClass} value={interno.asunto} onChange={e => setInterno({...interno, asunto: e.target.value})} /></div>
                                             <div><label className={labelClass}>Consecutivo</label><input type="text" className={`${inputClass} bg-[#e8f7fb] font-bold cursor-not-allowed`} disabled value={consecutivo} /></div>
                                         </div>
+                                        
+                                        {/* Añadido: Checkboxes de Tipos de Solicitud */}
+                                        <div className="mb-4">
+                                            <label className={labelClass}>Tipo de Solicitud</label>
+                                            <div className="flex flex-wrap gap-4 mt-2">
+                                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"><input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.garantiaUnica} onChange={() => handleCheckboxTipos('garantiaUnica')} />Garantía Única</label>
+                                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"><input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.cumplimientoParticulares} onChange={() => handleCheckboxTipos('cumplimientoParticulares')} />Cumplimiento Particulares</label>
+                                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"><input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.cumplimientoEstatales} onChange={() => handleCheckboxTipos('cumplimientoEstatales')} />Cumplimiento Estatales</label>
+                                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"><input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.disposicionLegal} onChange={() => handleCheckboxTipos('disposicionLegal')} />Disposición Legal</label>
+                                                <label className="flex items-center gap-2 text-sm text-gray-700 cursor-pointer"><input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" checked={interno.tipos.otros} onChange={() => handleCheckboxTipos('otros')} />Otros</label>
+                                            </div>
+                                        </div>
+
                                         <div className="bg-[#e8f7fb]/30 p-4 rounded-lg border border-[#e8f7fb]">
                                             <label className={labelClass}>Adjuntar Documentos (Contratos)</label>
                                             <div className="mt-2 flex items-center gap-3">
                                                 <label className="cursor-pointer bg-white px-4 py-2 border border-gray-300 rounded-md text-sm font-medium hover:bg-gray-50 flex items-center gap-2">
                                                     <Paperclip size={16} className="text-gray-500" /> Seleccionar Archivos
-                                                    <input id="file-upload-cotizador" type="file" multiple className="sr-only" onChange={handleFileChange} />
+                                                    <input type="file" multiple className="sr-only" onChange={handleFileChange} />
                                                 </label>
                                                 <span className="text-sm text-gray-500">{interno.archivos.length === 0 ? "Ningún archivo" : `${interno.archivos.length} archivo(s)`}</span>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {/* 1. TOMADOR */}
                                     <div className={sectionClass}>
-                                        <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2"><Building size={20} className="text-[#58C9E8]" /> 1. Tomador</h3>
+                                        <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2"><Building size={20} className="text-[#58C9E8]" /> 1. Tomador / Afianzado</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div className="md:col-span-2"><label className={labelClass}>Razón Social *</label><input type="text" className={inputClass} value={tomador.nombre} onChange={e => setTomador({...tomador, nombre: e.target.value})} /></div>
                                             <div><label className={labelClass}>NIT *</label><input type="text" className={inputClass} value={tomador.nit} onChange={e => setTomador({...tomador, nit: e.target.value})} /></div>
+                                            <div className="md:col-span-3"><label className={labelClass}>Dirección</label><input type="text" className={inputClass} value={tomador.direccion} onChange={e => setTomador({...tomador, direccion: e.target.value})} /></div>
+                                            <div><label className={labelClass}>Teléfono</label><input type="text" className={inputClass} value={tomador.telefono} onChange={e => setTomador({...tomador, telefono: e.target.value})} /></div>
+                                            <div><label className={labelClass}>Celular</label><input type="text" className={inputClass} value={tomador.celular} onChange={e => setTomador({...tomador, celular: e.target.value})} /></div>
+                                            <div><label className={labelClass}>E-mail *</label><input type="email" className={inputClass} value={tomador.email} onChange={e => setTomador({...tomador, email: e.target.value})} /></div>
                                         </div>
                                     </div>
 
-                                    {/* 2. BENEFICIARIO */}
                                     <div className={sectionClass}>
-                                        <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2"><Shield size={20} className="text-[#58C9E8]" /> 2. Asegurado</h3>
+                                        <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2"><Shield size={20} className="text-[#58C9E8]" /> 2. Asegurado / Beneficiario</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div className="md:col-span-2"><label className={labelClass}>Razón Social *</label><input type="text" className={inputClass} value={asegurado.nombre} onChange={e => setAsegurado({...asegurado, nombre: e.target.value})} /></div>
                                             <div><label className={labelClass}>NIT *</label><input type="text" className={inputClass} value={asegurado.nit} onChange={e => setAsegurado({...asegurado, nit: e.target.value})} /></div>
                                         </div>
                                     </div>
 
-                                    {/* 3. CONTRATO */}
                                     <div className={sectionClass}>
-                                        <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2"><FileText size={20} className="text-[#58C9E8]" /> 3. Contrato</h3>
+                                        <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-gray-100 pb-2"><FileText size={20} className="text-[#58C9E8]" /> 3. Datos del Contrato</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                            <div className="md:col-span-4"><label className={labelClass}>Objeto *</label><textarea rows="2" className={inputClass} value={contrato.objeto} onChange={e => setContrato({...contrato, objeto: e.target.value})}></textarea></div>
+                                            <div className="md:col-span-4 relative"><label className={labelClass}>Objeto *</label><textarea rows="2" maxLength="1000" className={inputClass} value={contrato.objeto} onChange={e => setContrato({...contrato, objeto: e.target.value})}></textarea></div>
                                             <div><label className={labelClass}>Número</label><input type="text" className={inputClass} value={contrato.numero} onChange={e => setContrato({...contrato, numero: e.target.value})} /></div>
                                             <div><label className={labelClass}>Valor SIN IVA</label><input type="text" className={inputClass} value={contrato.valorSinIva?contrato.valorSinIva.toLocaleString('es-CO'):''} onChange={e => setContrato({...contrato, valorSinIva: parseCurrency(e.target.value)})} /></div>
                                             <div><label className={labelClass}>Valor CON IVA</label><input type="text" className={`${inputClass} bg-[#e8f7fb] font-semibold`} disabled value={formatCurrency(valorConIva)} /></div>
@@ -559,7 +508,6 @@
                                         </div>
                                     </div>
 
-                                    {/* 4. AMPAROS */}
                                     <div className={sectionClass}>
                                         <h3 className="text-lg font-bold text-[#163f73] mb-2 flex items-center gap-2 border-b border-gray-100 pb-2"><Calculator size={20} className="text-[#58C9E8]" /> 4. Amparos y Garantías</h3>
                                         <div className="overflow-x-auto">
@@ -588,7 +536,7 @@
                                         </div>
                                     </div>
 
-                                    {/* 5. TOTALES */}
+                                    {/* 5. TOTALES (Con desglose completo) */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100"><h3 className="font-bold text-gray-500 mb-4">Ajustes Adicionales</h3>
                                             <div className="space-y-4">
@@ -598,13 +546,35 @@
                                         </div>
                                         <div className="bg-[#12334F] rounded-xl p-6 shadow-lg border border-[#163f73] text-white">
                                             <h3 className="font-bold text-[#58C9E8] mb-4">Liquidación Final</h3>
-                                            <div className="bg-[#163f73] rounded-lg p-4 mb-3">
-                                                <div className="flex justify-between font-bold"><span>Total Cumplimiento:</span><span>{formatCurrency(totalCump)}</span></div>
+                                            
+                                            {/* Bloque Cumplimiento */}
+                                            <div className="bg-[#163f73] rounded-lg p-4 shadow-sm mb-3">
+                                                <h4 className="font-bold text-white mb-2 border-b border-[#12334F] pb-1">Póliza de Cumplimiento</h4>
+                                                <div className="space-y-1 text-sm text-gray-300">
+                                                    <div className="flex justify-between"><span>Prima:</span> <span>{formatCurrency(primaCumplimiento)}</span></div>
+                                                    <div className="flex justify-between"><span>Gastos de Expedición:</span> <span>{formatCurrency(gastosCalculadosCump)}</span></div>
+                                                    <div className="flex justify-between"><span>IVA ({costos.tasaIva}%):</span> <span>{formatCurrency(ivaCump)}</span></div>
+                                                    <div className="flex justify-between font-bold text-[#58C9E8] pt-1 border-t border-[#12334F] mt-1">
+                                                        <span>Total Cumplimiento:</span> <span>{formatCurrency(totalCump)}</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="bg-[#163f73] rounded-lg p-4 mb-3">
-                                                <div className="flex justify-between font-bold"><span>Total RCE:</span><span>{formatCurrency(totalRCE)}</span></div>
+
+                                            {/* Bloque RCE */}
+                                            <div className="bg-[#163f73] rounded-lg p-4 shadow-sm mb-3">
+                                                <h4 className="font-bold text-white mb-2 border-b border-[#12334F] pb-1">Póliza de Responsabilidad Civil (RCE)</h4>
+                                                <div className="space-y-1 text-sm text-gray-300">
+                                                    <div className="flex justify-between"><span>Prima:</span> <span>{formatCurrency(primaRCE)}</span></div>
+                                                    <div className="flex justify-between"><span>Gastos de Expedición:</span> <span>{formatCurrency(gastosCalculadosRCE)}</span></div>
+                                                    <div className="flex justify-between"><span>IVA ({costos.tasaIva}%):</span> <span>{formatCurrency(ivaRCE)}</span></div>
+                                                    <div className="flex justify-between font-bold text-[#58C9E8] pt-1 border-t border-[#12334F] mt-1">
+                                                        <span>Total RCE:</span> <span>{formatCurrency(totalRCE)}</span>
+                                                    </div>
+                                                </div>
                                             </div>
-                                            <div className="bg-[#58C9E8] rounded-lg p-4 text-[#12334F] font-bold text-xl flex justify-between">
+
+                                            {/* Gran Total */}
+                                            <div className="bg-[#58C9E8] rounded-lg p-4 text-[#12334F] font-bold text-xl flex justify-between mt-2">
                                                 <span>GRAN TOTAL:</span><span>{formatCurrency(totalGeneral)}</span>
                                             </div>
                                         </div>
@@ -612,9 +582,10 @@
 
                                     {/* BOTONES COTIZADOR */}
                                     <div className="mt-8 flex flex-wrap justify-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
-                                        <button onClick={limpiarFormularioCotizador} className="px-6 py-3 text-red-600 bg-red-50 rounded-lg flex items-center gap-2 font-medium hover:bg-red-100"><Trash2 size={18} /> Limpiar</button>
-                                        <button onClick={exportarCotizacion} className="px-6 py-3 text-[#12334F] bg-gray-100 rounded-lg flex items-center gap-2 font-medium hover:bg-gray-200"><Save size={18} /> Resumen</button>
-                                        <button onClick={enviarSolicitudWebhook} className="px-8 py-3 text-white bg-[#163f73] rounded-lg flex items-center gap-2 font-bold hover:bg-[#12334F]">
+                                        <button onClick={limpiarFormularioCotizador} className="px-6 py-3 text-red-600 bg-red-50 rounded-lg flex items-center gap-2 font-medium hover:bg-red-100 transition-colors"><Trash2 size={18} /> Limpiar</button>
+                                        <button onClick={exportarCotizacion} className="px-6 py-3 text-[#12334F] bg-gray-100 rounded-lg flex items-center gap-2 font-medium hover:bg-gray-200 transition-colors"><Save size={18} /> Resumen</button>
+                                        <button onClick={() => window.print()} className="px-6 py-3 text-[#12334F] bg-[#e8f7fb] rounded-lg flex items-center gap-2 font-medium hover:bg-[#d0f0fa] border border-[#58C9E8] transition-colors"><Printer size={18} /> Imprimir / PDF</button>
+                                        <button onClick={enviarSolicitudWebhook} className="px-8 py-3 text-white bg-[#163f73] rounded-lg flex items-center gap-2 font-bold hover:bg-[#12334F] shadow-md disabled:opacity-50 transition-colors" disabled={isSubmitting}>
                                             {isSubmitting ? "Enviando..." : <><Send size={18} /> Enviar a AEGIS</>}
                                         </button>
                                     </div>
@@ -622,9 +593,10 @@
                             </div>
 
                             {/* ========================================================= */}
-                            {/* VISTA 2: REPORTE PRODUCCIÓN                               */}
+                            {/* VISTA 2: REPORTE PRODUCCIÓN (Estructura Original Restaurada) */}
                             {/* ========================================================= */}
                             <div className={activeMenu === 'produccion' ? 'block pb-20' : 'hidden'}>
+                                {/* Header Interno Portal */}
                                 <div className="bg-[#163f73] text-white py-6 px-8 shadow-sm mb-6 md:m-4 md:mb-6 md:rounded-xl flex flex-col md:flex-row justify-between items-center gap-4">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 bg-white/10 rounded-lg"><TrendingUp size={32} className="text-[#58C9E8]" strokeWidth={2} /></div>
@@ -633,7 +605,7 @@
                                     <div className="text-right hidden md:block"><p className="text-gray-300 text-sm">Cliente Principal</p><p className="font-bold text-white">Grupo Sandor</p></div>
                                 </div>
 
-                                <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto space-y-6">
+                                <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto space-y-8">
                                     
                                     {/* TOOLBAR CARGA DE ARCHIVOS */}
                                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -652,68 +624,175 @@
                                         </div>
                                     </div>
 
+                                    {/* SECCIÓN DE IMPACTO - HERO BANNER */}
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#58C9E8] opacity-5 rounded-full -translate-y-1/2 translate-x-1/4"></div>
+                                        <div className="flex-1 space-y-4 z-10">
+                                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e8f7fb] text-[#163f73] text-sm font-semibold mb-2">
+                                                <Award size={16} /> Excelencia Operativa
+                                            </div>
+                                            <h3 className="text-3xl font-bold text-[#163f73]">Velocidad y Eficiencia en tus Pólizas ✅</h3>
+                                            <p className="text-lg text-gray-600 leading-relaxed">
+                                                En AEGIS Insurance entendemos que el tiempo es un recurso crítico para <strong className="text-[#12334F]">Grupo Sandor</strong>. Por ello, hemos optimizado nuestros procesos logrando que la inmensa mayoría de sus solicitudes sean emitidas y entregadas en tiempo récord.
+                                            </p>
+                                        </div>
+                                        <div className="flex-shrink-0 w-full md:w-1/3 bg-[#163f73] rounded-2xl p-6 text-center text-white shadow-lg relative overflow-hidden z-10">
+                                            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                            <Zap size={40} className="text-[#58C9E8] mx-auto mb-3" />
+                                            <div className="text-6xl font-black text-[#58C9E8] mb-2">{prodPorcentaje}%</div>
+                                            <div className="text-sm font-medium uppercase tracking-wider text-gray-200">Emitidas en menos de 1 día</div>
+                                        </div>
+                                    </div>
+
                                     {/* MÉTRICAS KPI */}
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
                                             <div className="p-3 bg-blue-50 rounded-lg text-[#163f73]"><FileText size={28} /></div>
-                                            <div><p className="text-sm text-gray-500 font-medium">Total Solicitudes</p><h4 className="text-3xl font-bold text-[#12334F] mt-1">{prodTotal}</h4></div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 font-medium">Total Solicitudes Procesadas</p>
+                                                <h4 className="text-3xl font-bold text-[#12334F] mt-1">{prodTotal}</h4>
+                                                <p className="text-xs text-gray-400 mt-1">Periodo actual reportado</p>
+                                            </div>
                                         </div>
                                         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
                                             <div className="p-3 bg-[#e8f7fb] rounded-lg text-[#58C9E8]"><CheckCircle size={28} /></div>
-                                            <div><p className="text-sm text-gray-500 font-medium">Entregas &lt; 24 Horas</p><h4 className="text-3xl font-bold text-[#163f73] mt-1">{prodMenorUnDia} <span className="text-sm font-normal text-green-600">({prodPorcentaje}%)</span></h4></div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 font-medium">Entregas &lt; 24 Horas</p>
+                                                <h4 className="text-3xl font-bold text-[#163f73] mt-1">{prodMenorUnDia}</h4>
+                                                <p className="text-xs text-green-600 mt-1 font-medium flex items-center gap-1"><TrendingUp size={12} /> Óptimo rendimiento</p>
+                                            </div>
                                         </div>
                                         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
                                             <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600"><ClockIcon size={28} /></div>
-                                            <div><p className="text-sm text-gray-500 font-medium">Tiempo Típico (Mediana)</p><h4 className="text-3xl font-bold text-[#12334F] mt-1">{prodMediana} <span className="text-lg text-gray-500 font-normal">hrs</span></h4></div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 font-medium">Tiempo Típico (Mediana)</p>
+                                                <h4 className="text-3xl font-bold text-[#12334F] mt-1">{prodMediana} <span className="text-lg text-gray-500 font-normal">hrs</span></h4>
+                                                <p className="text-xs text-gray-400 mt-1">Excluye casos extendidos atípicos</p>
+                                            </div>
                                         </div>
                                     </div>
 
-                                    {/* TABLAS PRODUCCIÓN */}
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center"><h4 className="font-bold text-[#163f73]">Detalle de Pólizas</h4></div>
-                                            <div className="overflow-auto max-h-[400px]">
-                                                <table className="w-full text-left text-sm">
-                                                    <thead className="bg-white sticky top-0 shadow-sm text-xs text-gray-500 uppercase"><tr className="border-b">
-                                                        <th className="p-4">Asegurado / Ramo</th><th className="p-4 text-center">Horas ANS</th><th className="p-4">Estado</th>
-                                                    </tr></thead>
-                                                    <tbody className="divide-y divide-gray-100">
-                                                        {produccionData.map((p, i) => (
-                                                            <tr key={i} className="hover:bg-gray-50">
-                                                                <td className="p-4"><div className="font-bold text-[#12334F]">{p.asegurado}</div><div className="text-[10px] text-gray-400 mt-1 uppercase">{p.ramo} - {p.id}</div></td>
-                                                                <td className="p-4 text-center"><span className={`font-bold ${p.ansHoras<=24?'text-[#58C9E8]':'text-orange-500'}`}>{p.ansHoras}h</span></td>
-                                                                <td className="p-4"><span className="text-xs bg-gray-100 px-2 py-1 rounded">{p.estado}</span></td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
+                                    {/* BARRA DE PROGRESO VISUAL */}
+                                    <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
+                                        <h4 className="text-lg font-bold text-[#163f73] mb-4">Distribución de Tiempos de Respuesta (ANS)</h4>
+                                        <div className="w-full h-8 bg-gray-100 rounded-full overflow-hidden flex shadow-inner">
+                                            <div className="bg-[#58C9E8] h-full flex items-center justify-center text-xs font-bold text-[#12334F]" style={{ width: `${prodPorcentaje}%` }} title="Menos de 1 día">
+                                                {prodPorcentaje}% Menos de 1 día
+                                            </div>
+                                            <div className="bg-[#163f73] h-full flex items-center justify-center text-xs font-bold text-white" style={{ width: `${100 - prodPorcentaje}%` }} title="Más de 1 día">
+                                                {100 - prodPorcentaje}%
                                             </div>
                                         </div>
-                                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center"><h4 className="font-bold text-[#163f73]">Resumen de Valor (Opcional)</h4></div>
-                                            <div className="overflow-auto max-h-[400px] p-6">
-                                                <div className="bg-[#12334F] rounded-xl p-6 text-center text-white mb-6">
-                                                    <p className="text-sm text-gray-400 uppercase tracking-wider mb-2">Volumen de Primas Procesado</p>
-                                                    <p className="text-4xl font-black text-[#58C9E8]">{formatCurrency(prodTotalValor)}</p>
-                                                </div>
-                                                <div className="space-y-4">
-                                                    {prodSummaryArray.map((s, i) => (
-                                                        <div key={i} className="flex justify-between items-center border-b border-gray-100 pb-3">
-                                                            <div><p className="font-bold text-[#163f73]">{s.cliente}</p><p className="text-xs text-gray-500">{s.count} pólizas emitidas</p></div>
-                                                            <div className="font-bold text-gray-700">{formatCurrency(s.totalValor)}</div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
+                                        <div className="flex justify-between mt-3 text-sm text-gray-500">
+                                            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#58C9E8]"></span> Emitido y entregado exitosamente el mismo día</div>
+                                            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#163f73]"></span> Modificaciones, Anexos o Trámites Extensos (&gt; 24h)</div>
+                                        </div>
+                                    </div>
+
+                                    {/* TABLA DE DETALLE */}
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                                        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                                            <h4 className="text-lg font-bold text-[#163f73]">Registro Detallado de Producción</h4>
+                                            <span className="text-xs font-medium px-2 py-1 bg-[#e8f7fb] text-[#163f73] rounded-md border border-[#58C9E8]/30">{prodTotal} Solicitudes</span>
+                                        </div>
+                                        <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+                                            <table className="w-full text-left border-collapse min-w-[900px]">
+                                                <thead className="sticky top-0 bg-gray-50 z-10 shadow-sm">
+                                                    <tr className="text-gray-500 text-xs uppercase tracking-wider">
+                                                        <th className="px-6 py-4 font-semibold">Cliente</th>
+                                                        <th className="px-6 py-4 font-semibold">Asegurado / Póliza</th>
+                                                        <th className="px-6 py-4 font-semibold">Aseguradora / Ramo</th>
+                                                        <th className="px-6 py-4 font-semibold text-center">Tiempo ANS</th>
+                                                        <th className="px-6 py-4 font-semibold">Estado</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-100 text-sm">
+                                                    {produccionData.map((policy, idx) => {
+                                                        const isMenorUnDia = policy.ansHoras <= 24;
+                                                        const isAnulada = policy.estado === "Anulada" || policy.estado === "Cancelada";
+                                                        return (
+                                                            <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                                                <td className="px-6 py-4"><div className="font-bold text-[#12334F]">{policy.cliente}</div></td>
+                                                                <td className="px-6 py-4">
+                                                                    <div className="font-medium text-gray-700">{policy.asegurado}</div>
+                                                                    <div className="text-xs text-gray-400 mt-1">Doc: {policy.id}</div>
+                                                                </td>
+                                                                <td className="px-6 py-4">
+                                                                    <div className="text-gray-600 mb-1">{policy.aseguradora}</div>
+                                                                    <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-gray-100 text-gray-700 uppercase">{policy.ramo}</span>
+                                                                </td>
+                                                                <td className="px-6 py-4 text-center">
+                                                                    <div className={`inline-flex flex-col items-center justify-center p-2 rounded-lg ${isMenorUnDia ? 'bg-[#e8f7fb]' : 'bg-orange-50'}`}>
+                                                                        <span className={`font-bold ${isMenorUnDia ? 'text-[#163f73]' : 'text-orange-700'}`}>{policy.ansHoras.toFixed(1)} h</span>
+                                                                        <span className={`text-[10px] uppercase ${isMenorUnDia ? 'text-gray-500' : 'text-orange-600'}`}>{isMenorUnDia ? '< 1 Día' : '> 1 Día'}</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-6 py-4">
+                                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border ${isAnulada ? 'bg-red-50 text-red-700 border-red-200' : isMenorUnDia ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>
+                                                                        {isAnulada ? <AlertCircle size={14} /> : (isMenorUnDia ? <CheckCircle size={14} /> : <ClockIcon size={14} />)} {policy.estado}
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        )
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    {/* TABLA RESUMEN POR CLIENTE */}
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-8">
+                                        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                                            <h4 className="text-lg font-bold text-[#163f73]">Resumen de Producción por Cliente</h4>
+                                            <span className="text-xs font-medium px-2 py-1 bg-[#163f73] text-white rounded-md shadow-sm">Valores de Prima Estimados</span>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left border-collapse">
+                                                <thead className="bg-gray-50 shadow-sm border-b border-gray-200">
+                                                    <tr className="text-gray-500 text-xs uppercase tracking-wider">
+                                                        <th className="px-6 py-4 font-semibold">Cliente</th>
+                                                        <th className="px-6 py-4 font-semibold text-center">Nº Pólizas Gestionadas</th>
+                                                        <th className="px-6 py-4 font-semibold text-right">Valor Prima / Producción</th>
+                                                        <th className="px-6 py-4 font-semibold text-center">% Participación</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-100 text-sm">
+                                                    {prodSummaryArray.map((item, idx) => {
+                                                        const porcentaje = prodTotalValor > 0 ? ((item.totalValor / prodTotalValor) * 100).toFixed(1) : 0;
+                                                        return (
+                                                            <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                                                <td className="px-6 py-4"><div className="font-bold text-[#12334F]">{item.cliente}</div></td>
+                                                                <td className="px-6 py-4 text-center"><span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#e8f7fb] text-[#163f73] font-bold">{item.count}</span></td>
+                                                                <td className="px-6 py-4 text-right"><span className="font-bold text-[#12334F] text-base">{formatCurrency(item.totalValor)}</span></td>
+                                                                <td className="px-6 py-4 text-center">
+                                                                    <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                                                        <div className="bg-[#58C9E8] h-2 rounded-full" style={{ width: `${porcentaje}%` }}></div>
+                                                                    </div>
+                                                                    <span className="text-xs text-gray-500 font-semibold mt-1 inline-block">{porcentaje}%</span>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                                <tfoot className="bg-gray-100 font-bold border-t-2 border-gray-200 text-[#12334F]">
+                                                    <tr>
+                                                        <td className="px-6 py-4 text-right uppercase">Total General:</td>
+                                                        <td className="px-6 py-4 text-center text-lg">{prodTotal}</td>
+                                                        <td className="px-6 py-4 text-right text-lg">{formatCurrency(prodTotalValor)}</td>
+                                                        <td className="px-6 py-4 text-center text-lg">100%</td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
                                         </div>
                                     </div>
                                 </div>
                             </div>
 
                             {/* ========================================================= */}
-                            {/* VISTA 3: REPORTE CARTERA                                  */}
+                            {/* VISTA 3: REPORTE CARTERA (Estructura Original Restaurada) */}
                             {/* ========================================================= */}
                             <div className={activeMenu === 'cartera' ? 'block pb-20' : 'hidden'}>
+                                {/* Header Interno Portal */}
                                 <div className="bg-[#163f73] text-white py-6 px-8 shadow-sm mb-6 md:m-4 md:mb-6 md:rounded-xl flex flex-col md:flex-row justify-between items-center gap-4">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 bg-white/10 rounded-lg"><PieChart size={32} className="text-[#58C9E8]" strokeWidth={2} /></div>
@@ -722,7 +801,7 @@
                                     <div className="text-right hidden md:block"><p className="text-gray-300 text-sm">Cliente Principal</p><p className="font-bold text-white">Grupo Sandor</p></div>
                                 </div>
 
-                                <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto space-y-6">
+                                <div className="w-full px-4 sm:px-6 lg:px-8 max-w-[1600px] mx-auto space-y-8">
                                     
                                     {/* TOOLBAR CARGA DE ARCHIVOS */}
                                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col md:flex-row items-center justify-between gap-4">
@@ -741,59 +820,154 @@
                                         </div>
                                     </div>
 
-                                    {/* MÉTRICAS KPI */}
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        <div className="bg-[#163f73] text-white rounded-xl p-6 shadow-sm flex items-center gap-4 relative overflow-hidden">
-                                            <div className="absolute top-0 right-0 w-24 h-24 bg-white opacity-5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                            <div className="p-3 bg-[#58C9E8]/20 rounded-lg text-[#58C9E8] z-10"><DollarSign size={32} /></div>
-                                            <div className="z-10"><p className="text-sm text-gray-300 font-medium">Valor Total Adeudado</p><h4 className="text-3xl font-black text-[#58C9E8] mt-1">{formatCurrency(cartSumaTotal)}</h4></div>
+                                    {/* SECCIÓN DE IMPACTO - HERO BANNER */}
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#58C9E8] opacity-5 rounded-full -translate-y-1/2 translate-x-1/4"></div>
+                                        <div className="flex-1 space-y-4 z-10">
+                                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e8f7fb] text-[#163f73] text-sm font-semibold mb-2">
+                                                <PieChart size={16} /> Análisis Financiero
+                                            </div>
+                                            <h3 className="text-3xl font-bold text-[#163f73]">Salud de Cartera: ¡Excelente! ✅</h3>
+                                            <p className="text-lg text-gray-600 leading-relaxed">
+                                                El estado de cuentas por cobrar presenta una rotación sumamente ágil. Actualmente, el <strong>{cartPorcentajeSana}% del valor adeudado</strong> corresponde a facturación muy reciente (menor a 15 días), demostrando un excelente ciclo de gestión.
+                                            </p>
                                         </div>
-                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
-                                            <div className="p-3 bg-[#e8f7fb] rounded-lg text-[#58C9E8]"><Calendar size={28} /></div>
-                                            <div><p className="text-sm text-gray-500 font-medium">Antigüedad Promedio</p><h4 className="text-3xl font-bold text-[#163f73] mt-1">{cartPromedioDias} <span className="text-lg text-gray-500 font-normal">días</span></h4></div>
-                                        </div>
-                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
-                                            <div className="p-3 bg-orange-50 rounded-lg text-orange-500"><AlertCircle size={28} /></div>
-                                            <div><p className="text-sm text-gray-500 font-medium">Cartera Mayor a 15 Días</p><h4 className="text-2xl font-bold text-[#12334F] mt-1">{formatCurrency(cartAntigua)}</h4><p className="text-xs text-gray-400 mt-1">Requiere gestión</p></div>
+                                        <div className="flex-shrink-0 w-full md:w-auto bg-[#163f73] rounded-2xl p-6 text-center text-white shadow-lg relative overflow-hidden z-10 min-w-[300px]">
+                                            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                            <DollarSign size={40} className="text-[#58C9E8] mx-auto mb-3" />
+                                            <div className="text-3xl lg:text-4xl font-black text-[#58C9E8] mb-2">{formatCurrency(cartSumaTotal)}</div>
+                                            <div className="text-sm font-medium uppercase tracking-wider text-gray-200">Valor Total en Cartera</div>
                                         </div>
                                     </div>
 
-                                    {/* TABLAS CARTERA */}
-                                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                                        <div className="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex justify-between items-center"><h4 className="font-bold text-[#163f73]">Detalle de Cuentas por Cobrar</h4><span className="text-xs px-2 py-1 bg-[#e8f7fb] text-[#163f73] rounded">{cartTotal} Pólizas</span></div>
-                                            <div className="overflow-auto max-h-[400px]">
-                                                <table className="w-full text-left text-sm">
-                                                    <thead className="bg-white sticky top-0 shadow-sm text-xs text-gray-500 uppercase"><tr className="border-b">
-                                                        <th className="p-4">Tomador / Beneficiario</th><th className="p-4 text-center">Póliza</th><th className="p-4 text-center">Edad (Días)</th><th className="p-4 text-right">Valor Deuda</th>
-                                                    </tr></thead>
-                                                    <tbody className="divide-y divide-gray-100">
-                                                        {carteraData.sort((a,b) => b.dias - a.dias).map((p, i) => (
-                                                            <tr key={i} className="hover:bg-gray-50">
-                                                                <td className="p-4"><div className="font-bold text-[#12334F]">{p.tomador}</div><div className="text-[10px] text-gray-400 mt-1 truncate max-w-[200px]">{p.beneficiario}</div></td>
-                                                                <td className="p-4 text-center"><span className="text-xs font-mono bg-gray-100 px-2 py-1 rounded">{p.poliza}</span></td>
-                                                                <td className="p-4 text-center"><div className={`inline-block px-2 py-1 rounded text-xs font-bold ${p.dias>15?'bg-orange-100 text-orange-700':'bg-[#e8f7fb] text-[#163f73]'}`}>{p.dias}</div></td>
-                                                                <td className="p-4 text-right font-bold text-gray-700">{formatCurrency(p.total)}</td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
+                                    {/* MÉTRICAS KPI */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
+                                            <div className="p-3 bg-blue-50 rounded-lg text-[#163f73]"><FileText size={28} /></div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 font-medium">Volumen de Documentos</p>
+                                                <h4 className="text-3xl font-bold text-[#12334F] mt-1">{cartTotal}</h4>
+                                                <p className="text-xs text-gray-400 mt-1">Pólizas pendientes de pago</p>
                                             </div>
                                         </div>
-                                        <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden flex flex-col">
-                                            <div className="px-6 py-4 border-b border-gray-100 bg-gray-50"><h4 className="font-bold text-[#163f73]">Salud de la Cartera</h4></div>
-                                            <div className="p-6 flex-1 flex flex-col items-center justify-center text-center space-y-6">
-                                                <div className="relative w-32 h-32 flex items-center justify-center rounded-full border-[8px] border-gray-100">
-                                                    <svg className="absolute inset-0 w-full h-full transform -rotate-90">
-                                                        <circle cx="60" cy="60" r="56" fill="transparent" stroke="#58C9E8" strokeWidth="8" strokeDasharray={`${cartPorcentajeSana * 3.51} 351`} className="transition-all duration-1000"/>
-                                                    </svg>
-                                                    <div className="text-2xl font-black text-[#163f73]">{cartPorcentajeSana}%</div>
-                                                </div>
-                                                <div>
-                                                    <h3 className="font-bold text-[#12334F]">Corriente (0 - 15 días)</h3>
-                                                    <p className="text-gray-500 text-sm mt-1">{formatCurrency(cartSana)} del total adeudado está al día.</p>
-                                                </div>
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
+                                            <div className="p-3 bg-[#e8f7fb] rounded-lg text-[#58C9E8]"><Calendar size={28} /></div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 font-medium">Antigüedad Promedio</p>
+                                                <h4 className="text-3xl font-bold text-[#163f73] mt-1">{cartPromedioDias} <span className="text-lg text-gray-500 font-normal">días</span></h4>
+                                                <p className="text-xs text-green-600 mt-1 font-medium flex items-center gap-1">Promedio general rotación</p>
                                             </div>
+                                        </div>
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
+                                            <div className="p-3 bg-orange-50 rounded-lg text-orange-500"><AlertCircle size={28} /></div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 font-medium">Cartera Mayor a 15 Días</p>
+                                                <h4 className="text-2xl font-bold text-[#12334F] mt-1">{formatCurrency(cartAntigua)}</h4>
+                                                <p className="text-xs text-gray-400 mt-1">Requiere gestión</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* BARRA DE DISTRIBUCIÓN DE CARTERA */}
+                                    <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
+                                        <h4 className="text-lg font-bold text-[#163f73] mb-4">Distribución del Valor de Cartera por Antigüedad</h4>
+                                        <div className="w-full h-8 bg-gray-100 rounded-full overflow-hidden flex shadow-inner">
+                                            <div className="bg-[#58C9E8] h-full flex items-center justify-center text-xs font-bold text-[#12334F]" style={{ width: `${cartPorcentajeSana}%` }} title="De 0 a 15 Días">
+                                                {cartPorcentajeSana}% Corriente (0 - 15 días)
+                                            </div>
+                                            <div className="bg-[#163f73] h-full flex items-center justify-center text-xs font-bold text-white overflow-hidden whitespace-nowrap px-2" style={{ width: `${100 - cartPorcentajeSana}%` }} title="Más de 15 Días">
+                                                {(100 - cartPorcentajeSana).toFixed(1)}%
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between mt-3 text-sm text-gray-500">
+                                            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#58C9E8]"></span> Cartera Sana / Reciente ({formatCurrency(cartSana)})</div>
+                                            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#163f73]"></span> Por vencer / Gestión ({formatCurrency(cartAntigua)})</div>
+                                        </div>
+                                    </div>
+
+                                    {/* TABLA DE DETALLE */}
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                                        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                                            <h4 className="text-lg font-bold text-[#163f73]">Detalle de Facturación Pendiente</h4>
+                                            <span className="text-xs font-medium px-2 py-1 bg-[#e8f7fb] text-[#163f73] rounded-md border border-[#58C9E8]/30">Organizado por días</span>
+                                        </div>
+                                        <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+                                            <table className="w-full text-left border-collapse min-w-[900px]">
+                                                <thead className="bg-gray-50 shadow-sm border-b border-gray-200">
+                                                    <tr className="text-gray-500 text-xs uppercase tracking-wider">
+                                                        <th className="px-6 py-4 font-semibold">Tomador / Cliente</th>
+                                                        <th className="px-6 py-4 font-semibold">Beneficiario / Ramo</th>
+                                                        <th className="px-6 py-4 font-semibold text-center">Nº Póliza</th>
+                                                        <th className="px-6 py-4 font-semibold text-center">Días Cartera</th>
+                                                        <th className="px-6 py-4 font-semibold text-right">Valor Total</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-100 text-sm">
+                                                    {carteraData.sort((a,b) => b.dias - a.dias).map((policy, idx) => {
+                                                        const isAntigua = policy.dias > 15;
+                                                        return (
+                                                            <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                                                <td className="px-6 py-4"><div className="font-bold text-[#12334F]">{policy.tomador}</div></td>
+                                                                <td className="px-6 py-4">
+                                                                    <div className="text-gray-600 truncate max-w-xs" title={policy.beneficiario}>{policy.beneficiario}</div>
+                                                                    <div className="text-[10px] uppercase font-bold text-gray-400 mt-1">{policy.ramo}</div>
+                                                                </td>
+                                                                <td className="px-6 py-4 text-center"><span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">{policy.poliza}</span></td>
+                                                                <td className="px-6 py-4 text-center">
+                                                                    <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full font-bold ${isAntigua ? 'bg-orange-100 text-orange-700' : 'bg-[#e8f7fb] text-[#163f73]'}`}>{policy.dias}</div>
+                                                                </td>
+                                                                <td className="px-6 py-4 text-right"><span className="font-bold text-[#12334F] text-base">{formatCurrency(policy.total)}</span></td>
+                                                            </tr>
+                                                        )
+                                                    })}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    {/* TABLA RESUMEN POR TOMADOR */}
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-8">
+                                        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                                            <h4 className="text-lg font-bold text-[#163f73]">Resumen Consolidado por Tomador</h4>
+                                            <span className="text-xs font-medium px-2 py-1 bg-[#163f73] text-white rounded-md shadow-sm">Totales Globales</span>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left border-collapse">
+                                                <thead className="bg-gray-50 shadow-sm border-b border-gray-200">
+                                                    <tr className="text-gray-500 text-xs uppercase tracking-wider">
+                                                        <th className="px-6 py-4 font-semibold">Tomador / Cliente</th>
+                                                        <th className="px-6 py-4 font-semibold text-center">Total Pólizas</th>
+                                                        <th className="px-6 py-4 font-semibold text-right">Valor Total Adeudado</th>
+                                                        <th className="px-6 py-4 font-semibold text-center">% de Participación</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-100 text-sm">
+                                                    {cartSummaryArray.map((item, idx) => {
+                                                        const porcentaje = ((item.total / cartSumaTotal) * 100).toFixed(1);
+                                                        return (
+                                                            <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                                                <td className="px-6 py-4"><div className="font-bold text-[#12334F]">{item.tomador}</div></td>
+                                                                <td className="px-6 py-4 text-center"><span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#e8f7fb] text-[#163f73] font-bold">{item.count}</span></td>
+                                                                <td className="px-6 py-4 text-right"><span className="font-bold text-[#12334F] text-base">{formatCurrency(item.total)}</span></td>
+                                                                <td className="px-6 py-4 text-center">
+                                                                    <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                                                        <div className="bg-[#58C9E8] h-2 rounded-full" style={{ width: `${porcentaje}%` }}></div>
+                                                                    </div>
+                                                                    <span className="text-xs text-gray-500 font-semibold mt-1 inline-block">{porcentaje}%</span>
+                                                                </td>
+                                                            </tr>
+                                                        );
+                                                    })}
+                                                </tbody>
+                                                <tfoot className="bg-gray-100 font-bold border-t-2 border-gray-200 text-[#12334F]">
+                                                    <tr>
+                                                        <td className="px-6 py-4 text-right uppercase">Total General:</td>
+                                                        <td className="px-6 py-4 text-center text-lg">{cartTotal}</td>
+                                                        <td className="px-6 py-4 text-right text-lg">{formatCurrency(cartSumaTotal)}</td>
+                                                        <td className="px-6 py-4 text-center text-lg">100%</td>
+                                                    </tr>
+                                                </tfoot>
+                                            </table>
                                         </div>
                                     </div>
                                 </div>
