@@ -216,14 +216,182 @@
             };
 
             const exportarCotizacion = () => {
-                let resumen = `📋 COTIZACIÓN - AEGIS INSURANCE (Grupo Sandor)\n\n`;
+                // Nuevo resumen optimizado y detallado para copiar y pegar
+                const amparosActivos = amparos.filter(a => a.activo);
+                let detalleAmparos = amparosActivos.map(a => 
+                    `  - ${a.nombre} | Fechas: ${a.desde||'-'} al ${a.hasta||'-'} (${a.dias} días) | Valor Asegurado: ${formatCurrency(a.valorAsegurado)} | Prima: ${formatCurrency(a.prima)}`
+                ).join('\n');
+
+                let resumen = `📋 SOLICITUD DE COTIZACIÓN - AEGIS INSURANCE\n`;
+                resumen += `=================================================\n\n`;
+                resumen += `🔖 DATOS GENERALES\n`;
                 resumen += `Consecutivo: ${consecutivo}\n`;
-                resumen += `Solicitante: ${interno.solicitante}\n`;
-                resumen += `Tomador: ${tomador.nombre}\n`;
-                resumen += `Gran Total: ${formatCurrency(totalGeneral)}\n`;
+                resumen += `Solicitante: ${interno.solicitante} (${interno.solicitanteEmail})\n`;
+                resumen += `Asunto: ${interno.asunto}\n\n`;
+                resumen += `🏢 PARTES\n`;
+                resumen += `Tomador/Afianzado: ${tomador.nombre} (NIT: ${tomador.nit})\n`;
+                resumen += `Asegurado/Beneficiario: ${asegurado.nombre} (NIT: ${asegurado.nit})\n\n`;
+                resumen += `📄 DATOS DEL CONTRATO\n`;
+                resumen += `Objeto: ${contrato.objeto}\n`;
+                resumen += `Número: ${contrato.numero || 'N/A'}\n`;
+                resumen += `Duración: ${contrato.duracion} días\n`;
+                resumen += `Valor SIN IVA: ${formatCurrency(contrato.valorSinIva)}\n`;
+                resumen += `Valor CON IVA: ${formatCurrency(valorConIva)}\n\n`;
+                resumen += `🛡️ AMPAROS SOLICITADOS\n`;
+                resumen += detalleAmparos ? `${detalleAmparos}\n\n` : `  Ningún amparo seleccionado.\n\n`;
+                resumen += `💰 RESUMEN FINANCIERO\n`;
+                resumen += `Total Cumplimiento: ${formatCurrency(totalCump)}\n`;
+                resumen += `Total RCE: ${formatCurrency(totalRCE)}\n`;
+                resumen += `GRAN TOTAL: ${formatCurrency(totalGeneral)}\n`;
+                
                 navigator.clipboard.writeText(resumen).then(() => {
-                    alert(`✅ ¡Resumen de la cotización copiado al portapapeles!`);
+                    alert(`✅ ¡Resumen detallado copiado al portapapeles! Listo para pegar en correo o chat.`);
                 }).catch(() => alert(`Cotización finalizada. Gran Total: ${formatCurrency(totalGeneral)}`));
+            };
+
+            // NUEVA FUNCIÓN: Generar PDF / Imprimir con diseño HTML limpio
+            const imprimirCotizacion = () => {
+                const printWindow = window.open('', '_blank');
+                
+                const amparosHtml = amparos.filter(a => a.activo).map(a => `
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">${a.nombre}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">${a.desde || '-'} al ${a.hasta || '-'}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.dias}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-size: 13px;">${formatCurrency(a.valorAsegurado)}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.tasa}%</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-size: 13px; font-weight: bold; color:#163f73;">${formatCurrency(a.prima)}</td>
+                    </tr>
+                `).join('');
+
+                const htmlContent = `
+                    <!DOCTYPE html>
+                    <html lang="es">
+                    <head>
+                        <meta charset="UTF-8">
+                        <title>Cotización ${consecutivo} - AEGIS Insurance</title>
+                        <style>
+                            body { font-family: 'Arial', sans-serif; color: #12334F; margin: 0; padding: 40px; }
+                            .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #58C9E8; padding-bottom: 20px; margin-bottom: 30px; }
+                            .header h1 { margin: 0; color: #163f73; font-size: 28px; text-transform: uppercase; letter-spacing: 1px; }
+                            .header p { margin: 2px 0 0 0; color: #58C9E8; font-weight: bold; letter-spacing: 3px; font-size: 11px; text-transform: uppercase; }
+                            .section-title { color: #163f73; font-size: 16px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; margin-top: 30px; margin-bottom: 15px; text-transform: uppercase; }
+                            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                            td { padding: 6px 0; vertical-align: top; font-size: 14px; }
+                            .label { font-weight: bold; width: 35%; color: #555; }
+                            .val { width: 65%; }
+                            .amparos-table th { background-color: #f4f7f9; padding: 12px 10px; text-align: left; font-size: 12px; color: #163f73; text-transform: uppercase; }
+                            .totals-box { background-color: #f4f7f9; border-left: 5px solid #58C9E8; padding: 20px; margin-top: 30px; page-break-inside: avoid; width: 50%; float: right; }
+                            .totals-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+                            .grand-total { font-size: 18px; font-weight: bold; color: #163f73; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; }
+                            .clearfix { clear: both; }
+                            .footer { margin-top: 60px; text-align: center; font-size: 11px; color: #888; border-top: 1px solid #eee; padding-top: 20px; }
+                            @media print { body { padding: 0; } .totals-box { border: 1px solid #e0e0e0; } }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="header">
+                            <div>
+                                <!-- SVG Logo Print -->
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#58C9E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 5px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                <h1>AEGIS</h1>
+                                <p>INSURANCE</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <h2 style="margin:0; color: #163f73; font-size: 20px;">COTIZACIÓN OFICIAL</h2>
+                                <p style="margin:5px 0 0 0; color: #555; font-size:14px; letter-spacing: 0; font-weight: normal;">No. <b>${consecutivo}</b></p>
+                                <p style="margin:5px 0 0 0; color: #555; font-size:12px; letter-spacing: 0; font-weight: normal;">Fecha: ${new Date().toLocaleDateString('es-CO')}</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 40px;">
+                            <div style="flex: 1;">
+                                <h3 class="section-title">Datos del Tomador</h3>
+                                <table>
+                                    <tr><td class="label">Razón Social:</td><td class="val">${tomador.nombre}</td></tr>
+                                    <tr><td class="label">NIT:</td><td class="val">${tomador.nit}</td></tr>
+                                    <tr><td class="label">Dirección:</td><td class="val">${tomador.direccion || '-'}</td></tr>
+                                    <tr><td class="label">Email / Tel:</td><td class="val">${tomador.email || '-'} / ${tomador.telefono || tomador.celular || '-'}</td></tr>
+                                </table>
+                            </div>
+                            <div style="flex: 1;">
+                                <h3 class="section-title">Datos del Asegurado</h3>
+                                <table>
+                                    <tr><td class="label">Razón Social:</td><td class="val">${asegurado.nombre}</td></tr>
+                                    <tr><td class="label">NIT:</td><td class="val">${asegurado.nit}</td></tr>
+                                    <tr><td class="label">Solicitante:</td><td class="val">${interno.solicitante}</td></tr>
+                                    <tr><td class="label">Asunto:</td><td class="val">${interno.asunto || '-'}</td></tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <h3 class="section-title">Datos del Contrato</h3>
+                        <table>
+                            <tr><td class="label" style="width:20%;">Objeto:</td><td class="val" style="width:80%; text-align: justify;">${contrato.objeto}</td></tr>
+                            <tr><td class="label" style="width:20%;">No. Contrato:</td><td class="val" style="width:80%;">${contrato.numero || '-'}</td></tr>
+                            <tr><td class="label" style="width:20%;">Duración:</td><td class="val" style="width:80%;">${contrato.duracion || '-'} días</td></tr>
+                            <tr><td class="label" style="width:20%;">Valor SIN IVA:</td><td class="val" style="width:80%;">${formatCurrency(contrato.valorSinIva)}</td></tr>
+                            <tr><td class="label" style="width:20%;">Valor CON IVA:</td><td class="val" style="width:80%;">${formatCurrency(valorConIva)}</td></tr>
+                        </table>
+
+                        <h3 class="section-title">Amparos Solicitados</h3>
+                        <table class="amparos-table">
+                            <thead>
+                                <tr>
+                                    <th>Amparo</th>
+                                    <th>Vigencia</th>
+                                    <th style="text-align: center;">Días</th>
+                                    <th style="text-align: right;">V. Asegurado</th>
+                                    <th style="text-align: center;">Tasa</th>
+                                    <th style="text-align: right;">Prima</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${amparosHtml || '<tr><td colspan="6" style="text-align:center; padding: 20px;">No se seleccionaron amparos.</td></tr>'}
+                            </tbody>
+                        </table>
+
+                        <div class="totals-box">
+                            <div class="totals-row">
+                                <span>Prima Cumplimiento:</span>
+                                <span>${formatCurrency(primaCumplimiento)}</span>
+                            </div>
+                            <div class="totals-row">
+                                <span>Prima RCE:</span>
+                                <span>${formatCurrency(primaRCE)}</span>
+                            </div>
+                            <div class="totals-row">
+                                <span>Gastos de Expedición:</span>
+                                <span>${formatCurrency(gastosCalculadosCump + gastosCalculadosRCE)}</span>
+                            </div>
+                            <div class="totals-row">
+                                <span>IVA (${costos.tasaIva}%):</span>
+                                <span>${formatCurrency(ivaCump + ivaRCE)}</span>
+                            </div>
+                            <div class="totals-row grand-total">
+                                <span>GRAN TOTAL A PAGAR:</span>
+                                <span>${formatCurrency(totalGeneral)}</span>
+                            </div>
+                        </div>
+                        <div class="clearfix"></div>
+
+                        <div class="footer">
+                            <strong>AEGIS INSURANCE - PROTECCIÓN & RESPALDO</strong><br>
+                            Documento generado automáticamente a través del Portal de Servicios. Operación exclusiva para Grupo Elite / Sandor.<br>
+                            Este documento es de carácter informativo y está sujeto a revisión y aprobación definitiva por parte de la aseguradora.
+                        </div>
+                        <script>
+                            window.onload = function() { 
+                                setTimeout(() => {
+                                    window.print();
+                                }, 500);
+                            }
+                        <\/script>
+                    </body>
+                    </html>
+                `;
+                printWindow.document.write(htmlContent);
+                printWindow.document.close();
             };
 
             const handleAmparoToggle = (id) => {
@@ -275,12 +443,19 @@
                 setIsSubmitting(true);
                 try {
                     const attachments = await Promise.all(interno.archivos.map(getBase64));
+                    
+                    // NUEVO: Generar un texto ultra-detallado de amparos para exportar a Excel fácilmente
+                    const amparosDetalleCompleto = amparos.filter(a => a.activo).map(a => 
+                        `${a.nombre} | Desde: ${a.desde || '-'} Hasta: ${a.hasta || '-'} | Días: ${a.dias} | Asegurado: ${formatCurrency(a.valorAsegurado)} | Tasa: ${a.tasa}% | Prima: ${formatCurrency(a.prima)}`
+                    ).join('\n');
+
                     const payload = {
                         consecutivo, solicitante: interno.solicitante, solicitanteEmail: interno.solicitanteEmail, asunto: interno.asunto, tiposSolicitud: Object.keys(interno.tipos).filter(k => interno.tipos[k]).join(', '),
                         tomador: tomador.nombre, tomadorNombre: tomador.nombre, tomadorNit: tomador.nit, tomadorDireccion: tomador.direccion, tomadorTelefono: tomador.telefono, tomadorCelular: tomador.celular, tomadorEmail: tomador.email,
                         asegurado: asegurado.nombre, aseguradoNombre: asegurado.nombre, aseguradoNit: asegurado.nit,
                         contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, contratoValorSinIva: contrato.valorSinIva, contratoValorConIva: valorConIva, contratoDuracionDias: contrato.duracion,
                         amparosResumen: amparos.filter(a => a.activo).map(a => `${a.nombre}: ${formatCurrency(a.valorAsegurado)}`).join('\n'),
+                        amparosDetalleExcel: amparosDetalleCompleto, // <-- Se envía el detalle extendido para Excel
                         primaCumplimiento, gastosCumplimiento: gastosCalculadosCump, ivaCumplimiento: ivaCump, totalCumplimiento: totalCump, valorTotalCumplimiento: formatCurrency(totalCump),
                         primaRCE, gastosRCE: gastosCalculadosRCE, ivaRCE: ivaRCE, totalRCE, valorTotalRCE: formatCurrency(totalRCE),
                         granTotal: totalGeneral, valorGranTotal: formatCurrency(totalGeneral), adjuntos: attachments
@@ -583,8 +758,8 @@
                                     {/* BOTONES COTIZADOR */}
                                     <div className="mt-8 flex flex-wrap justify-center gap-4 bg-white p-4 rounded-xl shadow-sm border border-gray-100">
                                         <button onClick={limpiarFormularioCotizador} className="px-6 py-3 text-red-600 bg-red-50 rounded-lg flex items-center gap-2 font-medium hover:bg-red-100 transition-colors"><Trash2 size={18} /> Limpiar</button>
-                                        <button onClick={exportarCotizacion} className="px-6 py-3 text-[#12334F] bg-gray-100 rounded-lg flex items-center gap-2 font-medium hover:bg-gray-200 transition-colors"><Save size={18} /> Resumen</button>
-                                        <button onClick={() => window.print()} className="px-6 py-3 text-[#12334F] bg-[#e8f7fb] rounded-lg flex items-center gap-2 font-medium hover:bg-[#d0f0fa] border border-[#58C9E8] transition-colors"><Printer size={18} /> Imprimir / PDF</button>
+                                        <button onClick={exportarCotizacion} className="px-6 py-3 text-[#12334F] bg-gray-100 rounded-lg flex items-center gap-2 font-medium hover:bg-gray-200 transition-colors"><Save size={18} /> Resumen Rápido</button>
+                                        <button onClick={imprimirCotizacion} className="px-6 py-3 text-[#12334F] bg-[#e8f7fb] rounded-lg flex items-center gap-2 font-medium hover:bg-[#d0f0fa] border border-[#58C9E8] transition-colors"><Printer size={18} /> Imprimir / PDF</button>
                                         <button onClick={enviarSolicitudWebhook} className="px-8 py-3 text-white bg-[#163f73] rounded-lg flex items-center gap-2 font-bold hover:bg-[#12334F] shadow-md disabled:opacity-50 transition-colors" disabled={isSubmitting}>
                                             {isSubmitting ? "Enviando..." : <><Send size={18} /> Enviar a AEGIS</>}
                                         </button>
