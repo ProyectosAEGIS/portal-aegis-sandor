@@ -293,18 +293,22 @@
                             .header { display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #58C9E8; padding-bottom: 20px; margin-bottom: 30px; }
                             .header h1 { margin: 0; color: #163f73; font-size: 28px; text-transform: uppercase; letter-spacing: 1px; }
                             .header p { margin: 2px 0 0 0; color: #58C9E8; font-weight: bold; letter-spacing: 3px; font-size: 11px; text-transform: uppercase; }
-                            .section-title { color: #163f73; font-size: 16px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; margin-top: 30px; margin-bottom: 15px; text-transform: uppercase; }
-                            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                            td { padding: 6px 0; vertical-align: top; font-size: 14px; }
+                            .section-title { color: #163f73; font-size: 16px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; margin-top: 30px; margin-bottom: 15px; text-transform: uppercase; page-break-after: avoid; }
+                            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; page-break-inside: auto; }
+                            tr { page-break-inside: avoid; page-break-after: auto; }
+                            td, th { padding: 6px 0; vertical-align: top; font-size: 14px; page-break-inside: avoid; }
                             .label { font-weight: bold; width: 35%; color: #555; }
                             .val { width: 65%; }
                             .amparos-table th { background-color: #f4f7f9; padding: 12px 10px; text-align: left; font-size: 12px; color: #163f73; text-transform: uppercase; }
-                            .totals-box { background-color: #f4f7f9; border-left: 5px solid #58C9E8; padding: 20px; margin-top: 30px; page-break-inside: avoid; width: 50%; float: right; }
+                            .totals-box { background-color: #f4f7f9; border-left: 5px solid #58C9E8; padding: 20px; margin-top: 30px; page-break-inside: avoid; break-inside: avoid; width: 50%; margin-left: auto; }
                             .totals-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
                             .grand-total { font-size: 18px; font-weight: bold; color: #163f73; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; }
-                            .clearfix { clear: both; }
-                            .footer { margin-top: 60px; text-align: center; font-size: 11px; color: #888; border-top: 1px solid #eee; padding-top: 20px; }
-                            @media print { body { padding: 0; } .totals-box { border: 1px solid #e0e0e0; } }
+                            .footer { margin-top: 50px; text-align: center; font-size: 11px; color: #888; border-top: 1px solid #eee; padding-top: 20px; page-break-inside: avoid; }
+                            @media print { 
+                                @page { margin: 15mm; size: A4 portrait; }
+                                body { padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } 
+                                .totals-box { border: 1px solid #e0e0e0; } 
+                            }
                         </style>
                     </head>
                     <body>
@@ -391,7 +395,6 @@
                                 <span>${formatCurrency(totalGeneral)}</span>
                             </div>
                         </div>
-                        <div class="clearfix"></div>
 
                         <div class="footer">
                             <strong>AEGIS INSURANCE - PROTECCIÓN & RESPALDO</strong><br>
