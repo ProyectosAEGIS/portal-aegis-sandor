@@ -450,6 +450,7 @@
                     ).join('\n');
 
                     const payload = {
+                        fechaRegistro: new Date().toLocaleString('es-CO'), // <--- Nuevo campo automático
                         consecutivo, solicitante: interno.solicitante, solicitanteEmail: interno.solicitanteEmail, asunto: interno.asunto, tiposSolicitud: Object.keys(interno.tipos).filter(k => interno.tipos[k]).join(', '),
                         tomador: tomador.nombre, tomadorNombre: tomador.nombre, tomadorNit: tomador.nit, tomadorDireccion: tomador.direccion, tomadorTelefono: tomador.telefono, tomadorCelular: tomador.celular, tomadorEmail: tomador.email,
                         asegurado: asegurado.nombre, aseguradoNombre: asegurado.nombre, aseguradoNit: asegurado.nit,
