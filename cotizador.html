@@ -187,8 +187,20 @@
             const totalRCE = subtotalRCE + ivaRCE;
             const totalGeneral = totalCump + totalRCE;
 
-            React.useEffect(() => { setConsecutivo(`SANDOR-COT-${new Date().toISOString().replace(/\D/g, '').slice(2,14)}`); }, []);
-            const avanzarConsecutivo = () => setConsecutivo(`SANDOR-COT-${new Date().toISOString().replace(/\D/g, '').slice(2,14)}`);
+            // NUEVA FUNCIÓN: Generar consecutivo usando la hora local exacta
+            const generarConsecutivoLocal = () => {
+                const ahora = new Date();
+                const yy = String(ahora.getFullYear()).slice(-2);
+                const mm = String(ahora.getMonth() + 1).padStart(2, '0');
+                const dd = String(ahora.getDate()).padStart(2, '0');
+                const hh = String(ahora.getHours()).padStart(2, '0');
+                const min = String(ahora.getMinutes()).padStart(2, '0');
+                const ss = String(ahora.getSeconds()).padStart(2, '0');
+                return `SANDOR-COT-${yy}${mm}${dd}${hh}${min}${ss}`;
+            };
+
+            React.useEffect(() => { setConsecutivo(generarConsecutivoLocal()); }, []);
+            const avanzarConsecutivo = () => setConsecutivo(generarConsecutivoLocal());
 
             // Funciones Faltantes Reparadas
             const handleCheckboxTipos = (key) => {
