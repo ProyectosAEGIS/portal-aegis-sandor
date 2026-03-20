@@ -164,9 +164,9 @@
             const [interno, setInterno] = React.useState({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { garantiaUnica: false, cumplimientoParticulares: false, cumplimientoEstatales: false, disposicionLegal: false, otros: false }, archivos: [] });
             const [tomador, setTomador] = React.useState({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
             const [asegurado, setAsegurado] = React.useState({ nombre: '', nit: '' });
-            const [contrato, setContrato] = React.useState({ objeto: '', numero: '', valorSinIva: 0, duracion: '' });
+            const [contrato, setContrato] = React.useState({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '' });
             const [costos, setCostos] = React.useState({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
-            const [amparos, setAmparos] = React.useState(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, valorAsegurado: 0, tasa: (a.tasaDefault).toFixed(2), prima: 0 })));
+            const [amparos, setAmparos] = React.useState(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: (a.tasaDefault).toFixed(2), prima: 0 })));
             const [isSubmitting, setIsSubmitting] = React.useState(false);
 
             // --- ESTADOS DE REPORTES ---
@@ -174,7 +174,8 @@
             const [carteraData, setCarteraData] = React.useState(defaultCarteraData);
 
             // Cálculos Cotizador
-            const valorConIva = contrato.valorSinIva * (1 + (costos.tasaIva / 100));
+            const valorConIva = contrato.valorConIva || 0;
+            const valorSinIva = valorConIva / (1 + (costos.tasaIva / 100));
             const amparosCumplimiento = amparos.slice(0, 8);
             const tieneCumplimiento = amparosCumplimiento.some(a => a.activo);
             const primaCumplimiento = amparosCumplimiento.reduce((acc, curr) => curr.activo ? acc + curr.prima : acc, 0);
@@ -226,9 +227,9 @@
                     setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { garantiaUnica: false, cumplimientoParticulares: false, cumplimientoEstatales: false, disposicionLegal: false, otros: false }, archivos: [] });
                     setTomador({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
                     setAsegurado({ nombre: '', nit: '' });
-                    setContrato({ objeto: '', numero: '', valorSinIva: 0, duracion: '' });
+                    setContrato({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '' });
                     setCostos({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
-                    setAmparos(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, valorAsegurado: 0, tasa: (a.tasaDefault).toFixed(2), prima: 0 })));
+                    setAmparos(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: (a.tasaDefault).toFixed(2), prima: 0 })));
                     const fileInputs = document.querySelectorAll('input[type="file"]');
                     fileInputs.forEach(input => input.value = '');
                 }
@@ -238,7 +239,7 @@
                 // Nuevo resumen optimizado y detallado para copiar y pegar
                 const amparosActivos = amparos.filter(a => a.activo);
                 let detalleAmparos = amparosActivos.map(a => 
-                    `  - ${a.nombre} | Fechas: ${a.desde||'-'} al ${a.hasta||'-'} (${a.dias} días) | Valor Asegurado: ${formatCurrency(a.valorAsegurado)} | Prima: ${formatCurrency(a.prima)}`
+                    `  - ${a.nombre} | Fechas: ${a.desde||'-'} al ${a.hasta||'-'} (${a.dias} días) | Porcentaje: ${a.porcentaje||'0'}% | Valor Asegurado: ${formatCurrency(a.valorAsegurado)} | Prima: ${formatCurrency(a.prima)}`
                 ).join('\n');
 
                 let resumen = `📋 SOLICITUD DE COTIZACIÓN - AEGIS INSURANCE\n`;
@@ -253,8 +254,8 @@
                 resumen += `📄 DATOS DEL CONTRATO\n`;
                 resumen += `Objeto: ${contrato.objeto}\n`;
                 resumen += `Número: ${contrato.numero || 'N/A'}\n`;
-                resumen += `Duración: ${contrato.duracion} días\n`;
-                resumen += `Valor SIN IVA: ${formatCurrency(contrato.valorSinIva)}\n`;
+                resumen += `Vigencia: ${contrato.desde || '-'} al ${contrato.hasta || '-'} (${contrato.duracion} días)\n`;
+                resumen += `Valor SIN IVA: ${formatCurrency(valorSinIva)}\n`;
                 resumen += `Valor CON IVA: ${formatCurrency(valorConIva)}\n\n`;
                 resumen += `🛡️ AMPAROS SOLICITADOS\n`;
                 resumen += detalleAmparos ? `${detalleAmparos}\n\n` : `  Ningún amparo seleccionado.\n\n`;
@@ -277,6 +278,7 @@
                         <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">${a.nombre}</td>
                         <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">${a.desde || '-'} al ${a.hasta || '-'}</td>
                         <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.dias}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.porcentaje || '0'}%</td>
                         <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-size: 13px;">${formatCurrency(a.valorAsegurado)}</td>
                         <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.tasa}%</td>
                         <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-size: 13px; font-weight: bold; color:#163f73;">${formatCurrency(a.prima)}</td>
@@ -328,7 +330,7 @@
                                 <p>INSURANCE</p>
                             </div>
                             <div style="text-align: right;">
-                                <h2 style="margin:0; color: #163f73; font-size: 20px;">COTIZACIÓN OFICIAL</h2>
+                                <h2 style="margin:0; color: #163f73; font-size: 20px;">ORDEN DE SERVICIO</h2>
                                 <p style="margin:5px 0 0 0; color: #555; font-size:14px; letter-spacing: 0; font-weight: normal;">No. <b>${consecutivo}</b></p>
                                 <p style="margin:5px 0 0 0; color: #555; font-size:12px; letter-spacing: 0; font-weight: normal;">Fecha: ${new Date().toLocaleDateString('es-CO')}</p>
                             </div>
@@ -359,8 +361,8 @@
                         <table>
                             <tr><td class="label" style="width:20%;">Objeto:</td><td class="val" style="width:80%; text-align: justify;">${contrato.objeto}</td></tr>
                             <tr><td class="label" style="width:20%;">No. Contrato:</td><td class="val" style="width:80%;">${contrato.numero || '-'}</td></tr>
-                            <tr><td class="label" style="width:20%;">Duración:</td><td class="val" style="width:80%;">${contrato.duracion || '-'} días</td></tr>
-                            <tr><td class="label" style="width:20%;">Valor SIN IVA:</td><td class="val" style="width:80%;">${formatCurrency(contrato.valorSinIva)}</td></tr>
+                            <tr><td class="label" style="width:20%;">Vigencia:</td><td class="val" style="width:80%;">${contrato.desde || '-'} al ${contrato.hasta || '-'} (${contrato.duracion || '-'} días)</td></tr>
+                            <tr><td class="label" style="width:20%;">Valor SIN IVA:</td><td class="val" style="width:80%;">${formatCurrency(valorSinIva)}</td></tr>
                             <tr><td class="label" style="width:20%;">Valor CON IVA:</td><td class="val" style="width:80%;">${formatCurrency(valorConIva)}</td></tr>
                         </table>
 
@@ -371,13 +373,14 @@
                                     <th>Amparo</th>
                                     <th>Vigencia</th>
                                     <th style="text-align: center;">Días</th>
+                                    <th style="text-align: center;">% Vr. Aseg.</th>
                                     <th style="text-align: right;">V. Asegurado</th>
                                     <th style="text-align: center;">Tasa</th>
                                     <th style="text-align: right;">Prima</th>
                                 </tr>
                             </thead>
                             <tbody>
-                                ${amparosHtml || '<tr><td colspan="6" style="text-align:center; padding: 20px;">No se seleccionaron amparos.</td></tr>'}
+                                ${amparosHtml || '<tr><td colspan="7" style="text-align:center; padding: 20px;">No se seleccionaron amparos.</td></tr>'}
                             </tbody>
                         </table>
 
@@ -439,7 +442,7 @@
                             const diff = Math.ceil((new Date(newHasta) - new Date(newDesde)) / (1000 * 60 * 60 * 24));
                             newDias = diff > 0 ? diff : 0;
                         }
-                        return { ...amp, activo: isActivating, desde: newDesde, hasta: newHasta, dias: newDias, valorAsegurado: isActivating ? amp.valorAsegurado : 0, prima: isActivating ? amp.prima : 0 };
+                        return { ...amp, activo: isActivating, desde: newDesde, hasta: newHasta, dias: newDias, porcentaje: isActivating ? amp.porcentaje : '', valorAsegurado: isActivating ? amp.valorAsegurado : 0, valorAseguradoStr: isActivating ? amp.valorAseguradoStr : '', prima: isActivating ? amp.prima : 0 };
                     }
                     return amp;
                 }));
@@ -448,14 +451,50 @@
             const handleAmparoField = (id, field, value) => {
                 setAmparos(prev => prev.map(amp => {
                     if (amp.id === id) {
-                        const updated = { ...amp, [field]: value };
-                        if ((field === 'desde' || field === 'hasta') && updated.desde && updated.hasta) {
-                            const diff = Math.ceil((new Date(updated.hasta) - new Date(updated.desde)) / (1000 * 60 * 60 * 24));
-                            updated.dias = diff > 0 ? diff : 0;
+                        const updated = { ...amp };
+                        
+                        if (field === 'desde' || field === 'hasta') {
+                            updated[field] = value;
+                            if (updated.desde && updated.hasta) {
+                                const diff = Math.ceil((new Date(updated.hasta) - new Date(updated.desde)) / (1000 * 60 * 60 * 24));
+                                updated.dias = diff > 0 ? diff : 0;
+                            }
                         }
-                        if (field === 'valorAsegurado' || field === 'tasa') {
-                            updated.prima = updated.valorAsegurado * ((parseFloat(updated.tasa) || 0) / 100);
+                        else if (field === 'porcentaje') {
+                            updated.porcentaje = value;
+                            let cleanPct = value.replace(/[^0-9,.]/g, '').replace(',', '.');
+                            let pctNum = parseFloat(cleanPct);
+                            
+                            if (!isNaN(pctNum)) {
+                                let vAseg = valorConIva * (pctNum / 100);
+                                updated.valorAsegurado = vAseg;
+                                updated.valorAseguradoStr = vAseg.toLocaleString('es-CO', {minimumFractionDigits:0, maximumFractionDigits:2});
+                                updated.prima = vAseg * ((parseFloat(updated.tasa) || 0) / 100);
+                            } else {
+                                updated.valorAsegurado = 0;
+                                updated.valorAseguradoStr = '';
+                                updated.prima = 0;
+                            }
                         }
+                        else if (field === 'valorAsegurado') {
+                            updated.valorAseguradoStr = value;
+                            // Parseamos permitiendo decimales tras la coma (Estilo Colombia)
+                            let cleanVal = value.replace(/\./g, '').replace(',', '.').replace(/[^0-9.]/g, '');
+                            let vAseg = parseFloat(cleanVal) || 0;
+                            updated.valorAsegurado = vAseg;
+                            
+                            if (valorConIva > 0 && vAseg > 0) {
+                                updated.porcentaje = ((vAseg / valorConIva) * 100).toFixed(2).replace('.', ',');
+                            } else {
+                                updated.porcentaje = '';
+                            }
+                            updated.prima = vAseg * ((parseFloat(updated.tasa) || 0) / 100);
+                        }
+                        else if (field === 'tasa') {
+                            updated.tasa = value;
+                            updated.prima = updated.valorAsegurado * ((parseFloat(value.replace(',', '.')) || 0) / 100);
+                        }
+                        
                         return updated;
                     }
                     return amp;
@@ -476,7 +515,7 @@
                     const attachments = await Promise.all(interno.archivos.map(getBase64));
                     
                     const amparosDetalleExcel = amparos.filter(a => a.activo).map(a => 
-                        `${a.nombre} | Vig: ${a.desde || '-'} a ${a.hasta || '-'} (${a.dias} d) | V.Aseg: ${formatCurrency(a.valorAsegurado)} | Tasa: ${a.tasa}% | Prima: ${formatCurrency(a.prima)}`
+                        `${a.nombre} | Vig: ${a.desde || '-'} a ${a.hasta || '-'} (${a.dias} d) | % Asegurado: ${a.porcentaje||'0'}% | V.Aseg: ${formatCurrency(a.valorAsegurado)} | Tasa: ${a.tasa}% | Prima: ${formatCurrency(a.prima)}`
                     ).join('\n');
 
                     const payload = {
@@ -484,7 +523,7 @@
                         consecutivo, solicitante: interno.solicitante, solicitanteEmail: interno.solicitanteEmail, asunto: interno.asunto, tiposSolicitud: Object.keys(interno.tipos).filter(k => interno.tipos[k]).join(', '),
                         tomador: tomador.nombre, tomadorNombre: tomador.nombre, tomadorNit: tomador.nit, tomadorDireccion: tomador.direccion, tomadorTelefono: tomador.telefono, tomadorCelular: tomador.celular, tomadorEmail: tomador.email,
                         asegurado: asegurado.nombre, aseguradoNombre: asegurado.nombre, aseguradoNit: asegurado.nit,
-                        contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, contratoValorSinIva: contrato.valorSinIva, contratoValorConIva: valorConIva, contratoDuracionDias: contrato.duracion,
+                        contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, contratoValorSinIva: valorSinIva, contratoValorConIva: valorConIva, contratoDuracionDias: contrato.duracion,
                         amparosResumen: amparos.filter(a => a.activo).map(a => `${a.nombre}: ${formatCurrency(a.valorAsegurado)}`).join('\n'),
                         amparosDetalleExcel,
                         primaCumplimiento, gastosCumplimiento: gastosCalculadosCump, ivaCumplimiento: ivaCump, totalCumplimiento: totalCump, valorTotalCumplimiento: formatCurrency(totalCump),
@@ -712,23 +751,54 @@
 
                                     <div className={sectionClass}>
                                         <h3 className="text-lg font-bold text-[#163f73] mb-4 flex items-center gap-2 border-b border-[#dce4ec] pb-2"><FileText size={20} className="text-[#58C9E8]" /> 3. Datos del Contrato</h3>
-                                        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                                            <div className="md:col-span-4 relative"><label className={labelClass}>Objeto *</label><textarea rows="2" maxLength="1000" className={inputClass} value={contrato.objeto} onChange={e => setContrato({...contrato, objeto: e.target.value})}></textarea></div>
-                                            <div><label className={labelClass}>Número</label><input type="text" className={inputClass} value={contrato.numero} onChange={e => setContrato({...contrato, numero: e.target.value})} /></div>
-                                            <div><label className={labelClass}>Valor SIN IVA</label><input type="text" className={inputClass} value={contrato.valorSinIva?contrato.valorSinIva.toLocaleString('es-CO'):''} onChange={e => setContrato({...contrato, valorSinIva: parseCurrency(e.target.value)})} /></div>
-                                            <div><label className={labelClass}>Valor CON IVA</label><input type="text" className={`${inputClass} bg-[#e4ebf1] font-semibold`} disabled value={formatCurrency(valorConIva)} /></div>
-                                            <div><label className={labelClass}>Duración (Días)</label><input type="number" className={inputClass} value={contrato.duracion} onChange={e => setContrato({...contrato, duracion: e.target.value})} /></div>
+                                        <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
+                                            <div className="md:col-span-6 relative"><label className={labelClass}>Objeto *</label><textarea rows="2" maxLength="1000" className={inputClass} value={contrato.objeto} onChange={e => setContrato({...contrato, objeto: e.target.value})}></textarea></div>
+                                            <div className="md:col-span-2"><label className={labelClass}>Número</label><input type="text" className={inputClass} value={contrato.numero} onChange={e => setContrato({...contrato, numero: e.target.value})} /></div>
+                                            <div className="md:col-span-2">
+                                                <label className={labelClass}>Valor CON IVA *</label>
+                                                <div className="relative">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5c7792] font-bold pointer-events-none">$</span>
+                                                    <input type="text" className={`${inputClass} pl-8`} value={contrato.valorConIva?contrato.valorConIva.toLocaleString('es-CO'):''} onChange={e => setContrato({...contrato, valorConIva: parseCurrency(e.target.value)})} />
+                                                </div>
+                                            </div>
+                                            <div className="md:col-span-2">
+                                                <label className={labelClass}>Valor SIN IVA</label>
+                                                <div className="relative">
+                                                    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5c7792] font-bold pointer-events-none opacity-70">$</span>
+                                                    <input type="text" className={`${inputClass} bg-[#e4ebf1] font-semibold pl-8`} disabled value={valorSinIva ? valorSinIva.toLocaleString('es-CO', {maximumFractionDigits: 0}) : '0'} />
+                                                </div>
+                                            </div>
+                                            
+                                            <div className="md:col-span-2"><label className={labelClass}>Desde</label><input type="date" className={inputClass} value={contrato.desde} onChange={e => {
+                                                const newDesde = e.target.value;
+                                                let newDuracion = contrato.duracion;
+                                                if (newDesde && contrato.hasta) {
+                                                    const diff = Math.ceil((new Date(contrato.hasta) - new Date(newDesde)) / (1000 * 60 * 60 * 24));
+                                                    newDuracion = diff > 0 ? diff : 0;
+                                                }
+                                                setContrato({...contrato, desde: newDesde, duracion: newDuracion});
+                                            }} /></div>
+                                            <div className="md:col-span-2"><label className={labelClass}>Hasta</label><input type="date" className={inputClass} value={contrato.hasta} onChange={e => {
+                                                const newHasta = e.target.value;
+                                                let newDuracion = contrato.duracion;
+                                                if (contrato.desde && newHasta) {
+                                                    const diff = Math.ceil((new Date(newHasta) - new Date(contrato.desde)) / (1000 * 60 * 60 * 24));
+                                                    newDuracion = diff > 0 ? diff : 0;
+                                                }
+                                                setContrato({...contrato, hasta: newHasta, duracion: newDuracion});
+                                            }} /></div>
+                                            <div className="md:col-span-2"><label className={labelClass}>Duración (Días)</label><input type="number" className={`${inputClass} bg-[#e4ebf1] font-semibold`} disabled value={contrato.duracion} /></div>
                                         </div>
                                     </div>
 
                                     <div className={sectionClass}>
                                         <h3 className="text-lg font-bold text-[#163f73] mb-2 flex items-center gap-2 border-b border-[#dce4ec] pb-2"><Calculator size={20} className="text-[#58C9E8]" /> 4. Amparos y Garantías</h3>
                                         <div className="overflow-x-auto">
-                                            <table className="w-full text-left min-w-[900px]">
+                                            <table className="w-full text-left min-w-[1000px]">
                                                 <thead className="bg-[#e6edf3] text-xs uppercase tracking-wider text-[#163f73]">
                                                     <tr>
                                                         <th className="px-4 py-3 font-semibold rounded-tl-lg">Amparo</th><th className="px-4 py-3 font-semibold w-32">Desde</th><th className="px-4 py-3 font-semibold w-32">Hasta</th>
-                                                        <th className="px-2 py-3 font-semibold text-center w-16">Días</th><th className="px-4 py-3 font-semibold w-40 text-right">Valor Asegurado</th>
+                                                        <th className="px-2 py-3 font-semibold text-center w-16">Días</th><th className="px-2 py-3 font-semibold text-center w-24">% Vr. Aseg.</th><th className="px-4 py-3 font-semibold w-40 text-right">Valor Asegurado</th>
                                                         <th className="px-2 py-3 font-semibold text-center w-24">Tasa %</th><th className="px-4 py-3 font-semibold w-32 text-right rounded-tr-lg">Prima</th>
                                                     </tr>
                                                 </thead>
@@ -739,7 +809,13 @@
                                                             <td className="px-2 py-3"><input type="date" className="w-full p-1.5 text-xs border border-[#cdd7e0] rounded bg-[#eef3f8] focus:bg-white focus:ring-1 focus:ring-[#58C9E8] outline-none disabled:opacity-50 disabled:bg-[#e4ebf1] transition-colors" disabled={!amp.activo} value={amp.desde} onChange={e => handleAmparoField(amp.id, 'desde', e.target.value)} /></td>
                                                             <td className="px-2 py-3"><input type="date" className="w-full p-1.5 text-xs border border-[#cdd7e0] rounded bg-[#eef3f8] focus:bg-white focus:ring-1 focus:ring-[#58C9E8] outline-none disabled:opacity-50 disabled:bg-[#e4ebf1] transition-colors" disabled={!amp.activo} value={amp.hasta} onChange={e => handleAmparoField(amp.id, 'hasta', e.target.value)} /></td>
                                                             <td className="px-2 py-3 text-center"><span className="text-sm font-bold text-[#5c7792]">{amp.dias || '-'}</span></td>
-                                                            <td className="px-4 py-3"><input type="text" className="w-full p-1.5 text-sm text-right font-semibold border border-[#cdd7e0] rounded bg-[#eef3f8] focus:bg-white focus:ring-1 focus:ring-[#58C9E8] outline-none disabled:opacity-50 disabled:bg-[#e4ebf1] transition-colors" disabled={!amp.activo} value={amp.valorAsegurado?amp.valorAsegurado.toLocaleString('es-CO'):''} onChange={e => handleAmparoField(amp.id, 'valorAsegurado', parseCurrency(e.target.value))} /></td>
+                                                            <td className="px-2 py-3"><input type="text" placeholder="%" className="w-full p-1.5 text-sm text-center font-semibold border border-[#cdd7e0] rounded bg-[#eef3f8] focus:bg-white focus:ring-1 focus:ring-[#58C9E8] outline-none disabled:opacity-50 disabled:bg-[#e4ebf1] transition-colors" disabled={!amp.activo} value={amp.porcentaje} onChange={e => handleAmparoField(amp.id, 'porcentaje', e.target.value)} /></td>
+                                                            <td className="px-4 py-3">
+                                                                <div className="relative flex items-center">
+                                                                    <span className={`absolute left-2 text-[#5c7792] font-bold text-sm pointer-events-none ${!amp.activo && 'opacity-50'}`}>$</span>
+                                                                    <input type="text" className="w-full p-1.5 pl-6 text-sm text-right font-semibold border border-[#cdd7e0] rounded bg-[#eef3f8] focus:bg-white focus:ring-1 focus:ring-[#58C9E8] outline-none disabled:opacity-50 disabled:bg-[#e4ebf1] transition-colors" disabled={!amp.activo} value={amp.valorAseguradoStr !== undefined ? amp.valorAseguradoStr : (amp.valorAsegurado ? amp.valorAsegurado.toLocaleString('es-CO',{minimumFractionDigits:0, maximumFractionDigits:2}) : '')} onChange={e => handleAmparoField(amp.id, 'valorAsegurado', e.target.value)} />
+                                                                </div>
+                                                            </td>
                                                             <td className="px-2 py-3"><input type="text" className="w-full p-1.5 text-xs text-center border border-[#cdd7e0] rounded bg-[#e6edf3] text-[#5c7792] font-semibold disabled:opacity-70" disabled value={amp.tasa} /></td>
                                                             <td className="px-4 py-3 text-right"><span className="text-sm font-bold text-[#163f73]">{formatCurrency(amp.prima)}</span></td>
                                                         </tr>
@@ -753,8 +829,20 @@
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                         <div className="bg-white rounded-xl p-6 shadow-sm border border-[#dce4ec]"><h3 className="font-bold text-[#163f73] mb-4 border-b border-[#dce4ec] pb-2">Ajustes Adicionales</h3>
                                             <div className="space-y-4">
-                                                <div><label className={labelClass}>Gastos Cumplimiento</label><input type="text" className={inputClass} value={costos.gastosCump?costos.gastosCump.toLocaleString('es-CO'):''} onChange={e => setCostos({...costos, gastosCump: parseCurrency(e.target.value)})} /></div>
-                                                <div><label className={labelClass}>Gastos RCE</label><input type="text" className={inputClass} value={costos.gastosRCE?costos.gastosRCE.toLocaleString('es-CO'):''} onChange={e => setCostos({...costos, gastosRCE: parseCurrency(e.target.value)})} /></div>
+                                                <div>
+                                                    <label className={labelClass}>Gastos Cumplimiento</label>
+                                                    <div className="relative">
+                                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5c7792] font-bold pointer-events-none">$</span>
+                                                        <input type="text" className={`${inputClass} pl-8`} value={costos.gastosCump?costos.gastosCump.toLocaleString('es-CO'):''} onChange={e => setCostos({...costos, gastosCump: parseCurrency(e.target.value)})} />
+                                                    </div>
+                                                </div>
+                                                <div>
+                                                    <label className={labelClass}>Gastos RCE</label>
+                                                    <div className="relative">
+                                                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5c7792] font-bold pointer-events-none">$</span>
+                                                        <input type="text" className={`${inputClass} pl-8`} value={costos.gastosRCE?costos.gastosRCE.toLocaleString('es-CO'):''} onChange={e => setCostos({...costos, gastosRCE: parseCurrency(e.target.value)})} />
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                         <div className="bg-[#12334F] rounded-xl p-6 shadow-lg border border-[#163f73] text-white">
