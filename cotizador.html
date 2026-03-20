@@ -305,9 +305,9 @@
                             .grand-total { font-size: 18px; font-weight: bold; color: #163f73; margin-top: 15px; padding-top: 15px; border-top: 1px solid #ccc; }
                             .footer { margin-top: 50px; text-align: center; font-size: 11px; color: #888; border-top: 1px solid #eee; padding-top: 20px; page-break-inside: avoid; }
                             @media print { 
-                                @page { margin: 15mm; size: A4 portrait; }
-                                body { padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; } 
-                                .totals-box { border: 1px solid #e0e0e0; } 
+                                @page { margin: 10mm; size: landscape; }
+                                body { padding: 0; -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; zoom: 0.85; } 
+                                .totals-box { border: 1px solid #e0e0e0; break-inside: avoid; } 
                             }
                         </style>
                     </head>
@@ -464,12 +464,19 @@
                 setIsSubmitting(true);
                 try {
                     const attachments = await Promise.all(interno.archivos.map(getBase64));
+                    
+                    const amparosDetalleExcel = amparos.filter(a => a.activo).map(a => 
+                        `${a.nombre} | Vig: ${a.desde || '-'} a ${a.hasta || '-'} (${a.dias} d) | V.Aseg: ${formatCurrency(a.valorAsegurado)} | Tasa: ${a.tasa}% | Prima: ${formatCurrency(a.prima)}`
+                    ).join('\n');
+
                     const payload = {
+                        fechaRegistro: new Date().toLocaleString('es-CO'),
                         consecutivo, solicitante: interno.solicitante, solicitanteEmail: interno.solicitanteEmail, asunto: interno.asunto, tiposSolicitud: Object.keys(interno.tipos).filter(k => interno.tipos[k]).join(', '),
                         tomador: tomador.nombre, tomadorNombre: tomador.nombre, tomadorNit: tomador.nit, tomadorDireccion: tomador.direccion, tomadorTelefono: tomador.telefono, tomadorCelular: tomador.celular, tomadorEmail: tomador.email,
                         asegurado: asegurado.nombre, aseguradoNombre: asegurado.nombre, aseguradoNit: asegurado.nit,
                         contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, contratoValorSinIva: contrato.valorSinIva, contratoValorConIva: valorConIva, contratoDuracionDias: contrato.duracion,
                         amparosResumen: amparos.filter(a => a.activo).map(a => `${a.nombre}: ${formatCurrency(a.valorAsegurado)}`).join('\n'),
+                        amparosDetalleExcel,
                         primaCumplimiento, gastosCumplimiento: gastosCalculadosCump, ivaCumplimiento: ivaCump, totalCumplimiento: totalCump, valorTotalCumplimiento: formatCurrency(totalCump),
                         primaRCE, gastosRCE: gastosCalculadosRCE, ivaRCE: ivaRCE, totalRCE, valorTotalRCE: formatCurrency(totalRCE),
                         granTotal: totalGeneral, valorGranTotal: formatCurrency(totalGeneral), adjuntos: attachments
