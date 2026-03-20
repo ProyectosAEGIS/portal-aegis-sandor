@@ -520,7 +520,7 @@
                         <div className={sectionCls}>
                             <h3 className="flex items-center gap-2 font-bold text-[#163f73] mb-4 border-b pb-2"><FileText size={20} className="text-[#58C9E8]" /> 2. Datos del Contrato</h3>
                             <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                                <div className="md:col-span-6"><label className={labelCls}>Objeto del Contrato *</label><textarea className={`${inputCls} h-20`} value={contrato.objeto} onChange={e => setContrato({...contrato, objeto: e.target.value})}></textarea></div>
+                                <div className="md:col-span-6"><label className={labelCls}>Objeto del Contrato *</label><textarea maxLength="2000" className={`${inputCls} h-20`} value={contrato.objeto} onChange={e => setContrato({...contrato, objeto: e.target.value})}></textarea></div>
                                 <div className="md:col-span-2"><label className={labelCls}>Número</label><input type="text" className={inputCls} value={contrato.numero} onChange={e => setContrato({...contrato, numero: e.target.value})} /></div>
                                 <div className="md:col-span-2">
                                     <label className={labelCls}>Valor CON IVA *</label>
