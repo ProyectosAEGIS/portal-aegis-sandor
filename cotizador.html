@@ -523,11 +523,12 @@
                         // Ajuste CRÍTICO para html2canvas: 
                         // No usar opacity:0 ni display:none. Lo enviamos fuera de la pantalla visible.
                         tempDiv.style.position = 'absolute';
-                        tempDiv.style.top = '-10000px'; // Muy arriba, fuera de la vista del usuario
+                        tempDiv.style.top = '0';
                         tempDiv.style.left = '0';
                         tempDiv.style.width = '1122px'; // Ancho A4 horizontal aprox.
                         tempDiv.style.backgroundColor = '#ffffff'; // Fondo blanco garantizado
-                        tempDiv.style.zIndex = '-1000';
+                        tempDiv.style.zIndex = '-9999';
+                        tempDiv.style.visibility = 'hidden';
                         
                         document.body.appendChild(tempDiv);
                         
@@ -569,7 +570,7 @@
                         tiposSolicitud: Object.keys(interno.tipos).filter(k => interno.tipos[k]).join(', '),
                         tomadorNombre: tomador.nombre, tomadorNit: tomador.nit, tomadorDireccion: tomador.direccion, tomadorTelefono: tomador.telefono, tomadorEmail: tomador.email,
                         aseguradoNombre: asegurado.nombre, aseguradoNit: asegurado.nit,
-                        contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, contratoValorSinIva: valorSinIva, contratoValorConIva: valorConIva, contratoDuracionDias: contrato.duracion,
+                        contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, contratoValorSinIva: valorSinIva, contratoValorConIva: valorConIva, contratoValorSinIvaFormateado: formatCurrency(valorSinIva), contratoValorConIvaFormateado: formatCurrency(valorConIva), contratoDuracionDias: contrato.duracion,
                         amparosDetalleExcel, 
                         primaCumplimiento: primaCumplimiento, 
                         gastosCumplimiento: gastosCalculadosCump, 
