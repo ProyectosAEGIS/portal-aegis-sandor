@@ -519,30 +519,33 @@
                     try {
                         const tempDiv = document.createElement('div');
                         tempDiv.innerHTML = getOrdenServicioHTML();
-                        // Ajuste importante para que html2canvas capture el ancho correcto sin estar visible
+                        
+                        // Ajuste CRÍTICO para html2canvas: 
+                        // No usar opacity:0 ni display:none. Lo enviamos fuera de la pantalla visible.
                         tempDiv.style.position = 'absolute';
-                        tempDiv.style.top = '0';
+                        tempDiv.style.top = '-10000px'; // Muy arriba, fuera de la vista del usuario
                         tempDiv.style.left = '0';
                         tempDiv.style.width = '1122px'; // Ancho A4 horizontal aprox.
-                        tempDiv.style.zIndex = '-9999';
-                        tempDiv.style.opacity = '0'; 
-                        tempDiv.style.pointerEvents = 'none';
+                        tempDiv.style.backgroundColor = '#ffffff'; // Fondo blanco garantizado
+                        tempDiv.style.zIndex = '-1000';
+                        
                         document.body.appendChild(tempDiv);
                         
-                        // Pequeña pausa para asegurar que el navegador pinte el DOM interno
-                        await new Promise(resolve => setTimeout(resolve, 100));
+                        // Pausa ligeramente más larga (300ms) para asegurar que el navegador pinte el DOM interno
+                        await new Promise(resolve => setTimeout(resolve, 300));
                         
                         const opt = {
                             margin:       10,
                             filename:     `${consecutivo}_Orden_Servicio.pdf`,
                             image:        { type: 'jpeg', quality: 0.98 },
-                            html2canvas:  { scale: 2, logging: false, useCORS: true },
+                            html2canvas:  { scale: 2, logging: false, useCORS: true, windowWidth: 1122 },
                             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
                         };
                         
                         const pdfDataUri = await html2pdf().set(opt).from(tempDiv).outputPdf('datauristring');
                         const pdfBase64 = pdfDataUri.split(',')[1];
-                        document.body.removeChild(tempDiv);
+                        
+                        document.body.removeChild(tempDiv); // Limpiamos la pantalla
                         
                         if (pdfBase64) {
                             attachments.push({
