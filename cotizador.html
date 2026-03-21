@@ -558,7 +558,18 @@
                         tomadorNombre: tomador.nombre, tomadorNit: tomador.nit, tomadorDireccion: tomador.direccion, tomadorTelefono: tomador.telefono, tomadorEmail: tomador.email,
                         aseguradoNombre: asegurado.nombre, aseguradoNit: asegurado.nit,
                         contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, contratoValorSinIva: valorSinIva, contratoValorConIva: valorConIva, contratoDuracionDias: contrato.duracion,
-                        amparosDetalleExcel, valorTotalCumplimiento: formatCurrency(totalCump), valorTotalRCE: formatCurrency(totalRCE), valorGranTotal: formatCurrency(totalGeneral), adjuntos: attachments
+                        amparosDetalleExcel, 
+                        primaCumplimiento: primaCumplimiento, 
+                        gastosCumplimiento: gastosCalculadosCump, 
+                        ivaCumplimiento: ivaCump, 
+                        valorTotalCumplimiento: formatCurrency(totalCump), 
+                        primaRCE: primaRCE, 
+                        gastosRCE: gastosCalculadosRCE, 
+                        ivaRCE: ivaRCE, 
+                        valorTotalRCE: formatCurrency(totalRCE), 
+                        granTotal: totalGeneral,
+                        valorGranTotal: formatCurrency(totalGeneral), 
+                        adjuntos: attachments
                     };
 
                     const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
