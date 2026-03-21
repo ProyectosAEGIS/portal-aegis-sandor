@@ -82,7 +82,7 @@
             { id: 4, nombre: 'Pagos de Salarios y Prestaciones', tasaDefault: 0.15 },
             { id: 5, nombre: 'Calidad del Servicio', tasaDefault: 0.18 },
             { id: 6, nombre: 'Calidad de los Bienes', tasaDefault: 0.18 },
-            { id: 7, nombre: 'Estabilidad y Calidad', tasaDefault: 0.18 },
+            { id: 7, nombre: 'Estabilidad y Calidad', spread: 0.18 },
             { id: 8, nombre: 'Calidad y Correcto Funcionamiento', tasaDefault: 0.18 },
             { id: 9, nombre: 'Responsabilidad Civil Extracontractual', tasaDefault: 0.20 }
         ];
@@ -175,7 +175,7 @@
             const [asegurado, setAsegurado] = React.useState({ nombre: '', nit: '' });
             const [contrato, setContrato] = React.useState({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '' });
             const [costos, setCostos] = React.useState({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
-            const [amparos, setAmparos] = React.useState(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault.toFixed(2), prima: 0 })));
+            const [amparos, setAmparos] = React.useState(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault ? a.tasaDefault.toFixed(2) : '0.18', prima: 0 })));
             const [isSubmitting, setIsSubmitting] = React.useState(false);
 
             // --- ESTADOS DE REPORTES ---
@@ -354,7 +354,7 @@
                     setAsegurado({ nombre: '', nit: '' });
                     setContrato({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '' });
                     setCostos({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
-                    setAmparos(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault.toFixed(2), prima: 0 })));
+                    setAmparos(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault ? a.tasaDefault.toFixed(2) : '0.18', prima: 0 })));
                     const fileInputs = document.querySelectorAll('input[type="file"]');
                     fileInputs.forEach(input => input.value = '');
                 }
@@ -519,15 +519,24 @@
                     try {
                         const tempDiv = document.createElement('div');
                         tempDiv.innerHTML = getOrdenServicioHTML();
+                        // Ajuste importante para que html2canvas capture el ancho correcto sin estar visible
                         tempDiv.style.position = 'absolute';
-                        tempDiv.style.left = '-9999px';
+                        tempDiv.style.top = '0';
+                        tempDiv.style.left = '0';
+                        tempDiv.style.width = '1122px'; // Ancho A4 horizontal aprox.
+                        tempDiv.style.zIndex = '-9999';
+                        tempDiv.style.opacity = '0'; 
+                        tempDiv.style.pointerEvents = 'none';
                         document.body.appendChild(tempDiv);
+                        
+                        // Pequeña pausa para asegurar que el navegador pinte el DOM interno
+                        await new Promise(resolve => setTimeout(resolve, 100));
                         
                         const opt = {
                             margin:       10,
                             filename:     `${consecutivo}_Orden_Servicio.pdf`,
                             image:        { type: 'jpeg', quality: 0.98 },
-                            html2canvas:  { scale: 2, logging: false },
+                            html2canvas:  { scale: 2, logging: false, useCORS: true },
                             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
                         };
                         
