@@ -250,7 +250,8 @@
                         </style>
                         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #58C9E8; padding-bottom: 20px; margin-bottom: 30px;">
                             <div>
-                                <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#58C9E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 5px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                <!-- Corrección CRÍTICA: Se añadió xmlns para que html2canvas pueda renderizar el logo sin fallar -->
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#58C9E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 5px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
                                 <h1 style="margin: 0; color: #163f73; font-size: 28px; text-transform: uppercase; letter-spacing: 1px;">AEGIS</h1>
                                 <p style="margin: 2px 0 0 0; color: #58C9E8; font-weight: bold; letter-spacing: 3px; font-size: 11px; text-transform: uppercase;">INSURANCE</p>
                             </div>
@@ -512,65 +513,50 @@
                 if (!WEBHOOK_URL) return alert("❌ Error: No se ha configurado la URL de Make.com.");
                 if (!interno.solicitante || !tomador.nombre) return alert("Diligencie Solicitante y Tomador mínimo.");
                 setIsSubmitting(true);
+                
+                // 1. Mostrar cortina de carga para mejor experiencia de usuario
+                const cortina = document.createElement('div');
+                cortina.id = 'cortina-pdf';
+                cortina.style.position = 'fixed';
+                cortina.style.inset = '0';
+                cortina.style.backgroundColor = 'rgba(18, 51, 79, 0.95)'; // Azul oscuro corporativo
+                cortina.style.zIndex = '999999';
+                cortina.style.display = 'flex';
+                cortina.style.flexDirection = 'column';
+                cortina.style.alignItems = 'center';
+                cortina.style.justifyContent = 'center';
+                cortina.style.color = 'white';
+                cortina.innerHTML = `
+                    <svg class="animate-spin h-12 w-12 text-[#58C9E8] mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <h3 class="text-xl font-bold">Generando Orden de Servicio...</h3>
+                    <p class="text-sm mt-2 text-gray-300">Empaquetando documentos y conectando con el servidor.</p>
+                `;
+                document.body.appendChild(cortina);
+
                 try {
                     const attachments = await Promise.all(interno.archivos.map(getBase64));
                     
-                    // --- Generación PDF en Segundo Plano (TRUCO DE LA CORTINA) ---
+                    // --- Generación PDF en Entorno Aislado (SOLUCIÓN DEFINITIVA AL BLANCO) ---
                     try {
-                        // 1. Creamos el documento físicamente visible en la pantalla (Z-index alto)
-                        const tempDiv = document.createElement('div');
-                        tempDiv.innerHTML = getOrdenServicioHTML();
-                        tempDiv.style.position = 'absolute';
-                        tempDiv.style.top = '0';
-                        tempDiv.style.left = '0';
-                        tempDiv.style.width = '1122px'; // Ancho A4 horizontal
-                        tempDiv.style.backgroundColor = '#ffffff'; 
-                        tempDiv.style.zIndex = '100000'; // Súper encima de todo
-                        
-                        document.body.appendChild(tempDiv);
-
-                        // 2. Creamos una CORTINA ELEGANTE para ocultarle el pantallazo al usuario
-                        const cortina = document.createElement('div');
-                        cortina.id = 'cortina-pdf';
-                        cortina.style.position = 'fixed';
-                        cortina.style.inset = '0';
-                        cortina.style.backgroundColor = 'rgba(255, 255, 255, 0.95)';
-                        cortina.style.zIndex = '100001'; // Encima del PDF
-                        cortina.style.display = 'flex';
-                        cortina.style.flexDirection = 'column';
-                        cortina.style.alignItems = 'center';
-                        cortina.style.justifyContent = 'center';
-                        cortina.innerHTML = `
-                            <svg class="animate-spin h-12 w-12 text-[#163f73] mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                            </svg>
-                            <h3 class="text-xl font-bold text-[#163f73]">Generando Orden de Servicio...</h3>
-                            <p class="text-gray-500 text-sm mt-2">Preparando archivos adjuntos y finalizando cotización</p>
-                        `;
-                        document.body.appendChild(cortina);
-                        
-                        // Obligamos al navegador a subir la ventana (html2canvas lo requiere)
-                        window.scrollTo(0, 0);
-                        
-                        // Pausa de medio segundo para que el navegador pinte todos los colores
-                        await new Promise(resolve => setTimeout(resolve, 600));
+                        // Obtenemos el HTML como un simple texto string
+                        const htmlString = getOrdenServicioHTML();
                         
                         const opt = {
                             margin:       10,
                             filename:     `${consecutivo}_Orden_Servicio.pdf`,
                             image:        { type: 'jpeg', quality: 0.98 },
-                            html2canvas:  { scale: 2, logging: false, useCORS: true, scrollY: 0 },
+                            // Al usar .from(string), html2pdf crea un iframe interno aislado. 
+                            // Esto evita cualquier conflicto visual con la pantalla principal.
+                            html2canvas:  { scale: 2, logging: false, useCORS: true, letterRendering: true },
                             jsPDF:        { unit: 'mm', format: 'a4', orientation: 'landscape' }
                         };
                         
-                        // Tomamos la "foto" del documento visible
-                        const pdfDataUri = await html2pdf().set(opt).from(tempDiv).outputPdf('datauristring');
+                        // Generamos el PDF directamente desde el texto HTML
+                        const pdfDataUri = await html2pdf().set(opt).from(htmlString).outputPdf('datauristring');
                         const pdfBase64 = pdfDataUri.split(',')[1];
-                        
-                        // Limpiamos la pantalla: Borramos el doc y la cortina
-                        document.body.removeChild(tempDiv); 
-                        document.body.removeChild(cortina);
                         
                         if (pdfBase64) {
                             attachments.push({
@@ -580,9 +566,6 @@
                         }
                     } catch (pdfError) {
                         console.error("Error al generar PDF automático:", pdfError);
-                        if(document.getElementById('cortina-pdf')) {
-                            document.body.removeChild(document.getElementById('cortina-pdf'));
-                        }
                     }
                     // ----------------------------------------------------
 
@@ -618,7 +601,15 @@
                         setConsecutivo(generarConsecutivoLocal()); 
                         limpiarFormularioCotizador();
                     } else { throw new Error(res.status); }
-                } catch (e) { alert("❌ Error: " + e.message); } finally { setIsSubmitting(false); }
+                } catch (e) { 
+                    alert("❌ Error: " + e.message); 
+                } finally { 
+                    setIsSubmitting(false); 
+                    // Remover la cortina al finalizar
+                    if(document.getElementById('cortina-pdf')) {
+                        document.body.removeChild(document.getElementById('cortina-pdf'));
+                    }
+                }
             };
 
             // --- FUNCIONES DE REPORTES CSV ---
