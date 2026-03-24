@@ -239,13 +239,18 @@
                             .label { font-weight: bold; width: 35%; color: #555; }
                             .val { width: 65%; }
                             .amparos-table th { background-color: #f4f7f9; padding: 12px 10px; text-align: left; font-size: 12px; color: #163f73; text-transform: uppercase; }
-                            .totals-container { width: 50%; margin-left: auto; margin-top: 20px; }
-                            .totals-box { background-color: #f4f7f9; border-left: 4px solid #163f73; padding: 15px; margin-bottom: 10px; }
+                            
+                            /* --- NUEVO DISEÑO PARA LOS TOTALES LADO A LADO --- */
+                            .totals-container { width: 100%; margin-top: 20px; page-break-inside: avoid; }
+                            .totals-grid { display: flex; gap: 20px; width: 100%; }
+                            .totals-box { flex: 1; background-color: #f4f7f9; border-left: 4px solid #163f73; padding: 15px; }
                             .totals-box h4 { margin: 0 0 10px 0; color: #163f73; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
                             .totals-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; color: #333; }
                             .totals-subtotal { display: flex; justify-content: space-between; font-weight: bold; color: #163f73; font-size: 14px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ccc; }
-                            .grand-total-box { background-color: #12334F; border-left: 5px solid #58C9E8; padding: 15px; color: white; margin-top: 15px; }
+                            .grand-total-box { width: 100%; box-sizing: border-box; background-color: #12334F; border-left: 5px solid #58C9E8; padding: 15px; color: white; margin-top: 15px; }
                             .grand-total-box .totals-row { color: white; font-size: 18px; font-weight: bold; margin: 0; }
+                            /* ------------------------------------------------ */
+
                             .section-title { color: #163f73; font-size: 16px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; margin-top: 30px; margin-bottom: 15px; text-transform: uppercase; }
                         </style>
                         <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #58C9E8; padding-bottom: 20px; margin-bottom: 30px;">
@@ -310,21 +315,24 @@
                             </tbody>
                         </table>
 
-                        <div class="totals-container">
-                            <div class="totals-box">
-                                <h4>Póliza de Cumplimiento</h4>
-                                <div class="totals-row"><span>Prima:</span><span>${formatCurrency(primaCumplimiento)}</span></div>
-                                <div class="totals-row"><span>Gastos de Expedición:</span><span>${formatCurrency(gastosCalculadosCump)}</span></div>
-                                <div class="totals-row"><span>IVA (${costos.tasaIva}%):</span><span>${formatCurrency(ivaCump)}</span></div>
-                                <div class="totals-subtotal"><span>Total Cumplimiento:</span><span>${formatCurrency(totalCump)}</span></div>
-                            </div>
+                        <!-- CONTENEDOR FINAL ESTRUCTURADO Y PROTEGIDO DE CORTES -->
+                        <div class="totals-container" style="page-break-inside: avoid;">
+                            <div class="totals-grid">
+                                <div class="totals-box">
+                                    <h4>Póliza de Cumplimiento</h4>
+                                    <div class="totals-row"><span>Prima:</span><span>${formatCurrency(primaCumplimiento)}</span></div>
+                                    <div class="totals-row"><span>Gastos de Expedición:</span><span>${formatCurrency(gastosCalculadosCump)}</span></div>
+                                    <div class="totals-row"><span>IVA (${costos.tasaIva}%):</span><span>${formatCurrency(ivaCump)}</span></div>
+                                    <div class="totals-subtotal"><span>Total Cumplimiento:</span><span>${formatCurrency(totalCump)}</span></div>
+                                </div>
 
-                            <div class="totals-box">
-                                <h4>Póliza de Responsabilidad Civil (RCE)</h4>
-                                <div class="totals-row"><span>Prima:</span><span>${formatCurrency(primaRCE)}</span></div>
-                                <div class="totals-row"><span>Gastos de Expedición:</span><span>${formatCurrency(gastosCalculadosRCE)}</span></div>
-                                <div class="totals-row"><span>IVA (${costos.tasaIva}%):</span><span>${formatCurrency(ivaRCE)}</span></div>
-                                <div class="totals-subtotal"><span>Total RCE:</span><span>${formatCurrency(totalRCE)}</span></div>
+                                <div class="totals-box">
+                                    <h4>Póliza de Responsabilidad Civil (RCE)</h4>
+                                    <div class="totals-row"><span>Prima:</span><span>${formatCurrency(primaRCE)}</span></div>
+                                    <div class="totals-row"><span>Gastos de Expedición:</span><span>${formatCurrency(gastosCalculadosRCE)}</span></div>
+                                    <div class="totals-row"><span>IVA (${costos.tasaIva}%):</span><span>${formatCurrency(ivaRCE)}</span></div>
+                                    <div class="totals-subtotal"><span>Total RCE:</span><span>${formatCurrency(totalRCE)}</span></div>
+                                </div>
                             </div>
 
                             <div class="grand-total-box">
