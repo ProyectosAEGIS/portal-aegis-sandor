@@ -519,7 +519,12 @@
             // --- FUNCIÓN DE ENVÍO CORREGIDA ---
             const enviarAegis = async () => {
                 if (!WEBHOOK_URL) return alert("❌ Error: No se ha configurado la URL de Make.com.");
-                if (!interno.solicitante || !tomador.nombre) return alert("Diligencie Solicitante y Tomador mínimo.");
+                
+                // NUEVO CANDADO DE SEGURIDAD: Exigimos Nombre, CORREO y Tomador
+                if (!interno.solicitante || !interno.solicitanteEmail || !tomador.nombre) {
+                    return alert("⚠️ Por favor diligencie el Nombre del Solicitante, su Correo Electrónico y el Nombre del Tomador como mínimo.");
+                }
+
                 setIsSubmitting(true);
                 
                 // 1. Mostrar cortina de carga para mejor experiencia de usuario
