@@ -299,8 +299,30 @@
             };
 
             const exportarCotizacion = () => {
-                let resumen = `📋 COTIZACIÓN - AEGIS INSURANCE\n\nConsecutivo: ${consecutivo}\nSolicitante: ${interno.solicitante}\nTomador: ${tomador.nombre}\nGran Total: ${formatCurrency(totalGeneral)}\n`;
-                navigator.clipboard.writeText(resumen).then(() => alert(`✅ ¡Resumen copiado al portapapeles!`)).catch(() => alert(`Cotización finalizada. Gran Total: ${formatCurrency(totalGeneral)}`));
+                const amparosTexto = amparos.filter(a => a.activo).map(a =>
+                    `   - ${a.nombre}: Vigencia ${a.desde || '-'} a ${a.hasta || '-'} (${a.dias} días) | V.Aseg: ${formatCurrency(a.valorAsegurado)} | Prima: ${formatCurrency(a.prima)}`
+                ).join('\n');
+
+                let resumen = `📋 *RESUMEN DE COTIZACIÓN - AEGIS INSURANCE*\n`;
+                resumen += `--------------------------------------------------\n`;
+                resumen += `🆔 *Consecutivo:* ${consecutivo}\n`;
+                resumen += `👤 *Solicitante:* ${interno.solicitante}\n`;
+                resumen += `🏢 *Tomador:* ${tomador.nombre} (NIT: ${tomador.nit})\n`;
+                resumen += `🛡️ *Asegurado:* ${asegurado.nombre} (NIT: ${asegurado.nit})\n\n`;
+                resumen += `📄 *DATOS DEL CONTRATO*\n`;
+                resumen += `   - Objeto: ${contrato.objeto}\n`;
+                resumen += `   - Valor (Con IVA): ${formatCurrency(contrato.valorConIva)}\n\n`;
+                resumen += `⚖️ *AMPAROS LIQUIDADOS*\n`;
+                resumen += amparosTexto ? amparosTexto + `\n\n` : `   - Ningún amparo seleccionado.\n\n`;
+                resumen += `💰 *LIQUIDACIÓN FINANCIERA*\n`;
+                resumen += `   - Total Cumplimiento: ${formatCurrency(totalCump)}\n`;
+                resumen += `   - Total RCE: ${formatCurrency(totalRCE)}\n`;
+                resumen += `--------------------------------------------------\n`;
+                resumen += `🎯 *GRAN TOTAL A PAGAR: ${formatCurrency(totalGeneral)}*\n`;
+
+                navigator.clipboard.writeText(resumen)
+                    .then(() => alert(`✅ ¡Resumen detallado copiado al portapapeles!`))
+                    .catch(() => alert(`Cotización finalizada. Gran Total: ${formatCurrency(totalGeneral)}`));
             };
 
             const descargarPDF = async () => {
@@ -584,7 +606,8 @@
                         limpiarFormularioCotizador();
                     } else throw new Error(res.status);
                 } catch (e) { 
-                    alert("❌ Error al enviar. Revise su conexión."); 
+                    console.error("Error envío:", e);
+                    alert("❌ Error al enviar. Revise su conexión a internet o la configuración del Webhook."); 
                 } finally { 
                     setIsSubmitting(false); 
                     if(document.getElementById('cortina-pdf')) document.body.removeChild(document.getElementById('cortina-pdf'));
