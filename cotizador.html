@@ -71,6 +71,9 @@
         const Calendar = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
         const Download = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
         const AlertCircle = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>;
+        const Copy = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>;
+        const Award = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>;
+        const Zap = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
 
         // ==========================================
         // 2. CONFIGURACIÓN Y DATOS INICIALES
@@ -193,12 +196,34 @@
             const prodMenorUnDia = produccionData.filter(p => p.ansHoras <= 24).length;
             const prodPorcentaje = prodTotal > 0 ? Math.round((prodMenorUnDia / prodTotal) * 100) : 0;
             const prodMediana = getMedian(produccionData.map(p => p.ansHoras)).toFixed(1);
+            const prodTotalValor = produccionData.reduce((acc, curr) => acc + curr.valor, 0);
+            const prodSummaryArray = Object.keys(produccionData.reduce((acc, curr) => {
+                if (!acc[curr.cliente]) acc[curr.cliente] = { count: 0, totalValor: 0 };
+                acc[curr.cliente].count += 1;
+                acc[curr.cliente].totalValor += curr.valor;
+                return acc;
+            }, {})).map(k => ({
+                cliente: k,
+                ...produccionData.reduce((acc, curr) => {
+                    if (!acc[curr.cliente]) acc[curr.cliente] = { count: 0, totalValor: 0 };
+                    acc[curr.cliente].count += 1;
+                    acc[curr.cliente].totalValor += curr.valor;
+                    return acc;
+                }, {})[k]
+            })).sort((a, b) => b.totalValor - a.totalValor);
 
             // Cálculos Cartera
             const cartTotal = carteraData.length;
             const cartSumaTotal = carteraData.reduce((acc, curr) => acc + curr.total, 0);
+            const cartSana = carteraData.filter(p => p.dias <= 15).reduce((acc, curr) => acc + curr.total, 0);
             const cartAntigua = carteraData.filter(p => p.dias > 15).reduce((acc, curr) => acc + curr.total, 0);
+            const cartPorcentajeSana = cartSumaTotal > 0 ? ((cartSana / cartSumaTotal) * 100).toFixed(1) : 0;
             const cartPromedioDias = cartTotal > 0 ? (carteraData.reduce((acc, curr) => acc + curr.dias, 0) / cartTotal).toFixed(1) : 0;
+            const cartSummaryArray = Object.keys(carteraData.reduce((acc, curr) => {
+                if (!acc[curr.tomador]) acc[curr.tomador] = { count: 0, total: 0 };
+                acc[curr.tomador].count += 1; acc[curr.tomador].total += curr.total;
+                return acc;
+            }, {})).map(k => ({ tomador: k, ...carteraData.reduce((acc, curr) => { if (!acc[curr.tomador]) acc[curr.tomador] = { count: 0, total: 0 }; acc[curr.tomador].count += 1; acc[curr.tomador].total += curr.total; return acc; }, {})[k] })).sort((a, b) => b.total - a.total);
 
             const generarConsecutivoLocal = () => {
                 const ahora = new Date();
@@ -270,6 +295,29 @@
                     setAmparos(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault ? a.tasaDefault.toFixed(2) : '0.18', prima: 0 })));
                     setConsecutivo(generarConsecutivoLocal());
                     document.querySelectorAll('input[type="file"]').forEach(input => input.value = '');
+                }
+            };
+
+            const exportarCotizacion = () => {
+                let resumen = `📋 COTIZACIÓN - AEGIS INSURANCE\n\nConsecutivo: ${consecutivo}\nSolicitante: ${interno.solicitante}\nTomador: ${tomador.nombre}\nGran Total: ${formatCurrency(totalGeneral)}\n`;
+                navigator.clipboard.writeText(resumen).then(() => alert(`✅ ¡Resumen copiado al portapapeles!`)).catch(() => alert(`Cotización finalizada. Gran Total: ${formatCurrency(totalGeneral)}`));
+            };
+
+            const descargarPDF = async () => {
+                const cortina = document.createElement('div');
+                cortina.id = 'cortina-pdf-download';
+                cortina.style.position = 'fixed'; cortina.style.inset = '0'; cortina.style.backgroundColor = 'rgba(18, 51, 79, 0.95)';
+                cortina.style.zIndex = '999999'; cortina.style.display = 'flex'; cortina.style.flexDirection = 'column'; cortina.style.alignItems = 'center'; cortina.style.justifyContent = 'center'; cortina.style.color = 'white';
+                cortina.innerHTML = `<svg class="animate-spin h-12 w-12 text-[#58C9E8] mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><h3 class="text-xl font-bold">Generando Documento...</h3>`;
+                document.body.appendChild(cortina);
+                try {
+                    const htmlString = getOrdenServicioHTML();
+                    const opt = { margin: 10, filename: `${consecutivo}_Orden_Servicio.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, logging: false, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } };
+                    await html2pdf().set(opt).from(htmlString).save();
+                } catch(e) {
+                    alert("Error al generar PDF.");
+                } finally {
+                    if(document.getElementById('cortina-pdf-download')) document.body.removeChild(document.getElementById('cortina-pdf-download'));
                 }
             };
 
@@ -593,18 +641,32 @@
                             </div>
                             
                             <div className="flex items-center gap-6">
+                                {/* INTERRUPTOR DE ROLES */}
                                 <div className="bg-gray-100 p-1 rounded-full flex items-center shadow-inner hidden md:flex">
-                                    <button onClick={() => setRolActual('cliente')} className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${rolActual === 'cliente' ? 'bg-white text-[#163f73] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Vista Cliente</button>
-                                    <button onClick={() => setRolActual('director')} className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${rolActual === 'director' ? 'bg-[#163f73] text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>Vista Director</button>
+                                    <button 
+                                        onClick={() => setRolActual('cliente')} 
+                                        className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${rolActual === 'cliente' ? 'bg-white text-[#163f73] shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                                        Vista Cliente
+                                    </button>
+                                    <button 
+                                        onClick={() => setRolActual('director')} 
+                                        className={`px-4 py-1.5 text-xs font-bold rounded-full transition-all ${rolActual === 'director' ? 'bg-[#163f73] text-white shadow-sm' : 'text-gray-500 hover:text-gray-700'}`}>
+                                        Vista Director
+                                    </button>
                                 </div>
-                                <span className="text-sm text-gray-500 font-medium hidden lg:block">{new Date().toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                                <span className="text-sm text-gray-500 font-medium hidden lg:block">
+                                    {new Date().toLocaleDateString('es-CO', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+                                </span>
                             </div>
                         </header>
 
                         <main className="flex-1 overflow-y-auto bg-[#e6edf3] relative w-full">
                             
-                            {/* VISTA: COTIZADOR */}
+                            {/* ========================================================= */}
+                            {/* VISTA: COTIZADOR                                          */}
+                            {/* ========================================================= */}
                             <div className={activeMenu === 'cotizador' ? 'block p-4 md:p-8 pb-20' : 'hidden'}>
+                                
                                 <div className="bg-[#163f73] text-white py-6 px-8 shadow-sm rounded-xl flex justify-between items-center mb-6">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 bg-white/10 rounded-lg"><Calculator size={32} className="text-[#58C9E8]" /></div>
@@ -617,6 +679,7 @@
                                 </div>
 
                                 <div className="max-w-[1600px] mx-auto space-y-6">
+                                    {/* Bloques Visibles para ambos roles (Cliente/Director) */}
                                     <div className={sectionCls}>
                                         <h3 className="flex items-center gap-2 font-bold text-[#163f73] mb-4 border-b border-[#dce4ec] pb-2"><User size={20} className="text-[#58C9E8]" /> 0. Datos del Solicitante</h3>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -675,6 +738,7 @@
                                         </div>
                                     </div>
 
+                                    {/* Bloques VISIBLES SOLO PARA EL DIRECTOR */}
                                     {rolActual === 'director' && (
                                         <>
                                             <div className={`${sectionCls} border-l-4 border-l-[#58C9E8]`}>
@@ -754,6 +818,7 @@
                                         </>
                                     )}
 
+                                    {/* Footer de Acción Dinámico con Botones de Resumen y PDF */}
                                     <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-[#12334F] p-8 rounded-3xl text-white shadow-2xl relative overflow-hidden">
                                         <div className="absolute top-0 right-0 w-32 h-32 bg-[#58C9E8] opacity-10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                                         <div className="z-10">
@@ -769,15 +834,25 @@
                                                 </>
                                             )}
                                         </div>
-                                        <div className="flex flex-wrap gap-3 z-10">
-                                            <button onClick={limpiarFormularioCotizador} className="px-4 py-3 bg-white/10 hover:bg-red-500/20 text-white rounded-xl font-bold transition-all"><Trash2 size={18} /></button>
+                                        <div className="flex flex-wrap items-center gap-3 z-10">
+                                            <button onClick={limpiarFormularioCotizador} className="px-4 py-3 bg-white/10 hover:bg-red-500/20 text-white rounded-xl font-bold transition-all" title="Limpiar"><Trash2 size={18} /></button>
                                             
+                                            {/* BOTONES EXTRAS RESTAURADOS */}
+                                            {rolActual === 'director' && (
+                                                <>
+                                                    <button onClick={exportarCotizacion} className="px-4 py-3 bg-white/10 hover:bg-gray-500/20 text-white rounded-xl font-bold transition-all" title="Copiar Resumen"><Copy size={18} /></button>
+                                                    <button onClick={descargarPDF} className="px-4 py-3 bg-[#58C9E8]/20 hover:bg-[#58C9E8]/40 text-[#58C9E8] rounded-xl font-bold transition-all flex items-center gap-2" title="Descargar Orden">
+                                                        <Download size={18} /> PDF
+                                                    </button>
+                                                </>
+                                            )}
+
                                             {rolActual === 'cliente' ? (
-                                                <button onClick={enviarAegis} disabled={isSubmitting} className="px-10 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                                <button onClick={enviarAegis} disabled={isSubmitting} className="px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all ml-2">
                                                     {isSubmitting ? "GUARDANDO..." : <><Cloud size={18}/> GUARDAR PRE-ORDEN</>}
                                                 </button>
                                             ) : (
-                                                <button onClick={enviarAegis} disabled={isSubmitting} className="px-10 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                                <button onClick={enviarAegis} disabled={isSubmitting} className="px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all ml-2">
                                                     {isSubmitting ? "GENERANDO..." : <><Send size={18}/> GENERAR ORDEN FINAL</>}
                                                 </button>
                                             )}
@@ -786,14 +861,20 @@
                                 </div>
                             </div>
 
-                            {/* VISTA: REPORTE PRODUCCIÓN */}
+                            {/* ========================================================= */}
+                            {/* VISTA: REPORTE PRODUCCIÓN (RESTAURADO VERSIÓN PREMIUM)    */}
+                            {/* ========================================================= */}
                             <div className={activeMenu === 'produccion' ? 'block p-4 md:p-8 pb-20' : 'hidden'}>
                                 <div className="bg-[#163f73] text-white py-6 px-8 shadow-sm rounded-xl flex justify-between items-center mb-6">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 bg-white/10 rounded-lg"><TrendingUp size={32} className="text-[#58C9E8]" /></div>
-                                        <h1 className="text-2xl font-bold">Reporte de Producción</h1>
+                                        <div>
+                                            <h1 className="text-2xl font-bold">Reporte de Gestión y ANS</h1>
+                                            <p className="text-[#58C9E8] text-sm">Vista de Producción</p>
+                                        </div>
                                     </div>
                                 </div>
+
                                 <div className="w-full max-w-[1600px] mx-auto space-y-8">
                                     <div className="bg-white rounded-xl shadow-sm border p-6 flex flex-col md:flex-row justify-between items-center gap-4">
                                         <h3 className="text-lg font-bold text-[#163f73]">Actualizar Datos del Reporte</h3>
@@ -803,37 +884,202 @@
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        <div className="bg-white p-6 rounded-xl border flex gap-4 items-center">
-                                            <FileText size={32} className="text-[#163f73]" />
-                                            <div><p className="text-sm text-gray-500">Total Pólizas</p><h4 className="text-3xl font-bold text-[#12334F]">{prodTotal}</h4></div>
+                                    {/* SECCIÓN DE IMPACTO - MENSAJE EJECUTIVO */}
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#58C9E8] opacity-5 rounded-full -translate-y-1/2 translate-x-1/4"></div>
+                                        
+                                        <div className="flex-1 space-y-4 z-10">
+                                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e8f7fb] text-[#163f73] text-sm font-semibold mb-2">
+                                            <Award size={16} />
+                                            Excelencia Operativa
+                                            </div>
+                                            <h3 className="text-3xl font-bold text-[#163f73]">
+                                            Velocidad y Eficiencia en tus Pólizas
+                                            </h3>
+                                            <p className="text-lg text-gray-600 leading-relaxed">
+                                            En AEGIS Insurance entendemos que el tiempo es un recurso crítico. Por ello, hemos optimizado nuestros procesos logrando que la inmensa mayoría de sus solicitudes sean emitidas y entregadas en tiempo récord.
+                                            </p>
                                         </div>
-                                        <div className="bg-white p-6 rounded-xl border flex gap-4 items-center">
-                                            <CheckCircle size={32} className="text-[#58C9E8]" />
-                                            <div><p className="text-sm text-gray-500">Emitidas &lt; 24h</p><h4 className="text-3xl font-bold text-[#163f73]">{prodMenorUnDia} <span className="text-sm font-normal text-green-600">({prodPorcentaje}%)</span></h4></div>
-                                        </div>
-                                        <div className="bg-white p-6 rounded-xl border flex gap-4 items-center">
-                                            <ClockIcon size={32} className="text-indigo-600" />
-                                            <div><p className="text-sm text-gray-500">Mediana ANS</p><h4 className="text-3xl font-bold text-[#12334F]">{prodMediana} <span className="text-sm font-normal text-gray-500">hrs</span></h4></div>
+                                        
+                                        <div className="flex-shrink-0 w-full md:w-1/3 bg-[#163f73] rounded-2xl p-6 text-center text-white shadow-lg relative overflow-hidden z-10">
+                                            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                            <Zap size={40} className="text-[#58C9E8] mx-auto mb-3" />
+                                            <div className="text-6xl font-black text-[#58C9E8] mb-2">{prodPorcentaje}%</div>
+                                            <div className="text-sm font-medium uppercase tracking-wider text-gray-200">
+                                            Emitidas en menos de 1 día
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                                        <div className="px-6 py-4 border-b bg-gray-50 font-bold text-[#163f73]">Detalle de Pólizas</div>
-                                        <div className="overflow-auto max-h-[500px]">
+                                    {/* TARJETAS DE MÉTRICAS */}
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
+                                            <div className="p-3 bg-blue-50 rounded-lg text-[#163f73]">
+                                            <FileText size={28} />
+                                            </div>
+                                            <div>
+                                            <p className="text-sm text-gray-500 font-medium">Total Solicitudes Procesadas</p>
+                                            <h4 className="text-3xl font-bold text-[#12334F] mt-1">{prodTotal}</h4>
+                                            <p className="text-xs text-gray-400 mt-1">Periodo actual reportado</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
+                                            <div className="p-3 bg-[#e8f7fb] rounded-lg text-[#58C9E8]">
+                                            <CheckCircle size={28} />
+                                            </div>
+                                            <div>
+                                            <p className="text-sm text-gray-500 font-medium">Entregas &lt; 24 Horas</p>
+                                            <h4 className="text-3xl font-bold text-[#163f73] mt-1">{prodMenorUnDia}</h4>
+                                            <p className="text-xs text-green-600 mt-1 font-medium flex items-center gap-1">
+                                                <TrendingUp size={12} /> Óptimo rendimiento
+                                            </p>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
+                                            <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600">
+                                            <ClockIcon size={28} />
+                                            </div>
+                                            <div>
+                                            <p className="text-sm text-gray-500 font-medium">Tiempo Típico (Mediana)</p>
+                                            <h4 className="text-3xl font-bold text-[#12334F] mt-1">{prodMediana} <span className="text-lg text-gray-500 font-normal">hrs</span></h4>
+                                            <p className="text-xs text-gray-400 mt-1">Excluye casos extendidos atípicos</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* BARRA DE PROGRESO VISUAL */}
+                                    <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
+                                        <h4 className="text-lg font-bold text-[#163f73] mb-4">Distribución de Tiempos de Respuesta (ANS)</h4>
+                                        <div className="w-full h-8 bg-gray-100 rounded-full overflow-hidden flex shadow-inner">
+                                            <div 
+                                            className="bg-[#58C9E8] h-full flex items-center justify-center text-xs font-bold text-[#12334F] overflow-hidden whitespace-nowrap" 
+                                            style={{ width: `${prodPorcentaje}%` }}
+                                            >
+                                            {prodPorcentaje}% Menos de 1 día
+                                            </div>
+                                            <div 
+                                            className="bg-[#163f73] h-full flex items-center justify-center text-xs font-bold text-white overflow-hidden whitespace-nowrap" 
+                                            style={{ width: `${100 - prodPorcentaje}%` }}
+                                            >
+                                            {100 - prodPorcentaje}%
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between mt-3 text-sm text-gray-500">
+                                            <div className="flex items-center gap-2">
+                                            <span className="w-3 h-3 rounded-full bg-[#58C9E8]"></span>
+                                            Emitido y entregado exitosamente el mismo día
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                            <span className="w-3 h-3 rounded-full bg-[#163f73]"></span>
+                                            Modificaciones, Anexos o Trámites Extensos (&gt; 24h)
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* TABLA RESUMEN POR CLIENTE */}
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-8">
+                                        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                                            <h4 className="text-lg font-bold text-[#163f73]">Resumen Consolidado por Cliente</h4>
+                                            <span className="text-xs font-medium px-2 py-1 bg-[#163f73] text-white rounded-md shadow-sm">Totales Globales</span>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left border-collapse">
+                                            <thead className="bg-gray-50 shadow-sm border-b border-gray-200">
+                                                <tr className="text-gray-500 text-xs uppercase tracking-wider">
+                                                <th className="px-6 py-4 font-semibold">Cliente / Tomador</th>
+                                                <th className="px-6 py-4 font-semibold text-center">Total Pólizas</th>
+                                                <th className="px-6 py-4 font-semibold text-right">Prima Total Emitida</th>
+                                                <th className="px-6 py-4 font-semibold text-center">% de Participación</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-100 text-sm">
+                                                {prodSummaryArray.map((item, idx) => {
+                                                    const porcentaje = prodTotalValor > 0 ? ((item.totalValor / prodTotalValor) * 100).toFixed(1) : 0;
+                                                    return (
+                                                        <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                                            <td className="px-6 py-4"><div className="font-bold text-[#12334F]">{item.cliente}</div></td>
+                                                            <td className="px-6 py-4 text-center"><span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#e8f7fb] text-[#163f73] font-bold">{item.count}</span></td>
+                                                            <td className="px-6 py-4 text-right"><span className="font-bold text-[#12334F] text-base">{formatCurrency(item.totalValor)}</span></td>
+                                                            <td className="px-6 py-4 text-center">
+                                                                <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                                                    <div className="bg-[#58C9E8] h-2 rounded-full" style={{ width: `${porcentaje}%` }}></div>
+                                                                </div>
+                                                                <span className="text-xs text-gray-500 font-semibold mt-1 inline-block">{porcentaje}%</span>
+                                                            </td>
+                                                        </tr>
+                                                    );
+                                                })}
+                                            </tbody>
+                                            <tfoot className="bg-gray-100 font-bold border-t-2 border-gray-200 text-[#12334F]">
+                                                <tr>
+                                                    <td className="px-6 py-4 text-right uppercase">Total General:</td>
+                                                    <td className="px-6 py-4 text-center text-lg">{prodTotal}</td>
+                                                    <td className="px-6 py-4 text-right text-lg">{formatCurrency(prodTotalValor)}</td>
+                                                    <td className="px-6 py-4 text-center text-lg">100%</td>
+                                                </tr>
+                                            </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    {/* TABLA DETALLE PÓLIZAS */}
+                                    <div className="bg-white rounded-xl shadow-sm border overflow-hidden mt-8">
+                                        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                                            <h4 className="text-lg font-bold text-[#163f73]">Registro Detallado de Pólizas ({prodTotal} Solicitudes)</h4>
+                                            <span className="text-xs font-medium px-2 py-1 bg-[#e8f7fb] text-[#163f73] rounded-md border border-[#58C9E8]/30">Vista Completa Real</span>
+                                        </div>
+                                        <div className="overflow-x-auto max-h-[500px]">
                                             <table className="w-full text-left text-sm border-collapse min-w-[800px]">
-                                                <thead className="bg-white sticky top-0 border-b text-xs uppercase text-gray-500">
-                                                    <tr><th className="p-4">Cliente</th><th className="p-4">Asegurado</th><th className="p-4 text-center">Horas ANS</th><th className="p-4">Estado</th></tr>
+                                                <thead className="bg-white sticky top-0 border-b text-xs uppercase text-gray-500 shadow-sm z-10">
+                                                    <tr>
+                                                        <th className="px-6 py-4 font-semibold">Asegurado</th>
+                                                        <th className="px-6 py-4 font-semibold">Aseguradora</th>
+                                                        <th className="px-6 py-4 font-semibold">Ramo</th>
+                                                        <th className="px-6 py-4 font-semibold text-center">Tiempo ANS</th>
+                                                        <th className="px-6 py-4 font-semibold">Estado</th>
+                                                    </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-100">
-                                                    {produccionData.map((p, i) => (
-                                                        <tr key={i} className="hover:bg-gray-50">
-                                                            <td className="p-4 font-bold text-[#12334F]">{p.cliente}</td>
-                                                            <td className="p-4"><div className="font-medium text-gray-700">{p.asegurado}</div><div className="text-xs text-gray-400">{p.ramo}</div></td>
-                                                            <td className="p-4 text-center font-bold text-[#163f73]">{p.ansHoras.toFixed(1)} h</td>
-                                                            <td className="p-4"><span className="px-2 py-1 bg-gray-100 rounded text-xs">{p.estado}</span></td>
-                                                        </tr>
-                                                    ))}
+                                                    {produccionData.map((policy, idx) => {
+                                                        const isMenorUnDia = policy.ansHoras <= 24;
+                                                        const isAnulada = policy.estado === "Anulada";
+                                                        return (
+                                                            <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                                                <td className="px-6 py-4">
+                                                                    <div className="font-medium text-[#12334F]">{policy.asegurado}</div>
+                                                                    <div className="text-xs text-gray-400 mt-1">Cliente: {policy.cliente}</div>
+                                                                </td>
+                                                                <td className="px-6 py-4 text-gray-600">{policy.aseguradora}</td>
+                                                                <td className="px-6 py-4">
+                                                                    <span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">
+                                                                    {policy.ramo}
+                                                                    </span>
+                                                                </td>
+                                                                <td className="px-6 py-4 text-center">
+                                                                    <div className={`inline-flex flex-col items-center justify-center p-2 rounded-lg ${isMenorUnDia ? 'bg-[#e8f7fb]' : 'bg-orange-50'}`}>
+                                                                    <span className={`font-bold ${isMenorUnDia ? 'text-[#163f73]' : 'text-orange-700'}`}>{policy.ansHoras.toFixed(1)} h</span>
+                                                                    <span className={`text-[10px] uppercase ${isMenorUnDia ? 'text-gray-500' : 'text-orange-600'}`}>
+                                                                        {isMenorUnDia ? '< 1 Día' : '> 1 Día'}
+                                                                    </span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-6 py-4">
+                                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border ${
+                                                                    isAnulada 
+                                                                        ? 'bg-red-50 text-red-700 border-red-200' 
+                                                                        : isMenorUnDia 
+                                                                        ? 'bg-green-50 text-green-700 border-green-200' 
+                                                                        : 'bg-orange-50 text-orange-700 border-orange-200'
+                                                                    }`}>
+                                                                    {isAnulada ? <AlertCircle size={14} /> : (isMenorUnDia ? <CheckCircle size={14} /> : <ClockIcon size={14} />)}
+                                                                    {policy.estado}
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        )
+                                                    })}
                                                 </tbody>
                                             </table>
                                         </div>
@@ -841,12 +1087,17 @@
                                 </div>
                             </div>
 
-                            {/* VISTA: REPORTE CARTERA */}
+                            {/* ========================================================= */}
+                            {/* VISTA: REPORTE CARTERA (RESTAURADO VERSIÓN PREMIUM)       */}
+                            {/* ========================================================= */}
                             <div className={activeMenu === 'cartera' ? 'block p-4 md:p-8 pb-20' : 'hidden'}>
                                 <div className="bg-[#163f73] text-white py-6 px-8 shadow-sm rounded-xl flex justify-between items-center mb-6">
                                     <div className="flex items-center gap-3">
                                         <div className="p-2 bg-white/10 rounded-lg"><PieChart size={32} className="text-[#58C9E8]" /></div>
-                                        <h1 className="text-2xl font-bold">Reporte de Cartera</h1>
+                                        <div>
+                                            <h1 className="text-2xl font-bold">Reporte de Cartera</h1>
+                                            <p className="text-[#58C9E8] text-sm">Estado de Cuentas por Cobrar</p>
+                                        </div>
                                     </div>
                                 </div>
                                 <div className="w-full max-w-[1600px] mx-auto space-y-8">
@@ -858,37 +1109,166 @@
                                         </div>
                                     </div>
 
-                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        <div className="bg-[#163f73] p-6 rounded-xl text-white flex gap-4 items-center">
-                                            <DollarSign size={32} className="text-[#58C9E8]" />
-                                            <div><p className="text-sm text-gray-300">Total Adeudado</p><h4 className="text-3xl font-black text-[#58C9E8]">{formatCurrency(cartSumaTotal)}</h4></div>
+                                    {/* SECCIÓN DE IMPACTO FINANCIERO */}
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
+                                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#58C9E8] opacity-5 rounded-full -translate-y-1/2 translate-x-1/4"></div>
+                                        
+                                        <div className="flex-1 space-y-4 z-10">
+                                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e8f7fb] text-[#163f73] text-sm font-semibold mb-2">
+                                            <PieChart size={16} />
+                                            Análisis Financiero
+                                            </div>
+                                            <h3 className="text-3xl font-bold text-[#163f73]">
+                                            Salud de Cartera Actual
+                                            </h3>
+                                            <p className="text-lg text-gray-600 leading-relaxed">
+                                            El estado de cuentas presenta una rotación ágil. Actualmente, el <strong>{cartPorcentajeSana}% del valor adeudado</strong> corresponde a facturación muy reciente (menor a 15 días), demostrando un excelente ciclo de gestión y recaudo.
+                                            </p>
                                         </div>
-                                        <div className="bg-white p-6 rounded-xl border flex gap-4 items-center">
-                                            <Calendar size={32} className="text-[#58C9E8]" />
-                                            <div><p className="text-sm text-gray-500">Antigüedad Promedio</p><h4 className="text-3xl font-bold text-[#163f73]">{cartPromedioDias} <span className="text-sm font-normal text-gray-500">días</span></h4></div>
-                                        </div>
-                                        <div className="bg-white p-6 rounded-xl border flex gap-4 items-center">
-                                            <AlertCircle size={32} className="text-orange-500" />
-                                            <div><p className="text-sm text-gray-500">Mayor a 15 Días</p><h4 className="text-2xl font-bold text-[#12334F]">{formatCurrency(cartAntigua)}</h4></div>
+                                        
+                                        <div className="flex-shrink-0 w-full md:w-auto bg-[#163f73] rounded-2xl p-6 text-center text-white shadow-lg relative overflow-hidden z-10 min-w-[300px]">
+                                            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                            <DollarSign size={40} className="text-[#58C9E8] mx-auto mb-3" />
+                                            <div className="text-3xl lg:text-4xl font-black text-[#58C9E8] mb-2">{formatCurrency(cartSumaTotal)}</div>
+                                            <div className="text-sm font-medium uppercase tracking-wider text-gray-200">
+                                            Valor Total en Cartera
+                                            </div>
                                         </div>
                                     </div>
 
-                                    <div className="bg-white rounded-xl shadow-sm border overflow-hidden">
-                                        <div className="px-6 py-4 border-b bg-gray-50 font-bold text-[#163f73]">Detalle de Cartera</div>
-                                        <div className="overflow-auto max-h-[500px]">
-                                            <table className="w-full text-left text-sm border-collapse min-w-[800px]">
-                                                <thead className="bg-white sticky top-0 border-b text-xs uppercase text-gray-500">
-                                                    <tr><th className="p-4">Tomador</th><th className="p-4">Póliza</th><th className="p-4 text-center">Días Mora</th><th className="p-4 text-right">Valor</th></tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-gray-100">
-                                                    {carteraData.sort((a,b)=>b.dias-a.dias).map((p, i) => (
-                                                        <tr key={i} className="hover:bg-gray-50">
-                                                            <td className="p-4 font-bold text-[#12334F]">{p.tomador}</td>
-                                                            <td className="p-4 text-xs bg-gray-100 rounded inline-block mt-2">{p.poliza}</td>
-                                                            <td className="p-4 text-center"><span className={`px-2 py-1 rounded font-bold ${p.dias>15?'bg-orange-100 text-orange-700':'bg-[#e8f7fb] text-[#163f73]'}`}>{p.dias}</span></td>
-                                                            <td className="p-4 text-right font-bold">{formatCurrency(p.total)}</td>
+                                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
+                                            <div className="p-3 bg-blue-50 rounded-lg text-[#163f73]">
+                                                <FileText size={28} />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 font-medium">Volumen de Documentos</p>
+                                                <h4 className="text-3xl font-bold text-[#12334F] mt-1">{cartTotal}</h4>
+                                                <p className="text-xs text-gray-400 mt-1">Pólizas pendientes de pago</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
+                                            <div className="p-3 bg-[#e8f7fb] rounded-lg text-[#58C9E8]">
+                                                <Calendar size={28} />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 font-medium">Antigüedad Promedio</p>
+                                                <h4 className="text-3xl font-bold text-[#163f73] mt-1">{cartPromedioDias} <span className="text-lg text-gray-500 font-normal">días</span></h4>
+                                                <p className="text-xs text-green-600 mt-1 font-medium flex items-center gap-1">Promedio general rotación</p>
+                                            </div>
+                                        </div>
+
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
+                                            <div className="p-3 bg-orange-50 rounded-lg text-orange-500">
+                                                <AlertCircle size={28} />
+                                            </div>
+                                            <div>
+                                                <p className="text-sm text-gray-500 font-medium">Cartera Mayor a 15 Días</p>
+                                                <h4 className="text-2xl font-bold text-[#12334F] mt-1">{formatCurrency(cartAntigua)}</h4>
+                                                <p className="text-xs text-gray-400 mt-1">Por vencer / En gestión</p>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* BARRA DE DISTRIBUCIÓN DE CARTERA */}
+                                    <div className="bg-white rounded-xl p-8 shadow-sm border border-gray-100">
+                                        <h4 className="text-lg font-bold text-[#163f73] mb-4">Distribución del Valor de Cartera por Antigüedad</h4>
+                                        <div className="w-full h-8 bg-gray-100 rounded-full overflow-hidden flex shadow-inner">
+                                            <div className="bg-[#58C9E8] h-full flex items-center justify-center text-xs font-bold text-[#12334F]" style={{ width: `${cartPorcentajeSana}%` }} title="De 0 a 15 Días">
+                                            {cartPorcentajeSana}% Corriente (0 - 15 días)
+                                            </div>
+                                            <div className="bg-[#163f73] h-full flex items-center justify-center text-xs font-bold text-white overflow-hidden whitespace-nowrap px-2" style={{ width: `${100 - cartPorcentajeSana}%` }} title="Más de 15 Días">
+                                            {(100 - cartPorcentajeSana).toFixed(1)}%
+                                            </div>
+                                        </div>
+                                        <div className="flex justify-between mt-3 text-sm text-gray-500">
+                                            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#58C9E8]"></span>Cartera Sana / Reciente ({formatCurrency(cartSana)})</div>
+                                            <div className="flex items-center gap-2"><span className="w-3 h-3 rounded-full bg-[#163f73]"></span>Por vencer / Gestión ({formatCurrency(cartAntigua)})</div>
+                                        </div>
+                                    </div>
+
+                                    {/* TABLA RESUMEN POR TOMADOR */}
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-8">
+                                        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                                            <h4 className="text-lg font-bold text-[#163f73]">Resumen Consolidado por Tomador</h4>
+                                            <span className="text-xs font-medium px-2 py-1 bg-[#163f73] text-white rounded-md shadow-sm">Totales Globales</span>
+                                        </div>
+                                        <div className="overflow-x-auto">
+                                            <table className="w-full text-left border-collapse">
+                                            <thead className="bg-gray-50 shadow-sm border-b border-gray-200">
+                                                <tr className="text-gray-500 text-xs uppercase tracking-wider">
+                                                <th className="px-6 py-4 font-semibold">Tomador / Cliente</th>
+                                                <th className="px-6 py-4 font-semibold text-center">Total Pólizas</th>
+                                                <th className="px-6 py-4 font-semibold text-right">Valor Total Adeudado</th>
+                                                <th className="px-6 py-4 font-semibold text-center">% de Participación</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody className="divide-y divide-gray-100 text-sm">
+                                                {cartSummaryArray.map((item, idx) => {
+                                                    const porcentaje = cartSumaTotal > 0 ? ((item.total / cartSumaTotal) * 100).toFixed(1) : 0;
+                                                    return (
+                                                        <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                                            <td className="px-6 py-4"><div className="font-bold text-[#12334F]">{item.tomador}</div></td>
+                                                            <td className="px-6 py-4 text-center"><span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#e8f7fb] text-[#163f73] font-bold">{item.count}</span></td>
+                                                            <td className="px-6 py-4 text-right"><span className="font-bold text-[#12334F] text-base">{formatCurrency(item.total)}</span></td>
+                                                            <td className="px-6 py-4 text-center">
+                                                                <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
+                                                                    <div className="bg-[#58C9E8] h-2 rounded-full" style={{ width: `${porcentaje}%` }}></div>
+                                                                </div>
+                                                                <span className="text-xs text-gray-500 font-semibold mt-1 inline-block">{porcentaje}%</span>
+                                                            </td>
                                                         </tr>
-                                                    ))}
+                                                    );
+                                                })}
+                                            </tbody>
+                                            <tfoot className="bg-gray-100 font-bold border-t-2 border-gray-200 text-[#12334F]">
+                                                <tr>
+                                                    <td className="px-6 py-4 text-right uppercase">Total General:</td>
+                                                    <td className="px-6 py-4 text-center text-lg">{cartTotal}</td>
+                                                    <td className="px-6 py-4 text-right text-lg">{formatCurrency(cartSumaTotal)}</td>
+                                                    <td className="px-6 py-4 text-center text-lg">100%</td>
+                                                </tr>
+                                            </tfoot>
+                                            </table>
+                                        </div>
+                                    </div>
+
+                                    {/* TABLA DE DETALLE DE CARTERA */}
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                                        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                                            <h4 className="text-lg font-bold text-[#163f73]">Detalle de Facturación Pendiente</h4>
+                                            <span className="text-xs font-medium px-2 py-1 bg-[#e8f7fb] text-[#163f73] rounded-md border border-[#58C9E8]/30">Organizado por días</span>
+                                        </div>
+                                        <div className="overflow-x-auto max-h-[500px]">
+                                            <table className="w-full text-left border-collapse min-w-[900px]">
+                                                <thead className="bg-gray-50 shadow-sm border-b border-gray-200 sticky top-0 z-10">
+                                                    <tr className="text-gray-500 text-xs uppercase tracking-wider">
+                                                    <th className="px-6 py-4 font-semibold">Tomador / Cliente</th>
+                                                    <th className="px-6 py-4 font-semibold">Beneficiario / Ramo</th>
+                                                    <th className="px-6 py-4 font-semibold text-center">Nº Póliza</th>
+                                                    <th className="px-6 py-4 font-semibold text-center">Días Cartera</th>
+                                                    <th className="px-6 py-4 font-semibold text-right">Valor Total</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-100 text-sm">
+                                                    {carteraData.sort((a,b) => b.dias - a.dias).map((policy, idx) => {
+                                                    const isAntigua = policy.dias > 15;
+                                                    return (
+                                                        <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                                        <td className="px-6 py-4"><div className="font-bold text-[#12334F]">{policy.tomador}</div></td>
+                                                        <td className="px-6 py-4">
+                                                            <div className="text-gray-600 truncate max-w-xs" title={policy.beneficiario}>{policy.beneficiario}</div>
+                                                            <div className="text-[10px] uppercase font-bold text-gray-400 mt-1">{policy.ramo}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-center"><span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">{policy.poliza}</span></td>
+                                                        <td className="px-6 py-4 text-center">
+                                                            <div className={`inline-flex items-center justify-center w-10 h-10 rounded-full font-bold ${isAntigua ? 'bg-orange-100 text-orange-700' : 'bg-[#e8f7fb] text-[#163f73]'}`}>{policy.dias}</div>
+                                                        </td>
+                                                        <td className="px-6 py-4 text-right"><span className="font-bold text-[#12334F] text-base">{formatCurrency(policy.total)}</span></td>
+                                                        </tr>
+                                                    )
+                                                    })}
                                                 </tbody>
                                             </table>
                                         </div>
