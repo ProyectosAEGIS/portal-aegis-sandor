@@ -300,7 +300,7 @@
 
             const exportarCotizacion = () => {
                 const amparosTexto = amparos.filter(a => a.activo).map(a =>
-                    `   - ${a.nombre}: Vigencia ${a.desde || '-'} a ${a.hasta || '-'} (${a.dias} días) | V.Aseg: ${formatCurrency(a.valorAsegurado)} | Prima: ${formatCurrency(a.prima)}`
+                    `   - ${a.nombre}: Vigencia ${a.desde || '-'} a ${a.hasta || '-'} (${a.dias} d) | V.Aseg: ${formatCurrency(a.valorAsegurado)} | Prima: ${formatCurrency(a.prima)}`
                 ).join('\n');
 
                 let resumen = `📋 *RESUMEN DE COTIZACIÓN - AEGIS INSURANCE*\n`;
@@ -554,7 +554,7 @@
                 try {
                     let attachments = [];
                     if (rolActual === 'director') {
-                        attachments = await Promise.all(interno.archivos.map(getBase64));
+                        // Los archivos del cliente ya se enviaron en la Pre-Orden. Solo generamos el PDF final.
                         try {
                             const htmlString = getOrdenServicioHTML();
                             const opt = { margin: 10, filename: `${consecutivo}_Orden_Servicio.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, logging: false, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } };
@@ -607,7 +607,7 @@
                     } else throw new Error(res.status);
                 } catch (e) { 
                     console.error("Error envío:", e);
-                    alert("❌ Error al enviar. Revise su conexión a internet o la configuración del Webhook."); 
+                    alert("❌ Error al enviar: " + e.message + ". Revise su conexión."); 
                 } finally { 
                     setIsSubmitting(false); 
                     if(document.getElementById('cortina-pdf')) document.body.removeChild(document.getElementById('cortina-pdf'));
