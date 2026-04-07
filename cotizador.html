@@ -18,7 +18,7 @@
     <!-- html2pdf para generación de PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
-    <!-- Firebase SDKs (Versión Compatible) -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
@@ -39,7 +39,9 @@
     <div id="root"></div>
 
     <script type="text/babel">
+        // ==========================================
         // 1. ÍCONOS SVG
+        // ==========================================
         const Shield = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
         const Calculator = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16.01" y2="14"/><line x1="16" y1="10" x2="16.01" y2="10"/><line x1="16" y1="18" x2="16.01" y2="18"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="12" y1="10" x2="12.01" y2="10"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="8" y1="10" x2="8.01" y2="10"/><line x1="8" y1="18" x2="8.01" y2="18"/></svg>;
         const User = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>;
@@ -70,7 +72,9 @@
         const Award = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>;
         const Zap = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>;
 
+        // ==========================================
         // 2. CONFIGURACIÓN INICIAL
+        // ==========================================
         const WEBHOOK_URL = "https://hook.us2.make.com/6oy0xm0wdgimjdyb39wnxuxlbs2wunlw"; 
 
         const firebaseConfig = {
@@ -94,24 +98,15 @@
             { id: 9, nombre: 'Responsabilidad Civil Extracontractual', tasaDefault: 0.20 }
         ];
 
-        // DATOS INICIALES DEMO PARA REPORTE DE PRODUCCIÓN
         const defaultProduccionData = [
             { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "101133204", aseguradora: "SEGUROS DEL ESTADO", asegurado: "MEDICARTE S.A.S", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.0, estado: "Completado", valor: 150000 },
             { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "4452077", aseguradora: "SURAMERICANA", asegurado: "DROGUERIAS Y FARMACIAS CRUZ VERDE S.A.S", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.0, estado: "Completado", valor: 150000 },
-            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "100029109", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "INST. UNIV. COLEGIO MAYOR DE ANTIOQUIA", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.6, estado: "Completado", valor: 150000 },
-            { cliente: "SERVICIOS TEMPORALES ELITE SAS", id: "101035391", aseguradora: "SEGUROS DEL ESTADO", asegurado: "TRABAJADORES EN MISION AL SERVICIO", ramo: "DISPOSICIÓN LEGAL", ansHoras: 53.0, estado: "Revisión Ext.", valor: 850000 },
-            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "100029162", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "E.S.E. HOSPITAL SAN RAFAEL DE FACATATIVA", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.4, estado: "Completado", valor: 150000 },
-            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "100089147 (A2)", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "ACEITES MANUELITA SA", ramo: "RESPONSABILIDAD CIVIL", ansHoras: 168.6, estado: "Modificada", valor: 1200000 },
-            { cliente: "MASTER SERVICE GROUP S A S", id: "100007462", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "MASTER SERVICE GROUP S A S", ramo: "RESPONSABILIDAD CIVIL", ansHoras: 1.5, estado: "Completado", valor: 1200000 }
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "100029109", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "INST. UNIV. COLEGIO MAYOR DE ANTIOQUIA", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.6, estado: "Completado", valor: 150000 }
         ];
 
-        // DATOS INICIALES DEMO PARA REPORTE DE CARTERA
         const defaultCarteraData = [
             { tomador: "SARUPETROL SAS", beneficiario: "INST. UNIV. COLEGIO MAYOR DE ANTIOQUIA", ramo: "CUMPLIMIENTO", poliza: "100029109", dias: 26, total: 92582 },
-            { tomador: "ELITE FACILITY MANAGEMENT SAS", beneficiario: "UNIVERSIDAD NACIONAL SEDE ORINOQUIA", ramo: "CUMPLIMIENTO", poliza: "100110019", dias: 23, total: 59500 },
-            { tomador: "SARUPETROL SAS", beneficiario: "MINISTERIO DE DEFENSA NACIONAL", ramo: "CUMPLIMIENTO", poliza: "100029213", dias: 19, total: 53550 },
-            { tomador: "ELITE FACILITY MANAGEMENT SAS", beneficiario: "CLINICA DE NUESTRA SEÑORA DE LA PAZ", ramo: "CUMPLIMIENTO", poliza: "100029372", dias: 5, total: 4655971 },
-            { tomador: "CONSORCIO SERVIPLUS", beneficiario: "DEPARTAMENTO DEL ATLANTICO", ramo: "CUMPLIMIENTO", poliza: "100029351", dias: 4, total: 183344 }
+            { tomador: "ELITE FACILITY MANAGEMENT SAS", beneficiario: "UNIVERSIDAD NACIONAL SEDE ORINOQUIA", ramo: "CUMPLIMIENTO", poliza: "100110019", dias: 23, total: 59500 }
         ];
 
         function formatCurrency(amount) {
@@ -133,9 +128,10 @@
         // 3. COMPONENTE PRINCIPAL REACT
         // ==========================================
         function App() {
-            // --- ESTADOS NUBE Y ROLES ---
+            const [activeMenu, setActiveMenu] = React.useState('cotizador');
+            const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+            const [rolActivo, setRolActivo] = React.useState('cliente');
             const [isFirebaseReady, setIsFirebaseReady] = React.useState(false);
-            const [rolActivo, setRolActivo] = React.useState('cliente'); // 'cliente' | 'director'
             const [isSubmitting, setIsSubmitting] = React.useState(false);
             const [isLoadingNube, setIsLoadingNube] = React.useState(false);
             
@@ -144,7 +140,7 @@
             const [solicitudesDb, setSolicitudesDb] = React.useState([]);
 
             // ESTADO PRINCIPAL DE LA SOLICITUD ACTUAL
-            const [estadoSolicitud, setEstadoSolicitud] = React.useState('Nueva'); // Nueva, Pre-Orden, En Trámite, Emitida-Entregada
+            const [estadoSolicitud, setEstadoSolicitud] = React.useState('Nueva'); // Nueva, Pre-Orden, Emitida, Finalizada
             const [consecutivo, setConsecutivo] = React.useState('');
             const [interno, setInterno] = React.useState({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { garantiaUnica: false, cumplimientoParticulares: false, cumplimientoEstatales: false, disposicionLegal: false, otros: false }, archivos: [] });
             const [tomador, setTomador] = React.useState({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
@@ -157,13 +153,8 @@
             const [observacionesPoliza, setObservacionesPoliza] = React.useState('');
             const [archivosPoliza, setArchivosPoliza] = React.useState([]);
 
-            // --- ESTADOS DE REPORTES ---
             const [produccionData, setProduccionData] = React.useState(defaultProduccionData);
             const [carteraData, setCarteraData] = React.useState(defaultCarteraData);
-
-            // --- ESTADOS DE NAVEGACIÓN ---
-            const [activeMenu, setActiveMenu] = React.useState('cotizador');
-            const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
             const menuItems = [
                 { id: 'inicio', icon: Home, label: 'Inicio' },
@@ -194,7 +185,7 @@
             const totalRCE = subtotalRCE + ivaRCE;
             const totalGeneral = totalCump + totalRCE;
 
-            // --- Cálculos Dinámicos de Reporte de Producción ---
+            // --- Cálculos Producción y Cartera ---
             const prodTotal = produccionData.length;
             const prodMenorUnDia = produccionData.filter(p => p.ansHoras <= 24).length;
             const prodPorcentaje = prodTotal > 0 ? Math.round((prodMenorUnDia / prodTotal) * 100) : 0;
@@ -206,7 +197,6 @@
                 return acc;
             }, {})).map(k => ({ cliente: k, ...produccionData.reduce((acc, curr) => { if (!acc[curr.cliente]) acc[curr.cliente] = { count: 0, totalValor: 0 }; acc[curr.cliente].count += 1; acc[curr.cliente].totalValor += curr.valor; return acc; }, {})[k] })).sort((a, b) => b.totalValor - a.totalValor);
 
-            // --- Cálculos Dinámicos de Reporte de Cartera ---
             const cartTotal = carteraData.length;
             const cartSumaTotal = carteraData.reduce((acc, curr) => acc + curr.total, 0);
             const cartSana = carteraData.filter(p => p.dias <= 15).reduce((acc, curr) => acc + curr.total, 0);
@@ -242,23 +232,7 @@
 
                 const setupFirestore = () => {
                     firestoreDb.collection("solicitudes").orderBy("fechaRegistro", "desc").onSnapshot(snap => {
-                        const data = snap.docs.map(doc => {
-                            let d = doc.data();
-                            
-                            // Normalizar estados antiguos a la nueva nomenclatura para la vista de tabla
-                            if (d.estado === 'Emitida') d.estado = 'En Trámite';
-                            if (d.estado === 'Finalizada') d.estado = 'Emitida-Entregada';
-                            
-                            // Recuperar nombres si son registros antiguos que no los tenían en la raíz
-                            if (!d.solicitanteNombre && d.formularioCompleto) {
-                                try { const p = JSON.parse(d.formularioCompleto); if(p.interno?.solicitante) d.solicitanteNombre = p.interno.solicitante; } catch(e){}
-                            }
-                            if (!d.tomadorNombre && d.formularioCompleto) {
-                                try { const p = JSON.parse(d.formularioCompleto); if(p.tomador?.nombre) d.tomadorNombre = p.tomador.nombre; } catch(e){}
-                            }
-                            
-                            return { id_db: doc.id, ...d };
-                        });
+                        const data = snap.docs.map(doc => ({ id_db: doc.id, ...doc.data() }));
                         setSolicitudesDb(data);
                     }, err => console.warn("Firestore error:", err.message));
 
@@ -284,20 +258,15 @@
             }, []);
 
             const cargarSolicitud = (datosGuardados, estadoNube) => {
-                setInterno(datosGuardados.interno || interno);
-                setTomador(datosGuardados.tomador || tomador);
-                setAsegurado(datosGuardados.asegurado || asegurado);
-                setContrato(datosGuardados.contrato || contrato);
+                setInterno(datosGuardados.interno);
+                setTomador(datosGuardados.tomador);
+                setAsegurado(datosGuardados.asegurado);
+                setContrato(datosGuardados.contrato);
                 if (datosGuardados.amparos) setAmparos(datosGuardados.amparos);
                 if (datosGuardados.costos) setCostos(datosGuardados.costos);
                 if (datosGuardados.consecutivo) setConsecutivo(datosGuardados.consecutivo);
                 
-                // Normalizar estados viejos al cargar el formulario
-                let estadoNormalizado = estadoNube || 'Pre-Orden';
-                if (estadoNormalizado === 'Emitida') estadoNormalizado = 'En Trámite';
-                if (estadoNormalizado === 'Finalizada') estadoNormalizado = 'Emitida-Entregada';
-                
-                setEstadoSolicitud(estadoNormalizado);
+                setEstadoSolicitud(estadoNube || 'Pre-Orden');
                 setActiveMenu('cotizador');
                 setRolActivo('director');
             };
@@ -319,6 +288,18 @@
                 }
             };
 
+            // FUNCION AÑADIDA: ELIMINAR SOLICITUD
+            const eliminarSolicitud = async (idToDelete) => {
+                if (window.confirm(`⚠️ ¿Está seguro de eliminar el registro ${idToDelete}? Esta acción no se puede deshacer en la base de datos.`)) {
+                    try {
+                        await db.collection("solicitudes").doc(idToDelete).delete();
+                        alert("✅ Registro eliminado exitosamente de la nube.");
+                    } catch (e) {
+                        alert("❌ Error eliminando registro: " + e.message);
+                    }
+                }
+            };
+
             const limpiarFormularioCotizador = () => {
                 if (window.confirm('¿Está seguro de que desea iniciar una nueva cotización en blanco?')) {
                     setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { garantiaUnica: false, cumplimientoParticulares: false, cumplimientoEstatales: false, disposicionLegal: false, otros: false }, archivos: [] });
@@ -327,15 +308,13 @@
                     setContrato({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '' });
                     setCostos({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
                     setAmparos(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault ? a.tasaDefault.toFixed(2) : '0.18', prima: 0 })));
-                    document.querySelectorAll('input[type="file"]').forEach(input => input.value = '');
                     setConsecutivo(generarConsecutivoLocal());
                     setEstadoSolicitud('Nueva');
                     setObservacionesPoliza('');
                     setArchivosPoliza([]);
+                    document.querySelectorAll('input[type="file"]').forEach(input => input.value = '');
                 }
             };
-
-            const handleCheckboxTipos = (key) => setInterno(prev => ({ ...prev, tipos: { ...prev.tipos, [key]: !prev.tipos[key] } }));
 
             const handleAmparoToggle = (id) => {
                 setAmparos(prev => prev.map(amp => {
@@ -397,11 +376,12 @@
                 }));
             };
 
+            const handleCheckboxTipos = (key) => {
+                setInterno(prev => ({ ...prev, tipos: { ...prev.tipos, [key]: !prev.tipos[key] } }));
+            };
+
             const handleFileChange = (e) => {
-                const files = Array.from(e.target.files);
-                const totalSize = files.reduce((acc, f) => acc + f.size, 0);
-                if (totalSize > 8 * 1024 * 1024) alert("⚠️ Atención: Archivos superan los 8MB. Podría haber errores de envío.");
-                setInterno(prev => ({ ...prev, archivos: files }));
+                setInterno(prev => ({ ...prev, archivos: Array.from(e.target.files) }));
             };
 
             const getBase64 = (file) => new Promise((resolve, reject) => {
@@ -415,10 +395,162 @@
             };
 
             const exportarCotizacion = () => {
-                const amparosActivos = amparos.filter(a => a.activo);
-                let detalleAmparos = amparosActivos.map(a => `  - ${a.nombre} | Fechas: ${a.desde||'-'} al ${a.hasta||'-'} (${a.dias} días) | Porcentaje: ${a.porcentaje||'0'}% | Valor Asegurado: ${formatCurrency(a.valorAsegurado)} | Prima: ${formatCurrency(a.prima)}`).join('\n');
-                let resumen = `📋 SOLICITUD DE COTIZACIÓN - AEGIS INSURANCE\n=================================================\n\n🔖 DATOS GENERALES\nConsecutivo: ${consecutivo}\nSolicitante: ${interno.solicitante} (${interno.solicitanteEmail})\nAsunto: ${interno.asunto}\n\n🏢 PARTES\nTomador/Afianzado: ${tomador.nombre} (NIT: ${tomador.nit})\nAsegurado/Beneficiario: ${asegurado.nombre} (NIT: ${asegurado.nit})\n\n📄 DATOS DEL CONTRATO\nObjeto: ${contrato.objeto}\nNúmero: ${contrato.numero || 'N/A'}\nVigencia: ${contrato.desde || '-'} al ${contrato.hasta || '-'} (${contrato.duracion || 0} días)\nValor SIN IVA: ${formatCurrency(valorSinIva)}\nValor CON IVA: ${formatCurrency(valorConIva)}\n\n🛡️ AMPAROS SOLICITADOS\n${detalleAmparos ? `${detalleAmparos}\n\n` : `  Ningún amparo seleccionado.\n\n`}💰 RESUMEN FINANCIERO\nTotal Cumplimiento: ${formatCurrency(totalCump)}\nTotal RCE: ${formatCurrency(totalRCE)}\nGRAN TOTAL: ${formatCurrency(totalGeneral)}\n`;
-                navigator.clipboard.writeText(resumen).then(() => alert(`✅ ¡Resumen detallado copiado al portapapeles! Listo para pegar en correo o chat.`)).catch(() => alert(`Cotización finalizada. Gran Total: ${formatCurrency(totalGeneral)}`));
+                const amparosTexto = amparos.filter(a => a.activo).map(a =>
+                    `   - ${a.nombre}: Vigencia ${a.desde || '-'} a ${a.hasta || '-'} (${a.dias} d) | V.Aseg: ${formatCurrency(a.valorAsegurado)} | Prima: ${formatCurrency(a.prima)}`
+                ).join('\n');
+
+                let resumen = `📋 *RESUMEN DE COTIZACIÓN - AEGIS INSURANCE*\n`;
+                resumen += `--------------------------------------------------\n`;
+                resumen += `🆔 *Consecutivo:* ${consecutivo}\n`;
+                resumen += `👤 *Solicitante:* ${interno.solicitante}\n`;
+                resumen += `🏢 *Tomador:* ${tomador.nombre} (NIT: ${tomador.nit})\n`;
+                resumen += `🛡️ *Asegurado:* ${asegurado.nombre} (NIT: ${asegurado.nit})\n\n`;
+                resumen += `📄 *DATOS DEL CONTRATO*\n`;
+                resumen += `   - Objeto: ${contrato.objeto}\n`;
+                resumen += `   - Valor (Con IVA): ${formatCurrency(contrato.valorConIva)}\n\n`;
+                resumen += `⚖️ *AMPAROS LIQUIDADOS*\n`;
+                resumen += amparosTexto ? amparosTexto + `\n\n` : `   - Ningún amparo seleccionado.\n\n`;
+                resumen += `💰 *LIQUIDACIÓN FINANCIERA*\n`;
+                resumen += `   - Total Cumplimiento: ${formatCurrency(totalCump)}\n`;
+                resumen += `   - Total RCE: ${formatCurrency(totalRCE)}\n`;
+                resumen += `--------------------------------------------------\n`;
+                resumen += `🎯 *GRAN TOTAL A PAGAR: ${formatCurrency(totalGeneral)}*\n`;
+
+                navigator.clipboard.writeText(resumen).then(() => alert(`✅ ¡Resumen detallado copiado al portapapeles!`)).catch(() => alert(`Cotización finalizada. Gran Total: ${formatCurrency(totalGeneral)}`));
+            };
+
+            const getOrdenServicioHTML = () => {
+                const amparosHtml = amparos.filter(a => a.activo).map(a => `
+                    <tr>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">${a.nombre}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">${a.desde || '-'} al ${a.hasta || '-'}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.dias}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.porcentaje || '0'}%</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-size: 13px;">${formatCurrency(a.valorAsegurado)}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.tasa}%</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-size: 13px; font-weight: bold; color:#163f73;">${formatCurrency(a.prima)}</td>
+                    </tr>
+                `).join('');
+
+                return `
+                    <div id="pdf-content" style="font-family: 'Arial', sans-serif; color: #12334F; padding: 20px; background: white;">
+                        <style>
+                            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                            td, th { padding: 6px 0; vertical-align: top; font-size: 14px; }
+                            .label { font-weight: bold; width: 35%; color: #555; }
+                            .val { width: 65%; }
+                            .amparos-table th { background-color: #f4f7f9; padding: 12px 10px; text-align: left; font-size: 12px; color: #163f73; text-transform: uppercase; }
+                            .totals-container { width: 100%; margin-top: 20px; page-break-inside: avoid; }
+                            .totals-grid { display: flex; gap: 20px; width: 100%; }
+                            .totals-box { flex: 1; background-color: #f4f7f9; border-left: 4px solid #163f73; padding: 15px; }
+                            .totals-box h4 { margin: 0 0 10px 0; color: #163f73; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+                            .totals-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; color: #333; }
+                            .totals-subtotal { display: flex; justify-content: space-between; font-weight: bold; color: #163f73; font-size: 14px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ccc; }
+                            .grand-total-box { width: 100%; box-sizing: border-box; background-color: #12334F; border-left: 5px solid #58C9E8; padding: 15px; color: white; margin-top: 15px; }
+                            .grand-total-box .totals-row { color: white; font-size: 18px; font-weight: bold; margin: 0; }
+                            .section-title { color: #163f73; font-size: 16px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; margin-top: 30px; margin-bottom: 15px; text-transform: uppercase; }
+                        </style>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #58C9E8; padding-bottom: 20px; margin-bottom: 30px;">
+                            <div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#58C9E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 5px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                <h1 style="margin: 0; color: #163f73; font-size: 28px; text-transform: uppercase; letter-spacing: 1px;">AEGIS</h1>
+                                <p style="margin: 2px 0 0 0; color: #58C9E8; font-weight: bold; letter-spacing: 3px; font-size: 11px; text-transform: uppercase;">INSURANCE</p>
+                            </div>
+                            <div style="text-align: right;">
+                                <h2 style="margin:0; color: #163f73; font-size: 20px;">ORDEN DE SERVICIO</h2>
+                                <p style="margin:5px 0 0 0; color: #555; font-size:14px; font-weight: normal;">No. <b>${consecutivo}</b></p>
+                                <p style="margin:5px 0 0 0; color: #555; font-size:12px; font-weight: normal;">Fecha: ${new Date().toLocaleDateString('es-CO')}</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 40px;">
+                            <div style="flex: 1;">
+                                <h3 class="section-title">Datos del Tomador</h3>
+                                <table>
+                                    <tr><td class="label">Razón Social:</td><td class="val">${tomador.nombre}</td></tr>
+                                    <tr><td class="label">NIT:</td><td class="val">${tomador.nit}</td></tr>
+                                    <tr><td class="label">Dirección:</td><td class="val">${tomador.direccion || '-'}</td></tr>
+                                    <tr><td class="label">Email / Tel:</td><td class="val">${tomador.email || '-'} / ${tomador.telefono || tomador.celular || '-'}</td></tr>
+                                </table>
+                            </div>
+                            <div style="flex: 1;">
+                                <h3 class="section-title">Datos del Asegurado</h3>
+                                <table>
+                                    <tr><td class="label">Razón Social:</td><td class="val">${asegurado.nombre}</td></tr>
+                                    <tr><td class="label">NIT:</td><td class="val">${asegurado.nit}</td></tr>
+                                    <tr><td class="label">Solicitante:</td><td class="val">${interno.solicitante}</td></tr>
+                                    <tr><td class="label">Asunto:</td><td class="val">${interno.asunto || '-'}</td></tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <h3 class="section-title">Datos del Contrato</h3>
+                        <table>
+                            <tr><td class="label" style="width:20%;">Objeto:</td><td class="val" style="width:80%; text-align: justify;">${contrato.objeto}</td></tr>
+                            <tr><td class="label" style="width:20%;">No. Contrato:</td><td class="val" style="width:80%;">${contrato.numero || '-'}</td></tr>
+                            <tr><td class="label" style="width:20%;">Vigencia:</td><td class="val" style="width:80%;">${contrato.desde || '-'} al ${contrato.hasta || '-'} (${contrato.duracion || '-'} días)</td></tr>
+                            <tr><td class="label" style="width:20%;">Valor SIN IVA:</td><td class="val" style="width:80%;">${formatCurrency(valorSinIva)}</td></tr>
+                            <tr><td class="label" style="width:20%;">Valor CON IVA:</td><td class="val" style="width:80%;">${formatCurrency(valorConIva)}</td></tr>
+                        </table>
+
+                        <h3 class="section-title">Amparos Solicitados</h3>
+                        <table class="amparos-table">
+                            <thead><tr><th>Amparo</th><th>Vigencia</th><th style="text-align: center;">Días</th><th style="text-align: center;">% Vr. Aseg.</th><th style="text-align: right;">V. Asegurado</th><th style="text-align: center;">Tasa</th><th style="text-align: right;">Prima</th></tr></thead>
+                            <tbody>${amparosHtml || '<tr><td colspan="7" style="text-align:center; padding: 20px;">No se seleccionaron amparos.</td></tr>'}</tbody>
+                        </table>
+
+                        <div class="totals-container" style="page-break-inside: avoid;">
+                            <div class="totals-grid">
+                                <div class="totals-box">
+                                    <h4>Póliza de Cumplimiento</h4>
+                                    <div class="totals-row"><span>Prima:</span><span>${formatCurrency(primaCumplimiento)}</span></div>
+                                    <div class="totals-row"><span>Gastos de Expedición:</span><span>${formatCurrency(gastosCalculadosCump)}</span></div>
+                                    <div class="totals-row"><span>IVA (${costos.tasaIva}%):</span><span>${formatCurrency(ivaCump)}</span></div>
+                                    <div class="totals-subtotal"><span>Total Cumplimiento:</span><span>${formatCurrency(totalCump)}</span></div>
+                                </div>
+                                <div class="totals-box">
+                                    <h4>Póliza de Responsabilidad Civil (RCE)</h4>
+                                    <div class="totals-row"><span>Prima:</span><span>${formatCurrency(primaRCE)}</span></div>
+                                    <div class="totals-row"><span>Gastos de Expedición:</span><span>${formatCurrency(gastosCalculadosRCE)}</span></div>
+                                    <div class="totals-row"><span>IVA (${costos.tasaIva}%):</span><span>${formatCurrency(ivaRCE)}</span></div>
+                                    <div class="totals-subtotal"><span>Total RCE:</span><span>${formatCurrency(totalRCE)}</span></div>
+                                </div>
+                            </div>
+                            <div class="grand-total-box">
+                                <div class="totals-row"><span>GRAN TOTAL A PAGAR:</span><span>${formatCurrency(totalGeneral)}</span></div>
+                            </div>
+                        </div>
+                        <div style="margin-top: 50px; text-align: center; font-size: 11px; color: #888; border-top: 1px solid #eee; padding-top: 20px;">
+                            <strong>AEGIS INSURANCE - PROTECCIÓN & RESPALDO</strong><br>
+                            Documento generado automáticamente a través del Portal de Servicios. Operación exclusiva para Grupo Elite / Sandor.<br>
+                        </div>
+                    </div>
+                `;
+            };
+
+            const descargarPDF = async () => {
+                const cortina = document.createElement('div');
+                cortina.id = 'cortina-pdf-download';
+                cortina.style.position = 'fixed';
+                cortina.style.inset = '0';
+                cortina.style.backgroundColor = 'rgba(18, 51, 79, 0.95)';
+                cortina.style.zIndex = '999999';
+                cortina.style.display = 'flex';
+                cortina.style.flexDirection = 'column';
+                cortina.style.alignItems = 'center';
+                cortina.style.justifyContent = 'center';
+                cortina.style.color = 'white';
+                cortina.innerHTML = `<svg class="animate-spin h-12 w-12 text-[#58C9E8] mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg><h3 class="text-xl font-bold">Generando Documento...</h3>`;
+                document.body.appendChild(cortina);
+                try {
+                    const htmlString = getOrdenServicioHTML();
+                    const opt = { margin: 10, filename: `${consecutivo}_Orden_Servicio.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, logging: false, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } };
+                    await html2pdf().set(opt).from(htmlString).save();
+                } catch(e) {
+                    alert("Error al generar PDF.");
+                } finally {
+                    if(document.getElementById('cortina-pdf-download')) document.body.removeChild(document.getElementById('cortina-pdf-download'));
+                }
             };
 
             const imprimirCotizacion = () => {
@@ -428,24 +560,7 @@
                 printWindow.document.close();
             };
 
-            const getOrdenServicioHTML = () => {
-                const amparosHtml = amparos.filter(a => a.activo).map(a => `<tr><td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">${a.nombre}</td><td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">${a.desde || '-'} al ${a.hasta || '-'}</td><td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.dias}</td><td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.porcentaje || '0'}%</td><td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-size: 13px;">${formatCurrency(a.valorAsegurado)}</td><td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.tasa}%</td><td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-size: 13px; font-weight: bold; color:#163f73;">${formatCurrency(a.prima)}</td></tr>`).join('');
-                return `
-                    <div id="pdf-content" style="font-family: 'Arial', sans-serif; color: #12334F; padding: 20px; background: white;">
-                        <style>table{width:100%;border-collapse:collapse;margin-bottom:20px;} td,th{padding:6px 0;vertical-align:top;font-size:14px;} .label{font-weight:bold;width:35%;color:#555;} .val{width:65%;} .amparos-table th{background-color:#f4f7f9;padding:12px 10px;text-align:left;font-size:12px;color:#163f73;text-transform:uppercase;} .totals-container{width:100%;margin-top:20px;page-break-inside:avoid;} .totals-grid{display:flex;gap:20px;width:100%;} .totals-box{flex:1;background-color:#f4f7f9;border-left:4px solid #163f73;padding:15px;} .totals-box h4{margin:0 0 10px 0;color:#163f73;font-size:13px;text-transform:uppercase;border-bottom:1px solid #ccc;padding-bottom:5px;} .totals-row{display:flex;justify-content:space-between;margin-bottom:6px;font-size:13px;color:#333;} .totals-subtotal{display:flex;justify-content:space-between;font-weight:bold;color:#163f73;font-size:14px;margin-top:8px;padding-top:8px;border-top:1px dashed #ccc;} .grand-total-box{width:100%;box-sizing:border-box;background-color:#12334F;border-left:5px solid #58C9E8;padding:15px;color:white;margin-top:15px;} .grand-total-box .totals-row{color:white;font-size:18px;font-weight:bold;margin:0;} .section-title{color:#163f73;font-size:16px;border-bottom:1px solid #e0e0e0;padding-bottom:5px;margin-top:30px;margin-bottom:15px;text-transform:uppercase;}</style>
-                        <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #58C9E8;padding-bottom:20px;margin-bottom:30px;">
-                            <div><svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#58C9E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom:5px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg><h1 style="margin:0;color:#163f73;font-size:28px;text-transform:uppercase;letter-spacing:1px;">AEGIS</h1><p style="margin:2px 0 0 0;color:#58C9E8;font-weight:bold;letter-spacing:3px;font-size:11px;text-transform:uppercase;">INSURANCE</p></div>
-                            <div style="text-align:right;"><h2 style="margin:0;color:#163f73;font-size:20px;">ORDEN DE SERVICIO</h2><p style="margin:5px 0 0 0;color:#555;font-size:14px;font-weight:normal;">No. <b>${consecutivo}</b></p><p style="margin:5px 0 0 0;color:#555;font-size:12px;font-weight:normal;">Fecha: ${new Date().toLocaleDateString('es-CO')}</p></div>
-                        </div>
-                        <div style="display:flex;gap:40px;"><div style="flex:1;"><h3 class="section-title">Datos del Tomador</h3><table><tr><td class="label">Razón Social:</td><td class="val">${tomador.nombre}</td></tr><tr><td class="label">NIT:</td><td class="val">${tomador.nit}</td></tr><tr><td class="label">Dirección:</td><td class="val">${tomador.direccion || '-'}</td></tr><tr><td class="label">Email / Tel:</td><td class="val">${tomador.email || '-'} / ${tomador.telefono || tomador.celular || '-'}</td></tr></table></div><div style="flex:1;"><h3 class="section-title">Datos del Asegurado</h3><table><tr><td class="label">Razón Social:</td><td class="val">${asegurado.nombre}</td></tr><tr><td class="label">NIT:</td><td class="val">${asegurado.nit}</td></tr><tr><td class="label">Solicitante:</td><td class="val">${interno.solicitante}</td></tr><tr><td class="label">Asunto:</td><td class="val">${interno.asunto || '-'}</td></tr></table></div></div>
-                        <h3 class="section-title">Datos del Contrato</h3><table><tr><td class="label" style="width:20%;">Objeto:</td><td class="val" style="width:80%;text-align:justify;">${contrato.objeto}</td></tr><tr><td class="label" style="width:20%;">No. Contrato:</td><td class="val" style="width:80%;">${contrato.numero || '-'}</td></tr><tr><td class="label" style="width:20%;">Vigencia:</td><td class="val" style="width:80%;">${contrato.desde || '-'} al ${contrato.hasta || '-'} (${contrato.duracion || '-'} días)</td></tr><tr><td class="label" style="width:20%;">Valor SIN IVA:</td><td class="val" style="width:80%;">${formatCurrency(valorSinIva)}</td></tr><tr><td class="label" style="width:20%;">Valor CON IVA:</td><td class="val" style="width:80%;">${formatCurrency(valorConIva)}</td></tr></table>
-                        <h3 class="section-title">Amparos Solicitados</h3><table class="amparos-table"><thead><tr><th>Amparo</th><th>Vigencia</th><th style="text-align:center;">Días</th><th style="text-align:center;">% Vr. Aseg.</th><th style="text-align:right;">V. Asegurado</th><th style="text-align:center;">Tasa</th><th style="text-align:right;">Prima</th></tr></thead><tbody>${amparosHtml || '<tr><td colspan="7" style="text-align:center;padding:20px;">No se seleccionaron amparos.</td></tr>'}</tbody></table>
-                        <div class="totals-container" style="page-break-inside:avoid;"><div class="totals-grid"><div class="totals-box"><h4>Póliza de Cumplimiento</h4><div class="totals-row"><span>Prima:</span><span>${formatCurrency(primaCumplimiento)}</span></div><div class="totals-row"><span>Gastos de Expedición:</span><span>${formatCurrency(gastosCalculadosCump)}</span></div><div class="totals-row"><span>IVA (${costos.tasaIva}%):</span><span>${formatCurrency(ivaCump)}</span></div><div class="totals-subtotal"><span>Total Cumplimiento:</span><span>${formatCurrency(totalCump)}</span></div></div><div class="totals-box"><h4>Póliza de Responsabilidad Civil (RCE)</h4><div class="totals-row"><span>Prima:</span><span>${formatCurrency(primaRCE)}</span></div><div class="totals-row"><span>Gastos de Expedición:</span><span>${formatCurrency(gastosCalculadosRCE)}</span></div><div class="totals-row"><span>IVA (${costos.tasaIva}%):</span><span>${formatCurrency(ivaRCE)}</span></div><div class="totals-subtotal"><span>Total RCE:</span><span>${formatCurrency(totalRCE)}</span></div></div></div><div class="grand-total-box"><div class="totals-row"><span>GRAN TOTAL A PAGAR:</span><span>${formatCurrency(totalGeneral)}</span></div></div></div>
-                        <div style="margin-top:50px;text-align:center;font-size:11px;color:#888;border-top:1px solid #eee;padding-top:20px;"><strong>AEGIS INSURANCE - PROTECCIÓN & RESPALDO</strong><br>Documento generado automáticamente a través del Portal de Servicios. Operación exclusiva para Grupo Elite / Sandor.<br></div>
-                    </div>`;
-            };
-
-            // --- LÓGICA DE ENVÍO Y COMUNICACIÓN CON MAKE.COM ---
+            // --- ACCIONES PRINCIPALES (WEBHOOK) ---
             const guardarPreOrden = async () => {
                 if (!interno.solicitante || !interno.solicitanteEmail || !tomador.nombre) return alert("⚠️ Llene Nombre, Correo y Tomador.");
                 setIsSubmitting(true);
@@ -510,9 +625,9 @@
 
                 try {
                     if (db) {
-                        const dataToSave = { fechaRegistro: new Date().toISOString(), consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'En Trámite', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo }) };
+                        const dataToSave = { fechaRegistro: new Date().toISOString(), consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'Emitida', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo }) };
                         await db.collection("solicitudes").doc(consecutivo).set(dataToSave, { merge: true });
-                        setEstadoSolicitud('En Trámite');
+                        setEstadoSolicitud('Emitida');
                     }
 
                     const attachments = []; 
@@ -545,7 +660,7 @@
                         if (!res.ok) throw new Error(res.status);
                     }
 
-                    alert("✅ ¡Orden procesada y enviada a En Trámite con éxito!");
+                    alert("✅ ¡Orden enviada al cliente con éxito!");
                 } catch (e) { 
                     alert("❌ Error: " + e.message); 
                 } finally { 
@@ -559,16 +674,17 @@
                 setIsSubmitting(true);
                 
                 try {
+                    // Cambiar estado en base de datos a Finalizada
                     if (db) {
-                        const dataToSave = { estado: 'Emitida-Entregada' };
+                        const dataToSave = { estado: 'Finalizada' };
                         await db.collection("solicitudes").doc(consecutivo).set(dataToSave, { merge: true });
-                        setEstadoSolicitud('Emitida-Entregada');
+                        setEstadoSolicitud('Finalizada');
                     }
 
                     if (WEBHOOK_URL) {
                         const attachments = await Promise.all(archivosPoliza.map(getBase64));
                         const payload = {
-                            flujo: 'ENTREGA-POLIZA', 
+                            flujo: 'ENTREGA-POLIZA', // Flujo Ruta C en Make.com
                             consecutivo, 
                             solicitanteNombre: interno.solicitante, 
                             solicitanteEmail: interno.solicitanteEmail,
@@ -813,205 +929,205 @@
                                             <div className="md:col-span-2"><label className={labelCls}>Duración (Días)</label><input type="number" className={`${inputCls} bg-[#e4ebf1] font-semibold cursor-not-allowed`} disabled value={contrato.duracion} /></div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* BLOQUES EXCLUSIVOS DEL DIRECTOR (Amparos y Totales) */}
-                                {(isDirector && (estadoSolicitud === 'Pre-Orden' || estadoSolicitud === 'Nueva')) && (
-                                    <div className="space-y-6 mt-8 border-t-4 border-[#58C9E8] pt-8 max-w-[1600px] mx-auto">
-                                        <div className="bg-[#e8f7fb] text-[#163f73] px-6 py-4 rounded-xl border border-[#58C9E8]/30 flex items-center justify-between">
-                                            <div>
-                                                <h3 className="font-bold text-lg">Zona de Liquidación</h3>
-                                                <p className="text-sm opacity-80">Por favor asigne los amparos y valores extraídos de los contratos anexos.</p>
-                                            </div>
-                                        </div>
-
-                                        <div className={sectionCls}>
-                                            <h3 className="flex items-center gap-2 font-bold text-[#163f73] mb-4 border-b border-[#dce4ec] pb-2"><Calculator size={20} className="text-[#58C9E8]" /> 3. Amparos y Garantías</h3>
-                                            <div className="overflow-x-auto">
-                                                <table className="w-full text-xs text-left min-w-[1000px]">
-                                                    <thead className="bg-[#12334F] text-white">
-                                                        <tr>
-                                                            <th className="p-3 rounded-tl-lg">AMPARO</th>
-                                                            <th className="p-3 w-64">VIGENCIA (DESDE - HASTA)</th>
-                                                            <th className="p-3 text-center w-16">DÍAS</th>
-                                                            <th className="p-3 text-center w-24">% Vr. Aseg.</th>
-                                                            <th className="p-3 text-right w-44">VALOR ASEGURADO</th>
-                                                            <th className="p-3 text-center w-20">TASA %</th>
-                                                            <th className="p-3 text-right w-40 rounded-tr-lg">PRIMA</th>
-                                                        </tr>
-                                                    </thead>
-                                                    <tbody className="divide-y divide-slate-200">
-                                                        {amparos.map(a => (
-                                                            <tr key={a.id} className={a.activo ? "bg-cyan-50/50" : "hover:bg-slate-50 transition-colors"}>
-                                                                <td className="p-3">
-                                                                    <label className="flex items-center gap-2 cursor-pointer w-full h-full m-0">
-                                                                        <input type="checkbox" className="w-4 h-4 rounded text-[#163f73] cursor-pointer" checked={a.activo} onChange={() => handleAmparoToggle(a.id)} />
-                                                                        <span className={`select-none ${a.activo ? "font-bold text-[#163f73]" : ""}`}>{a.nombre}</span>
-                                                                    </label>
-                                                                </td>
-                                                                <td className="p-3">
-                                                                    <div className="flex gap-1">
-                                                                        <input type="date" className="p-1 border border-[#cdd7e0] rounded w-full bg-white/50 focus:outline-none focus:ring-1 focus:ring-[#58C9E8] disabled:opacity-50" disabled={!a.activo} value={a.desde} onChange={e => handleAmparoField(a.id, 'desde', e.target.value)} />
-                                                                        <input type="date" className="p-1 border border-[#cdd7e0] rounded w-full bg-white/50 focus:outline-none focus:ring-1 focus:ring-[#58C9E8] disabled:opacity-50" disabled={!a.activo} value={a.hasta} onChange={e => handleAmparoField(a.id, 'hasta', e.target.value)} />
-                                                                    </div>
-                                                                </td>
-                                                                <td className="p-3 text-center font-bold text-slate-500">{a.dias || '-'}</td>
-                                                                <td className="p-3">
-                                                                    <input type="text" placeholder="%" className="w-full text-center p-1 border border-[#cdd7e0] rounded bg-white/50 font-semibold focus:outline-none focus:ring-1 focus:ring-[#58C9E8] disabled:opacity-50" disabled={!a.activo} value={a.porcentaje} onChange={e => handleAmparoField(a.id, 'porcentaje', e.target.value)} />
-                                                                </td>
-                                                                <td className="p-3">
-                                                                    <div className="relative flex items-center">
-                                                                        <span className={`absolute left-2 text-[#5c7792] font-bold text-sm pointer-events-none ${!a.activo && 'opacity-50'}`}>$</span>
-                                                                        <input type="text" className="w-full pl-6 text-right p-1 border border-[#cdd7e0] rounded bg-white/50 font-medium focus:outline-none focus:ring-1 focus:ring-[#58C9E8] disabled:opacity-50" disabled={!a.activo} value={a.valorAseguradoStr !== undefined ? a.valorAseguradoStr : (a.valorAsegurado ? a.valorAsegurado.toLocaleString('es-CO',{minimumFractionDigits:0, maximumFractionDigits:2}) : '')} onChange={e => handleAmparoField(a.id, 'valorAsegurado', e.target.value)} />
-                                                                    </div>
-                                                                </td>
-                                                                <td className="p-3">
-                                                                    <input type="text" className="w-full text-center p-1 border border-[#cdd7e0] rounded bg-white/50 font-semibold focus:outline-none focus:ring-1 focus:ring-[#58C9E8] disabled:opacity-50" disabled={!a.activo} value={a.tasa} onChange={e => handleAmparoField(a.id, 'tasa', e.target.value)} />
-                                                                </td>
-                                                                <td className="p-3 text-right font-bold text-[#163f73]">{formatCurrency(a.prima)}</td>
-                                                            </tr>
-                                                        ))}
-                                                    </tbody>
-                                                </table>
-                                            </div>
-                                        </div>
-
-                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                            <div className={sectionCls}>
-                                                <h3 className="font-bold text-[#163f73] mb-4 border-b border-[#dce4ec] pb-2">Ajustes Adicionales</h3>
-                                                <div className="space-y-4">
-                                                    <div>
-                                                        <label className={labelCls}>Gastos Cumplimiento</label>
-                                                        <div className="relative">
-                                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5c7792] font-bold pointer-events-none">$</span>
-                                                            <input type="text" className={`${inputCls} pl-8`} value={costos.gastosCump?costos.gastosCump.toLocaleString('es-CO'):''} onChange={e => setCostos({...costos, gastosCump: parseCurrency(e.target.value)})} />
-                                                        </div>
-                                                    </div>
-                                                    <div>
-                                                        <label className={labelCls}>Gastos RCE</label>
-                                                        <div className="relative">
-                                                            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5c7792] font-bold pointer-events-none">$</span>
-                                                            <input type="text" className={`${inputCls} pl-8`} value={costos.gastosRCE?costos.gastosRCE.toLocaleString('es-CO'):''} onChange={e => setCostos({...costos, gastosRCE: parseCurrency(e.target.value)})} />
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-
-                                            <div className="bg-[#12334F] rounded-xl p-6 shadow-lg border border-[#163f73] text-white">
-                                                <h3 className="font-bold text-[#58C9E8] mb-4">Liquidación Final</h3>
-                                                <div className="bg-[#163f73] rounded-lg p-4 shadow-sm mb-3">
-                                                    <h4 className="font-bold text-white mb-2 border-b border-[#12334F] pb-1 text-sm">Póliza de Cumplimiento</h4>
-                                                    <div className="space-y-1 text-sm text-gray-300">
-                                                        <div className="flex justify-between"><span>Prima:</span> <span>{formatCurrency(primaCumplimiento)}</span></div>
-                                                        <div className="flex justify-between"><span>Gastos de Expedición:</span> <span>{formatCurrency(gastosCalculadosCump)}</span></div>
-                                                        <div className="flex justify-between"><span>IVA ({costos.tasaIva}%):</span> <span>{formatCurrency(ivaCump)}</span></div>
-                                                        <div className="flex justify-between font-bold text-[#58C9E8] pt-1 border-t border-[#12334F] mt-1">
-                                                            <span>Total Cumplimiento:</span> <span>{formatCurrency(totalCump)}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-
-                                                <div className="bg-[#163f73] rounded-lg p-4 shadow-sm mb-3">
-                                                    <h4 className="font-bold text-white mb-2 border-b border-[#12334F] pb-1 text-sm">Póliza de Responsabilidad Civil (RCE)</h4>
-                                                    <div className="space-y-1 text-sm text-gray-300">
-                                                        <div className="flex justify-between"><span>Prima:</span> <span>{formatCurrency(primaRCE)}</span></div>
-                                                        <div className="flex justify-between"><span>Gastos de Expedición:</span> <span>{formatCurrency(gastosCalculadosRCE)}</span></div>
-                                                        <div className="flex justify-between"><span>IVA ({costos.tasaIva}%):</span> <span>{formatCurrency(ivaRCE)}</span></div>
-                                                        <div className="flex justify-between font-bold text-[#58C9E8] pt-1 border-t border-[#12334F] mt-1">
-                                                            <span>Total RCE:</span> <span>{formatCurrency(totalRCE)}</span>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                )}
-
-                                {/* NUEVA FASE 3: ENTREGA DE PÓLIZA (Solo Director si estado = En Trámite) */}
-                                {(isDirector && estadoSolicitud === 'En Trámite') && (
-                                    <div className="space-y-6 mt-8 border-t-4 border-green-500 pt-8 max-w-[1600px] mx-auto">
-                                        <div className="bg-green-50 text-green-800 px-6 py-4 rounded-xl border border-green-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-                                            <div>
-                                                <h3 className="font-bold text-lg flex items-center gap-2"><CheckCircle size={20}/> 4. Entrega de Póliza Final al Cliente</h3>
-                                                <p className="text-sm opacity-80">La Orden de Servicio ya está en trámite. Cargue el PDF de la póliza definitiva para finalizar este requerimiento.</p>
-                                            </div>
-                                        </div>
-
-                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    {/* BLOQUES EXCLUSIVOS DEL DIRECTOR (Amparos y Totales) */}
+                                    {(isDirector && (estadoSolicitud === 'Pre-Orden' || estadoSolicitud === 'Nueva')) && (
+                                        <div className="space-y-6 mt-8 border-t-4 border-[#58C9E8] pt-8 max-w-[1600px] mx-auto">
+                                            <div className="bg-[#e8f7fb] text-[#163f73] px-6 py-4 rounded-xl border border-[#58C9E8]/30 flex items-center justify-between">
                                                 <div>
-                                                    <label className={labelCls}>Observaciones / Notas para el cliente</label>
-                                                    <textarea 
-                                                        className={`${inputCls} h-32`} 
-                                                        placeholder="Escriba aquí los detalles, recomendaciones o saludos que irán en el correo de entrega..."
-                                                        value={observacionesPoliza} 
-                                                        onChange={e => setObservacionesPoliza(e.target.value)}
-                                                    ></textarea>
+                                                    <h3 className="font-bold text-lg">Zona de Liquidación</h3>
+                                                    <p className="text-sm opacity-80">Asigne los amparos extraídos de los contratos anexos y genere la orden final.</p>
                                                 </div>
-                                                <div className="bg-gray-50 p-6 rounded-lg border border-dashed border-gray-300 flex flex-col items-center justify-center text-center">
-                                                    <UploadCloud size={40} className="text-[#58C9E8] mb-3" />
-                                                    <label className="cursor-pointer bg-[#163f73] text-white px-6 py-2.5 rounded-md font-bold text-sm hover:bg-[#12334F] transition-colors mb-2 shadow-sm">
-                                                        Seleccionar Póliza (PDF)
-                                                        <input type="file" className="hidden" accept=".pdf" onChange={(e) => setArchivosPoliza(Array.from(e.target.files))} />
-                                                    </label>
-                                                    <span className="text-xs text-gray-500 font-bold">
-                                                        {archivosPoliza.length === 0 ? "Ningún archivo seleccionado" : `✅ ${archivosPoliza[0].name} cargado.`}
-                                                    </span>
+                                            </div>
+
+                                            <div className={sectionCls}>
+                                                <h3 className="flex items-center gap-2 font-bold text-[#163f73] mb-4 border-b border-[#dce4ec] pb-2"><Calculator size={20} className="text-[#58C9E8]" /> 3. Amparos y Garantías</h3>
+                                                <div className="overflow-x-auto">
+                                                    <table className="w-full text-xs text-left min-w-[1000px]">
+                                                        <thead className="bg-[#12334F] text-white">
+                                                            <tr>
+                                                                <th className="p-3 rounded-tl-lg">AMPARO</th>
+                                                                <th className="p-3 w-64">VIGENCIA (DESDE - HASTA)</th>
+                                                                <th className="p-3 text-center w-16">DÍAS</th>
+                                                                <th className="p-3 text-center w-24">% Vr. Aseg.</th>
+                                                                <th className="p-3 text-right w-44">VALOR ASEGURADO</th>
+                                                                <th className="p-3 text-center w-20">TASA %</th>
+                                                                <th className="p-3 text-right w-40 rounded-tr-lg">PRIMA</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody className="divide-y divide-slate-200">
+                                                            {amparos.map(a => (
+                                                                <tr key={a.id} className={a.activo ? "bg-cyan-50/50" : "hover:bg-slate-50 transition-colors"}>
+                                                                    <td className="p-3">
+                                                                        <label className="flex items-center gap-2 cursor-pointer w-full h-full m-0">
+                                                                            <input type="checkbox" className="w-4 h-4 rounded text-[#163f73] cursor-pointer" checked={a.activo} onChange={() => handleAmparoToggle(a.id)} />
+                                                                            <span className={`select-none ${a.activo ? "font-bold text-[#163f73]" : ""}`}>{a.nombre}</span>
+                                                                        </label>
+                                                                    </td>
+                                                                    <td className="p-3">
+                                                                        <div className="flex gap-1">
+                                                                            <input type="date" className="p-1 border border-[#cdd7e0] rounded w-full bg-white/50 focus:outline-none focus:ring-1 focus:ring-[#58C9E8] disabled:opacity-50" disabled={!a.activo} value={a.desde} onChange={e => handleAmparoField(a.id, 'desde', e.target.value)} />
+                                                                            <input type="date" className="p-1 border border-[#cdd7e0] rounded w-full bg-white/50 focus:outline-none focus:ring-1 focus:ring-[#58C9E8] disabled:opacity-50" disabled={!a.activo} value={a.hasta} onChange={e => handleAmparoField(a.id, 'hasta', e.target.value)} />
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="p-3 text-center font-bold text-slate-500">{a.dias || '-'}</td>
+                                                                    <td className="p-3">
+                                                                        <input type="text" placeholder="%" className="w-full text-center p-1 border border-[#cdd7e0] rounded bg-white/50 font-semibold focus:outline-none focus:ring-1 focus:ring-[#58C9E8] disabled:opacity-50" disabled={!a.activo} value={a.porcentaje} onChange={e => handleAmparoField(a.id, 'porcentaje', e.target.value)} />
+                                                                    </td>
+                                                                    <td className="p-3">
+                                                                        <div className="relative flex items-center">
+                                                                            <span className={`absolute left-2 text-[#5c7792] font-bold text-sm pointer-events-none ${!a.activo && 'opacity-50'}`}>$</span>
+                                                                            <input type="text" className="w-full pl-6 text-right p-1 border border-[#cdd7e0] rounded bg-white/50 font-medium focus:outline-none focus:ring-1 focus:ring-[#58C9E8] disabled:opacity-50" disabled={!a.activo} value={a.valorAseguradoStr !== undefined ? a.valorAseguradoStr : (a.valorAsegurado ? a.valorAsegurado.toLocaleString('es-CO',{minimumFractionDigits:0, maximumFractionDigits:2}) : '')} onChange={e => handleAmparoField(a.id, 'valorAsegurado', e.target.value)} />
+                                                                        </div>
+                                                                    </td>
+                                                                    <td className="p-3">
+                                                                        <input type="text" className="w-full text-center p-1 border border-[#cdd7e0] rounded bg-white/50 font-semibold focus:outline-none focus:ring-1 focus:ring-[#58C9E8] disabled:opacity-50" disabled={!a.activo} value={a.tasa} onChange={e => handleAmparoField(a.id, 'tasa', e.target.value)} />
+                                                                    </td>
+                                                                    <td className="p-3 text-right font-bold text-[#163f73]">{formatCurrency(a.prima)}</td>
+                                                                </tr>
+                                                            ))}
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+
+                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div className={sectionCls}>
+                                                    <h3 className="font-bold text-[#163f73] mb-4 border-b border-[#dce4ec] pb-2">Ajustes Adicionales</h3>
+                                                    <div className="space-y-4">
+                                                        <div>
+                                                            <label className={labelCls}>Gastos Cumplimiento</label>
+                                                            <div className="relative">
+                                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5c7792] font-bold pointer-events-none">$</span>
+                                                                <input type="text" className={`${inputCls} pl-8`} value={costos.gastosCump?costos.gastosCump.toLocaleString('es-CO'):''} onChange={e => setCostos({...costos, gastosCump: parseCurrency(e.target.value)})} />
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <label className={labelCls}>Gastos RCE</label>
+                                                            <div className="relative">
+                                                                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[#5c7792] font-bold pointer-events-none">$</span>
+                                                                <input type="text" className={`${inputCls} pl-8`} value={costos.gastosRCE?costos.gastosRCE.toLocaleString('es-CO'):''} onChange={e => setCostos({...costos, gastosRCE: parseCurrency(e.target.value)})} />
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
+                                                <div className="bg-[#12334F] rounded-xl p-6 shadow-lg border border-[#163f73] text-white">
+                                                    <h3 className="font-bold text-[#58C9E8] mb-4">Liquidación Final</h3>
+                                                    <div className="bg-[#163f73] rounded-lg p-4 shadow-sm mb-3">
+                                                        <h4 className="font-bold text-white mb-2 border-b border-[#12334F] pb-1 text-sm">Póliza de Cumplimiento</h4>
+                                                        <div className="space-y-1 text-sm text-gray-300">
+                                                            <div className="flex justify-between"><span>Prima:</span> <span>{formatCurrency(primaCumplimiento)}</span></div>
+                                                            <div className="flex justify-between"><span>Gastos de Expedición:</span> <span>{formatCurrency(gastosCalculadosCump)}</span></div>
+                                                            <div className="flex justify-between"><span>IVA ({costos.tasaIva}%):</span> <span>{formatCurrency(ivaCump)}</span></div>
+                                                            <div className="flex justify-between font-bold text-[#58C9E8] pt-1 border-t border-[#12334F] mt-1">
+                                                                <span>Total Cumplimiento:</span> <span>{formatCurrency(totalCump)}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+
+                                                    <div className="bg-[#163f73] rounded-lg p-4 shadow-sm mb-3">
+                                                        <h4 className="font-bold text-white mb-2 border-b border-[#12334F] pb-1 text-sm">Póliza de Responsabilidad Civil (RCE)</h4>
+                                                        <div className="space-y-1 text-sm text-gray-300">
+                                                            <div className="flex justify-between"><span>Prima:</span> <span>{formatCurrency(primaRCE)}</span></div>
+                                                            <div className="flex justify-between"><span>Gastos de Expedición:</span> <span>{formatCurrency(gastosCalculadosRCE)}</span></div>
+                                                            <div className="flex justify-between"><span>IVA ({costos.tasaIva}%):</span> <span>{formatCurrency(ivaRCE)}</span></div>
+                                                            <div className="flex justify-between font-bold text-[#58C9E8] pt-1 border-t border-[#12334F] mt-1">
+                                                                <span>Total RCE:</span> <span>{formatCurrency(totalRCE)}</span>
+                                                            </div>
+                                                        </div>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                )}
-
-                            </div>
-
-                            {/* FOOTER ACTION BUTTONS */}
-                            <div className={activeMenu === 'cotizador' ? "flex flex-col md:flex-row justify-between items-center gap-6 bg-[#12334F] p-8 rounded-3xl text-white shadow-2xl relative overflow-hidden mt-8 max-w-[1600px] mx-auto" : "hidden"}>
-                                <div className="absolute top-0 right-0 w-32 h-32 bg-[#58C9E8] opacity-10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                
-                                <div className="z-10 text-center md:text-left">
-                                    {isDirector ? (
-                                        <>
-                                            <p className="text-[10px] text-[#58C9E8] font-black tracking-widest uppercase mb-1">Gran Total Liquidado (IVA Inc.)</p>
-                                            <h2 className="text-3xl md:text-4xl font-black">{formatCurrency(totalGeneral)}</h2>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <p className="text-[10px] text-[#58C9E8] font-black tracking-widest uppercase mb-1">Fase 1 Completada</p>
-                                            <h2 className="text-2xl md:text-3xl font-bold">Datos listos para enviar</h2>
-                                        </>
                                     )}
+
+                                    {/* NUEVA FASE 3: ENTREGA DE PÓLIZA (Solo Director si estado = Emitida) */}
+                                    {(isDirector && estadoSolicitud === 'Emitida') && (
+                                        <div className="space-y-6 mt-8 border-t-4 border-green-500 pt-8 max-w-[1600px] mx-auto">
+                                            <div className="bg-green-50 text-green-800 px-6 py-4 rounded-xl border border-green-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+                                                <div>
+                                                    <h3 className="font-bold text-lg flex items-center gap-2"><CheckCircle size={20}/> 4. Entrega de Póliza Final al Cliente</h3>
+                                                    <p className="text-sm opacity-80">La Orden de Servicio ya fue emitida. Cargue el PDF de la póliza definitiva para finalizar este requerimiento.</p>
+                                                </div>
+                                            </div>
+
+                                            <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                    <div>
+                                                        <label className={labelCls}>Observaciones / Notas para el cliente</label>
+                                                        <textarea 
+                                                            className={`${inputCls} h-32`} 
+                                                            placeholder="Escriba aquí los detalles, recomendaciones o saludos que irán en el correo de entrega..."
+                                                            value={observacionesPoliza} 
+                                                            onChange={e => setObservacionesPoliza(e.target.value)}
+                                                        ></textarea>
+                                                    </div>
+                                                    <div className="bg-gray-50 p-6 rounded-lg border border-dashed border-gray-300 flex flex-col items-center justify-center text-center">
+                                                        <UploadCloud size={40} className="text-[#58C9E8] mb-3" />
+                                                        <label className="cursor-pointer bg-[#163f73] text-white px-6 py-2.5 rounded-md font-bold text-sm hover:bg-[#12334F] transition-colors mb-2 shadow-sm">
+                                                            Seleccionar Póliza (PDF)
+                                                            <input type="file" className="hidden" accept=".pdf" onChange={(e) => setArchivosPoliza(Array.from(e.target.files))} />
+                                                        </label>
+                                                        <span className="text-xs text-gray-500 font-bold">
+                                                            {archivosPoliza.length === 0 ? "Ningún archivo seleccionado" : `✅ ${archivosPoliza[0].name} cargado.`}
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
                                 </div>
 
-                                <div className="flex flex-wrap justify-center gap-3 z-10">
-                                    <button onClick={limpiarFormularioCotizador} className="px-4 py-3 bg-white/10 hover:bg-red-500/80 text-white rounded-xl font-bold transition-all" title="Limpiar todo"><Trash2 size={18} /></button>
+                                {/* FOOTER ACTION BUTTONS */}
+                                <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-[#12334F] p-8 rounded-3xl text-white shadow-2xl relative overflow-hidden mt-8 max-w-[1600px] mx-auto">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#58C9E8] opacity-10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                                     
-                                    {isDirector && (
-                                        <>
-                                            <button onClick={exportarCotizacion} className="px-5 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold flex items-center gap-2 transition-all border border-white/20"><FileText size={18} className="hidden sm:block"/> RESUMEN</button>
-                                            <button onClick={imprimirCotizacion} className="px-5 py-3 bg-[#e8f7fb] text-[#163f73] hover:bg-[#d0f0fa] rounded-xl font-bold flex items-center gap-2 border border-[#58C9E8]"><Printer size={18} className="hidden sm:block"/> PDF</button>
-                                        </>
-                                    )}
-
-                                    {isDirector ? (
-                                        estadoSolicitud === 'En Trámite' ? (
-                                            <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-500 text-white hover:bg-green-600 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
-                                                {isSubmitting ? "ENVIANDO PÓLIZA..." : <><Send size={18}/> ENVIAR PÓLIZA A CLIENTE</>}
-                                            </button>
-                                        ) : estadoSolicitud === 'Emitida-Entregada' ? (
-                                            <div className="px-6 py-3 bg-gray-500 text-white rounded-xl font-bold flex items-center gap-2 opacity-80 cursor-not-allowed">
-                                                <CheckCircle size={18}/> PROCESO FINALIZADO
-                                            </div>
+                                    <div className="z-10 text-center md:text-left">
+                                        {isDirector ? (
+                                            <>
+                                                <p className="text-[10px] text-[#58C9E8] font-black tracking-widest uppercase mb-1">Gran Total Liquidado (IVA Inc.)</p>
+                                                <h2 className="text-3xl md:text-4xl font-black">{formatCurrency(totalGeneral)}</h2>
+                                            </>
                                         ) : (
-                                            <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
-                                                {isSubmitting ? "PROCESANDO..." : <><Send size={18}/> GENERAR ORDEN FINAL</>}
+                                            <>
+                                                <p className="text-[10px] text-[#58C9E8] font-black tracking-widest uppercase mb-1">Fase 1 Completada</p>
+                                                <h2 className="text-2xl md:text-3xl font-bold">Datos listos para enviar</h2>
+                                            </>
+                                        )}
+                                    </div>
+
+                                    <div className="flex flex-wrap justify-center gap-3 z-10">
+                                        <button onClick={limpiarFormularioCotizador} className="px-4 py-3 bg-white/10 hover:bg-red-500/80 text-white rounded-xl font-bold transition-all" title="Limpiar todo"><Trash2 size={18} /></button>
+                                        
+                                        {isDirector && (
+                                            <>
+                                                <button onClick={exportarCotizacion} className="px-5 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold flex items-center gap-2 transition-all border border-white/20"><FileText size={18} className="hidden sm:block"/> RESUMEN</button>
+                                                <button onClick={imprimirCotizacion} className="px-5 py-3 bg-[#e8f7fb] text-[#163f73] hover:bg-[#d0f0fa] rounded-xl font-bold flex items-center gap-2 border border-[#58C9E8]"><Printer size={18} className="hidden sm:block"/> PDF</button>
+                                            </>
+                                        )}
+
+                                        {isDirector ? (
+                                            estadoSolicitud === 'Emitida' ? (
+                                                <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-500 text-white hover:bg-green-600 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                                    {isSubmitting ? "ENVIANDO PÓLIZA..." : <><Send size={18}/> ENVIAR PÓLIZA A CLIENTE</>}
+                                                </button>
+                                            ) : estadoSolicitud === 'Finalizada' ? (
+                                                <div className="px-6 py-3 bg-gray-500 text-white rounded-xl font-bold flex items-center gap-2 opacity-80 cursor-not-allowed">
+                                                    <CheckCircle size={18}/> PROCESO FINALIZADO
+                                                </div>
+                                            ) : (
+                                                <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                                    {isSubmitting ? "PROCESANDO..." : <><Send size={18}/> GENERAR ORDEN FINAL</>}
+                                                </button>
+                                            )
+                                        ) : (
+                                            <button onClick={guardarPreOrden} disabled={isSubmitting || isLoadingNube} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                                {isSubmitting ? "GUARDANDO..." : <><Cloud size={18}/> GUARDAR PRE-ORDEN</>}
                                             </button>
-                                        )
-                                    ) : (
-                                        <button onClick={guardarPreOrden} disabled={isSubmitting || isLoadingNube} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
-                                            {isSubmitting ? "GUARDANDO..." : <><Cloud size={18}/> GUARDAR PRE-ORDEN</>}
-                                        </button>
-                                    )}
+                                        )}
+                                    </div>
                                 </div>
                             </div>
 
@@ -1044,7 +1160,7 @@
                                                         <th className="px-6 py-4 font-semibold">Solicitante</th>
                                                         <th className="px-6 py-4 font-semibold">Valor Contrato</th>
                                                         <th className="px-6 py-4 font-semibold text-center">Estado</th>
-                                                        <th className="px-6 py-4 font-semibold text-center">Acción</th>
+                                                        <th className="px-6 py-4 font-semibold text-center">Acciones</th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-100 text-sm">
@@ -1071,15 +1187,20 @@
                                                                 {sol.valorConIva ? formatCurrency(sol.valorConIva) : '$ 0'}
                                                             </td>
                                                             <td className="px-6 py-4 text-center">
-                                                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${sol.estado === 'Emitida-Entregada' ? 'bg-blue-50 text-blue-700 border-blue-200' : sol.estado === 'En Trámite' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
-                                                                    {sol.estado === 'Emitida-Entregada' ? <Award size={14}/> : sol.estado === 'En Trámite' ? <CheckCircle size={14}/> : <ClockIcon size={14}/>}
+                                                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${(sol.estado === 'Finalizada' || sol.estado === 'Emitida-Entregada') ? 'bg-green-50 text-green-700 border-green-200' : (sol.estado === 'Emitida' || sol.estado === 'En Trámite') ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
+                                                                    {(sol.estado === 'Finalizada' || sol.estado === 'Emitida-Entregada') ? <CheckCircle size={14}/> : (sol.estado === 'Emitida' || sol.estado === 'En Trámite') ? <Award size={14}/> : <ClockIcon size={14}/>}
                                                                     {sol.estado || 'Pre-Orden'}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-6 py-4 text-center">
-                                                                <button onClick={() => abrirSolicitud(sol.consecutivo)} className="px-4 py-2 bg-white text-[#163f73] hover:bg-[#163f73] hover:text-white rounded-lg font-bold text-xs transition-colors border border-[#cdd7e0] shadow-sm flex items-center gap-2 mx-auto">
+                                                            <td className="px-6 py-4 text-center flex justify-center gap-2">
+                                                                <button onClick={() => abrirSolicitud(sol.consecutivo)} className="px-4 py-2 bg-white text-[#163f73] hover:bg-[#163f73] hover:text-white rounded-lg font-bold text-xs transition-colors border border-[#cdd7e0] shadow-sm flex items-center gap-2">
                                                                     Ver Detalle &rarr;
                                                                 </button>
+                                                                {isDirector && (
+                                                                    <button onClick={() => eliminarSolicitud(sol.consecutivo)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200" title="Eliminar registro de Firebase">
+                                                                        <Trash2 size={16}/>
+                                                                    </button>
+                                                                )}
                                                             </td>
                                                         </tr>
                                                     ))}
@@ -1113,22 +1234,6 @@
                                         </div>
                                     </div>
 
-                                    {/* MENSAJE EJECUTIVO */}
-                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
-                                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#58C9E8] opacity-5 rounded-full -translate-y-1/2 translate-x-1/4"></div>
-                                        <div className="flex-1 space-y-4 z-10">
-                                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e8f7fb] text-[#163f73] text-sm font-semibold mb-2"><Award size={16} />Excelencia Operativa</div>
-                                            <h3 className="text-3xl font-bold text-[#163f73]">Velocidad y Eficiencia en tus Pólizas</h3>
-                                            <p className="text-lg text-gray-600 leading-relaxed">Hemos optimizado nuestros procesos logrando que la inmensa mayoría de sus solicitudes sean emitidas y entregadas en tiempo récord.</p>
-                                        </div>
-                                        <div className="flex-shrink-0 w-full md:w-1/3 bg-[#163f73] rounded-2xl p-6 text-center text-white shadow-lg relative overflow-hidden z-10">
-                                            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                            <Zap size={40} className="text-[#58C9E8] mx-auto mb-3" />
-                                            <div className="text-6xl font-black text-[#58C9E8] mb-2">{prodPorcentaje}%</div>
-                                            <div className="text-sm font-medium uppercase tracking-wider text-gray-200">Emitidas en menos de 1 día</div>
-                                        </div>
-                                    </div>
-
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                                         <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
                                             <div className="p-3 bg-blue-50 rounded-lg text-[#163f73]"><FileText size={28} /></div>
@@ -1144,7 +1249,6 @@
                                         </div>
                                     </div>
 
-                                    {/* RESUMEN POR CLIENTE */}
                                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-8">
                                         <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
                                             <h4 className="text-lg font-bold text-[#163f73]">Resumen Consolidado por Cliente</h4>
@@ -1237,22 +1341,6 @@
                                         <div className="flex flex-wrap gap-3">
                                             <button onClick={() => downloadTemplate('cartera')} className="px-4 py-2.5 text-sm font-medium text-[#163f73] bg-[#e8f7fb] rounded-lg border border-[#58C9E8]/30 hover:bg-[#d0f0fa] flex items-center gap-2"><Download size={16} /> Plantilla CSV</button>
                                             <label className="cursor-pointer px-4 py-2.5 text-sm font-medium text-white bg-[#163f73] rounded-lg hover:bg-[#12334F] flex items-center gap-2"><DollarSign size={16} /> Cargar Archivo<input type="file" accept=".csv" className="hidden" onChange={(e) => handleCsvUpload(e, 'cartera')} /></label>
-                                        </div>
-                                    </div>
-
-                                    {/* IMPACTO FINANCIERO */}
-                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-8 flex flex-col md:flex-row items-center gap-8 relative overflow-hidden">
-                                        <div className="absolute top-0 right-0 w-64 h-64 bg-[#58C9E8] opacity-5 rounded-full -translate-y-1/2 translate-x-1/4"></div>
-                                        <div className="flex-1 space-y-4 z-10">
-                                            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#e8f7fb] text-[#163f73] text-sm font-semibold mb-2"><PieChart size={16} />Análisis Financiero</div>
-                                            <h3 className="text-3xl font-bold text-[#163f73]">Salud de Cartera Actual</h3>
-                                            <p className="text-lg text-gray-600 leading-relaxed">El {cartPorcentajeSana}% del valor adeudado corresponde a facturación muy reciente (menor a 15 días), demostrando un excelente ciclo de recaudo.</p>
-                                        </div>
-                                        <div className="flex-shrink-0 w-full md:w-auto bg-[#163f73] rounded-2xl p-6 text-center text-white shadow-lg relative overflow-hidden z-10 min-w-[300px]">
-                                            <div className="absolute top-0 right-0 w-32 h-32 bg-white opacity-10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                            <DollarSign size={40} className="text-[#58C9E8] mx-auto mb-3" />
-                                            <div className="text-3xl lg:text-4xl font-black text-[#58C9E8] mb-2">{formatCurrency(cartSumaTotal)}</div>
-                                            <div className="text-sm font-medium uppercase tracking-wider text-gray-200">Valor Total en Cartera</div>
                                         </div>
                                     </div>
 
