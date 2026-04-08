@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Servicios 2.0 - AEGIS Insurance</title>
+    <title>Portal de Servicios 2.4 - AEGIS Insurance</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -147,9 +147,10 @@
             const [solicitudesDb, setSolicitudesDb] = React.useState([]);
 
             // ESTADO PRINCIPAL DE LA SOLICITUD ACTUAL
-            const [estadoSolicitud, setEstadoSolicitud] = React.useState('Nueva'); // Nueva, Pre-Orden, Emitida, Finalizada
+            // Cambio Fase 1.1: Garantía única por Seriedad de la Oferta
+            const [estadoSolicitud, setEstadoSolicitud] = React.useState('Nueva'); 
             const [consecutivo, setConsecutivo] = React.useState('');
-            const [interno, setInterno] = React.useState({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { garantiaUnica: false, cumplimientoParticulares: false, cumplimientoEstatales: false, disposicionLegal: false, otros: false }, archivos: [] });
+            const [interno, setInterno] = React.useState({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { seriedadOferta: false, cumplimientoParticulares: false, cumplimientoEstatales: false, disposicionLegal: false, otros: false }, archivos: [] });
             const [tomador, setTomador] = React.useState({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
             const [asegurado, setAsegurado] = React.useState({ nombre: '', nit: '' });
             const [contrato, setContrato] = React.useState({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '' });
@@ -235,10 +236,9 @@
             React.useEffect(() => {
                 setConsecutivo(generarConsecutivoLocal());
                 
-                // GESTIÓN DE SEGURIDAD POR URL (Para enlaces enviados por Make.com)
                 const urlParams = new URLSearchParams(window.location.search);
                 if (urlParams.get('rol') === 'director') {
-                    setIsDirectorUnlocked(true); // Desbloqueo automático confiando en el link del correo
+                    setIsDirectorUnlocked(true); 
                     setRolActivo('director');
                 }
 
@@ -250,7 +250,13 @@
 
                 const setupFirestore = () => {
                     firestoreDb.collection("solicitudes").orderBy("fechaRegistro", "desc").onSnapshot(snap => {
-                        const data = snap.docs.map(doc => ({ id_db: doc.id, ...doc.data() }));
+                        const data = snap.docs.map(doc => {
+                            let d = doc.data();
+                            // Normalización retroactiva por si quedan datos viejos "Emitida"
+                            if (d.estado === 'Emitida') d.estado = 'En Trámite';
+                            if (d.estado === 'Finalizada') d.estado = 'Emitida-Entregada';
+                            return { id_db: doc.id, ...d };
+                        });
                         setSolicitudesDb(data);
                     }, err => console.warn("Firestore error:", err.message));
 
@@ -275,9 +281,8 @@
                     });
             }, []);
 
-            // FUNCIÓN DE SEGURIDAD: Mostrar Modal de PIN
             const handleAdminLogin = () => {
-                if(isDirectorUnlocked) return; // Ya está desbloqueado
+                if(isDirectorUnlocked) return; 
                 setPinDialog({ isOpen: true, pin: '', error: '' });
             };
 
@@ -293,7 +298,16 @@
             };
 
             const cargarSolicitud = (datosGuardados, estadoNube) => {
-                setInterno(datosGuardados.interno);
+                const internoSaved = datosGuardados.interno || {};
+                const loadedTipos = internoSaved.tipos || {};
+                
+                // Fallback para registros antiguos con garantiaUnica
+                if (loadedTipos.garantiaUnica !== undefined) {
+                    loadedTipos.seriedadOferta = loadedTipos.garantiaUnica;
+                    delete loadedTipos.garantiaUnica;
+                }
+
+                setInterno({ ...internoSaved, tipos: loadedTipos });
                 setTomador(datosGuardados.tomador);
                 setAsegurado(datosGuardados.asegurado);
                 setContrato(datosGuardados.contrato);
@@ -301,11 +315,13 @@
                 if (datosGuardados.costos) setCostos(datosGuardados.costos);
                 if (datosGuardados.consecutivo) setConsecutivo(datosGuardados.consecutivo);
                 
-                setEstadoSolicitud(estadoNube || 'Pre-Orden');
+                let estadoNormalizado = estadoNube || 'Pre-Orden';
+                if (estadoNormalizado === 'Emitida') estadoNormalizado = 'En Trámite';
+                if (estadoNormalizado === 'Finalizada') estadoNormalizado = 'Emitida-Entregada';
+                
+                setEstadoSolicitud(estadoNormalizado);
                 setActiveMenu('cotizador');
                 
-                // CORRECCIÓN BUG URL: Evitamos el 'Stale Closure' de React evaluando 
-                // el rol en tiempo real desde el estado previo.
                 setRolActivo(prevRol => prevRol === 'director' ? 'director' : 'cliente');
             };
 
@@ -339,7 +355,7 @@
 
             const limpiarFormularioCotizador = () => {
                 showConfirm('Nueva Cotización', '¿Está seguro de que desea iniciar una nueva cotización en blanco?', () => {
-                    setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { garantiaUnica: false, cumplimientoParticulares: false, cumplimientoEstatales: false, disposicionLegal: false, otros: false }, archivos: [] });
+                    setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { seriedadOferta: false, cumplimientoParticulares: false, cumplimientoEstatales: false, disposicionLegal: false, otros: false }, archivos: [] });
                     setTomador({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
                     setAsegurado({ nombre: '', nit: '' });
                     setContrato({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '' });
@@ -418,7 +434,14 @@
             };
 
             const handleFileChange = (e) => {
-                setInterno(prev => ({ ...prev, archivos: Array.from(e.target.files) }));
+                const files = Array.from(e.target.files);
+                const totalSize = files.reduce((acc, file) => acc + file.size, 0);
+                if (totalSize > 50 * 1024 * 1024) {
+                    showAlert('Límite Excedido', '⚠️ El peso total de los archivos supera los 50MB permitidos.');
+                    e.target.value = '';
+                    return;
+                }
+                setInterno(prev => ({ ...prev, archivos: files }));
             };
 
             const getBase64 = (file) => new Promise((resolve, reject) => {
@@ -637,7 +660,7 @@
                     showAlert('Éxito', "✅ ¡Pre-Orden guardada! El equipo ha sido notificado para completarla.");
                     
                     // Limpieza sin confirmación tras éxito para evitar doble alerta
-                    setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { garantiaUnica: false, cumplimientoParticulares: false, cumplimientoEstatales: false, disposicionLegal: false, otros: false }, archivos: [] });
+                    setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { seriedadOferta: false, cumplimientoParticulares: false, cumplimientoEstatales: false, disposicionLegal: false, otros: false }, archivos: [] });
                     setTomador({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
                     setAsegurado({ nombre: '', nit: '' });
                     setContrato({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '' });
@@ -676,10 +699,11 @@
                 document.body.appendChild(cortina);
 
                 try {
+                    // CAMBIO A "En Trámite" SEGÚN SOLICITUD
                     if (db) {
-                        const dataToSave = { fechaRegistro: new Date().toISOString(), consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'Emitida', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo }) };
+                        const dataToSave = { fechaRegistro: new Date().toISOString(), consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'En Trámite', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo }) };
                         await db.collection("solicitudes").doc(consecutivo).set(dataToSave, { merge: true });
-                        setEstadoSolicitud('Emitida');
+                        setEstadoSolicitud('En Trámite');
                     }
 
                     const attachments = []; 
@@ -970,12 +994,21 @@
                                         <div className="mt-4 mb-4">
                                             <label className={labelCls}>Tipo de Solicitud</label>
                                             <div className="flex flex-wrap gap-4 mt-2">
-                                                {Object.keys(interno.tipos).map(key => (
-                                                    <label key={key} className={`flex items-center gap-2 text-sm text-gray-700 ${isDirector ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}>
-                                                        <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" disabled={isDirector} checked={interno.tipos[key]} onChange={() => handleCheckboxTipos(key)} />
-                                                        {key === 'garantiaUnica' ? 'Garantía Única' : key === 'cumplimientoParticulares' ? 'Cumplimiento Particulares' : key === 'cumplimientoEstatales' ? 'Cumplimiento Estatales' : key === 'disposicionLegal' ? 'Disposición Legal' : 'Otros'}
-                                                    </label>
-                                                ))}
+                                                {Object.keys(interno.tipos).map(key => {
+                                                    let labelStr = '';
+                                                    if(key === 'seriedadOferta') labelStr = 'Seriedad de la oferta';
+                                                    else if(key === 'cumplimientoParticulares') labelStr = 'Cumplimiento Particulares';
+                                                    else if(key === 'cumplimientoEstatales') labelStr = 'Cumplimiento Estatales';
+                                                    else if(key === 'disposicionLegal') labelStr = 'Disposición Legal';
+                                                    else labelStr = 'Otros';
+
+                                                    return (
+                                                        <label key={key} className={`flex items-center gap-2 text-sm text-gray-700 ${isDirector ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}>
+                                                            <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" disabled={isDirector} checked={interno.tipos[key]} onChange={() => handleCheckboxTipos(key)} />
+                                                            {labelStr}
+                                                        </label>
+                                                    );
+                                                })}
                                             </div>
                                         </div>
                                         {!isDirector && (
@@ -1045,7 +1078,7 @@
                                     </div>
 
                                     {/* BLOQUES EXCLUSIVOS DEL DIRECTOR (Amparos y Totales) */}
-                                    {(isDirector && (estadoSolicitud === 'Pre-Orden' || estadoSolicitud === 'Nueva')) && (
+                                    {(isDirector && ['Pre-Orden', 'Nueva'].includes(estadoSolicitud)) && (
                                         <div className="space-y-6 mt-8 border-t-4 border-[#58C9E8] pt-8 max-w-[1600px] mx-auto">
                                             <div className="bg-[#e8f7fb] text-[#163f73] px-6 py-4 rounded-xl border border-[#58C9E8]/30 flex items-center justify-between">
                                                 <div>
@@ -1156,8 +1189,8 @@
                                         </div>
                                     )}
 
-                                    {/* NUEVA FASE 3: ENTREGA DE PÓLIZA (Solo Director si estado = Emitida) */}
-                                    {(isDirector && estadoSolicitud === 'Emitida') && (
+                                    {/* FASE 3: ENTREGA DE PÓLIZA (Para Directores en estados avanzados) */}
+                                    {(isDirector && ['En Trámite', 'Emitida', 'Emitida-Entregada', 'Finalizada'].includes(estadoSolicitud)) && (
                                         <div className="space-y-6 mt-8 border-t-4 border-green-500 pt-8 max-w-[1600px] mx-auto">
                                             <div className="bg-green-50 text-green-800 px-6 py-4 rounded-xl border border-green-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                                                 <div>
@@ -1181,7 +1214,16 @@
                                                         <UploadCloud size={40} className="text-[#58C9E8] mb-3" />
                                                         <label className="cursor-pointer bg-[#163f73] text-white px-6 py-2.5 rounded-md font-bold text-sm hover:bg-[#12334F] transition-colors mb-2 shadow-sm">
                                                             Seleccionar Póliza (PDF)
-                                                            <input type="file" className="hidden" accept=".pdf" onChange={(e) => setArchivosPoliza(Array.from(e.target.files))} />
+                                                            <input type="file" className="hidden" accept=".pdf" onChange={(e) => {
+                                                                const files = Array.from(e.target.files);
+                                                                const totalSize = files.reduce((acc, file) => acc + file.size, 0);
+                                                                if (totalSize > 50 * 1024 * 1024) {
+                                                                    showAlert('Límite Excedido', '⚠️ El archivo de la póliza supera los 50MB permitidos.');
+                                                                    e.target.value = '';
+                                                                    return;
+                                                                }
+                                                                setArchivosPoliza(files);
+                                                            }} />
                                                         </label>
                                                         <span className="text-xs text-gray-500 font-bold">
                                                             {archivosPoliza.length === 0 ? "Ningún archivo seleccionado" : `✅ ${archivosPoliza[0].name} cargado.`}
@@ -1223,13 +1265,20 @@
                                         )}
 
                                         {isDirector ? (
-                                            estadoSolicitud === 'Emitida' ? (
-                                                <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-500 text-white hover:bg-green-600 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
-                                                    {isSubmitting ? "ENVIANDO PÓLIZA..." : <><Send size={18}/> ENVIAR PÓLIZA A CLIENTE</>}
-                                                </button>
-                                            ) : (estadoSolicitud === 'Finalizada' || estadoSolicitud === 'Emitida-Entregada') ? (
-                                                <div className="px-6 py-3 bg-gray-500 text-white rounded-xl font-bold flex items-center gap-2 opacity-80 cursor-not-allowed">
-                                                    <CheckCircle size={18}/> PROCESO FINALIZADO
+                                            ['En Trámite', 'Emitida'].includes(estadoSolicitud) ? (
+                                                <div className="flex flex-wrap justify-center gap-2">
+                                                    <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-4 py-3 bg-[#163f73] text-white hover:bg-[#0e273d] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-[#58C9E8]/30" title="Reenviar Orden Final a Make">
+                                                        <RefreshCw size={18}/>
+                                                    </button>
+                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-500 text-white hover:bg-green-600 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                                        {isSubmitting ? "ENVIANDO PÓLIZA..." : <><Send size={18}/> ENVIAR PÓLIZA A CLIENTE</>}
+                                                    </button>
+                                                </div>
+                                            ) : ['Finalizada', 'Emitida-Entregada'].includes(estadoSolicitud) ? (
+                                                <div className="flex flex-wrap justify-center gap-2">
+                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-600 text-white hover:bg-green-700 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-green-400">
+                                                        {isSubmitting ? "REENVIANDO PÓLIZA..." : <><RefreshCw size={18}/> REENVIAR PÓLIZA (CORRECCIÓN)</>}
+                                                    </button>
                                                 </div>
                                             ) : (
                                                 <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
@@ -1307,8 +1356,8 @@
                                                                 </span>
                                                             </td>
                                                             <td className="px-6 py-4 text-center flex justify-center gap-2">
-                                                                <button onClick={() => abrirSolicitud(sol.consecutivo)} className="px-4 py-2 bg-white text-[#163f73] hover:bg-[#163f73] hover:text-white rounded-lg font-bold text-xs transition-colors border border-[#cdd7e0] shadow-sm flex items-center gap-2">
-                                                                    Ver Detalle &rarr;
+                                                                <button onClick={() => abrirSolicitud(sol.consecutivo)} className="px-4 py-2 bg-white text-[#163f73] hover:bg-[#163f73] hover:text-white rounded-lg font-bold text-xs transition-colors border border-[#cdd7e0] shadow-sm flex items-center gap-2" title="Abrir para revisar o reenviar datos">
+                                                                    Ver / Reenviar &rarr;
                                                                 </button>
                                                                 {isDirectorUnlocked && (
                                                                     <button onClick={() => eliminarSolicitud(sol.consecutivo)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200" title="Eliminar registro de Firebase">
