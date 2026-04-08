@@ -304,8 +304,9 @@
                 setEstadoSolicitud(estadoNube || 'Pre-Orden');
                 setActiveMenu('cotizador');
                 
-                if (isDirectorUnlocked) setRolActivo('director'); 
-                else setRolActivo('cliente');
+                // CORRECCIÓN BUG URL: Evitamos el 'Stale Closure' de React evaluando 
+                // el rol en tiempo real desde el estado previo.
+                setRolActivo(prevRol => prevRol === 'director' ? 'director' : 'cliente');
             };
 
             const abrirSolicitud = (idToLoad) => {
