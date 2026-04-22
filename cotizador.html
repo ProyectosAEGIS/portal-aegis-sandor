@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Servicios 2.4 - AEGIS Insurance</title>
+    <title>Portal de Servicios 2.11 - AEGIS Insurance</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -68,7 +68,7 @@
         const Calendar = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>;
         const UploadCloud = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/></svg>;
         const Download = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
-        const Award = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>;
+        const Search = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
 
         // ==========================================
         // 2. CONFIGURACIÓN INICIAL
@@ -84,7 +84,6 @@
             appId: "1:823771026895:web:c33dae191384cb83266eba"
         };
 
-        // --- CLAVE MAESTRA PARA MODO DIRECTOR ---
         const MASTER_PIN = "2025";
 
         const AMPAROS_BASE = [
@@ -142,24 +141,50 @@
             const [isSubmitting, setIsSubmitting] = React.useState(false);
             const [isLoadingNube, setIsLoadingNube] = React.useState(false);
             
-            // LA BASE DE DATOS DE SOLICITUDES EN LA NUBE
             const [db, setDb] = React.useState(null);
             const [solicitudesDb, setSolicitudesDb] = React.useState([]);
 
+            // ESTADO DE FILTROS PARA "MIS SOLICITUDES"
+            const [filtrosSolicitudes, setFiltrosSolicitudes] = React.useState({
+                consecutivo: '', fecha: '', tomador: '', solicitante: '', valor: '', estado: ''
+            });
+
             // ESTADO PRINCIPAL DE LA SOLICITUD ACTUAL
-            // Cambio Fase 1.1: Garantía única por Seriedad de la Oferta
             const [estadoSolicitud, setEstadoSolicitud] = React.useState('Nueva'); 
             const [consecutivo, setConsecutivo] = React.useState('');
-            const [interno, setInterno] = React.useState({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { seriedadOferta: false, cumplimientoParticulares: false, cumplimientoEstatales: false, disposicionLegal: false, otros: false }, archivos: [] });
+            const [interno, setInterno] = React.useState({ 
+                solicitante: '', 
+                solicitanteEmail: '', 
+                asunto: '', 
+                tipos: { 
+                    cumplimientoEstatales: false, 
+                    cumplimientoParticulares: false, 
+                    disposicionLegal: false, 
+                    prorroga: false, 
+                    responsabilidadCivil: false,
+                    seriedadOferta: false, 
+                    otros: false 
+                }, 
+                archivos: [] 
+            });
             const [tomador, setTomador] = React.useState({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
             const [asegurado, setAsegurado] = React.useState({ nombre: '', nit: '' });
             const [contrato, setContrato] = React.useState({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '' });
             const [costos, setCostos] = React.useState({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
             const [amparos, setAmparos] = React.useState(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault ? a.tasaDefault.toFixed(2) : '0.18', prima: 0 })));
 
-            // ESTADOS DE LA FASE 3: ENTREGA DE PÓLIZA
+            // ESTADOS DE LA FASE 3: ENTREGA DE PÓLIZA Y PRÓRROGAS
             const [observacionesPoliza, setObservacionesPoliza] = React.useState('');
             const [archivosPoliza, setArchivosPoliza] = React.useState([]);
+            const [numeroPoliza, setNumeroPoliza] = React.useState('');
+            const [aseguradora, setAseguradora] = React.useState('');
+            const [ramoPoliza, setRamoPoliza] = React.useState('');
+            const [prorrogaRef, setProrrogaRef] = React.useState(null);
+
+            const listaAseguradoras = [
+                "Aseguradora Solidaria de Colombia", "Berkley", "Chubb", "Liberty Seguros", "Mapfre",
+                "Mundial de Seguros", "Previsora", "Seguros Bolívar", "Seguros del Estado", "SURA", "Zúrich", "Otra"
+            ];
 
             const [produccionData, setProduccionData] = React.useState(defaultProduccionData);
             const [carteraData, setCarteraData] = React.useState(defaultCarteraData);
@@ -217,10 +242,68 @@
                 return acc;
             }, {})).map(k => ({ tomador: k, ...carteraData.reduce((acc, curr) => { if (!acc[curr.tomador]) acc[curr.tomador] = { count: 0, total: 0 }; acc[curr.tomador].count += 1; acc[curr.tomador].total += curr.total; return acc; }, {})[k] })).sort((a, b) => b.total - a.total);
 
-            // --- FUNCIONES DE DIÁLOGOS PERSONALIZADOS (Reemplazo seguro de alert y prompt) ---
+            // --- FILTRO SEGURO DE SOLICITUDES (TABLA) ---
+            const solicitudesFiltradas = React.useMemo(() => {
+                return solicitudesDb.filter(sol => {
+                    const solConsecutivo = sol.consecutivo || '';
+                    const solTomador = sol.tomadorNombre || '';
+                    const solSolicitante = sol.solicitanteNombre || '';
+                    const solEstado = sol.estado || '';
+
+                    const matchConsecutivo = solConsecutivo.toLowerCase().includes((filtrosSolicitudes.consecutivo || '').toLowerCase());
+                    const matchTomador = solTomador.toLowerCase().includes((filtrosSolicitudes.tomador || '').toLowerCase());
+                    const matchSolicitante = solSolicitante.toLowerCase().includes((filtrosSolicitudes.solicitante || '').toLowerCase());
+                    const matchEstado = solEstado.toLowerCase().includes((filtrosSolicitudes.estado || '').toLowerCase());
+                    
+                    let matchFecha = true;
+                    if (filtrosSolicitudes.fecha && sol.fechaRegistro) {
+                        try {
+                            const solFecha = new Date(sol.fechaRegistro).toISOString().split('T')[0];
+                            matchFecha = solFecha === filtrosSolicitudes.fecha;
+                        } catch(e) {}
+                    }
+
+                    let matchValor = true;
+                    if (filtrosSolicitudes.valor) {
+                        const valorFiltro = parseCurrency(filtrosSolicitudes.valor);
+                        const valorSol = sol.valorConIva || 0;
+                        matchValor = valorSol >= valorFiltro;
+                    }
+
+                    return matchConsecutivo && matchTomador && matchSolicitante && matchEstado && matchFecha && matchValor;
+                });
+            }, [solicitudesDb, filtrosSolicitudes]);
+
+            // --- FILTRO DINÁMICO DE PÓLIZAS PARA PRÓRROGA ---
+            const polizasDisponiblesProrroga = React.useMemo(() => {
+                if (!interno.tipos.prorroga) return [];
+                const cleanNitT = (tomador.nit || '').replace(/\D/g, '');
+                const cleanNitA = (asegurado.nit || '').replace(/\D/g, '');
+                if (!cleanNitT || !cleanNitA) return [];
+
+                return solicitudesDb.filter(sol => {
+                    if (!['Emitida-Entregada', 'Finalizada'].includes(sol.estado)) return false;
+                    try {
+                        if (sol.formularioCompleto) {
+                            const form = JSON.parse(sol.formularioCompleto);
+                            const solNitT = (form.tomador && form.tomador.nit) ? String(form.tomador.nit).replace(/\D/g, '') : '';
+                            const solNitA = (form.asegurado && form.asegurado.nit) ? String(form.asegurado.nit).replace(/\D/g, '') : '';
+                            return cleanNitT === solNitT && cleanNitA === solNitA;
+                        }
+                    } catch(e) {}
+                    return false;
+                });
+            }, [interno.tipos.prorroga, tomador.nit, asegurado.nit, solicitudesDb]);
+
+            // --- FUNCIONES DE DIÁLOGOS PERSONALIZADOS ---
             const showAlert = (title, message) => setUiDialog({ isOpen: true, type: 'alert', title, message, onConfirm: null });
             const showConfirm = (title, message, onConfirm) => setUiDialog({ isOpen: true, type: 'confirm', title, message, onConfirm });
             const closeDialog = () => setUiDialog({ ...uiDialog, isOpen: false });
+
+            // --- FUNCIONES DE FILTRADO PARA LA TABLA "MIS SOLICITUDES" ---
+            const handleFiltroChange = (e, campo) => {
+                setFiltrosSolicitudes(prev => ({ ...prev, [campo]: e.target.value }));
+            };
 
             const generarConsecutivoLocal = () => {
                 const ahora = new Date();
@@ -252,7 +335,6 @@
                     firestoreDb.collection("solicitudes").orderBy("fechaRegistro", "desc").onSnapshot(snap => {
                         const data = snap.docs.map(doc => {
                             let d = doc.data();
-                            // Normalización retroactiva por si quedan datos viejos "Emitida"
                             if (d.estado === 'Emitida') d.estado = 'En Trámite';
                             if (d.estado === 'Finalizada') d.estado = 'Emitida-Entregada';
                             return { id_db: doc.id, ...d };
@@ -301,11 +383,13 @@
                 const internoSaved = datosGuardados.interno || {};
                 const loadedTipos = internoSaved.tipos || {};
                 
-                // Fallback para registros antiguos con garantiaUnica
                 if (loadedTipos.garantiaUnica !== undefined) {
                     loadedTipos.seriedadOferta = loadedTipos.garantiaUnica;
                     delete loadedTipos.garantiaUnica;
                 }
+                
+                if (loadedTipos.responsabilidadCivil === undefined) loadedTipos.responsabilidadCivil = false;
+                if (loadedTipos.prorroga === undefined) loadedTipos.prorroga = false;
 
                 setInterno({ ...internoSaved, tipos: loadedTipos });
                 setTomador(datosGuardados.tomador);
@@ -315,6 +399,11 @@
                 if (datosGuardados.costos) setCostos(datosGuardados.costos);
                 if (datosGuardados.consecutivo) setConsecutivo(datosGuardados.consecutivo);
                 
+                setNumeroPoliza(datosGuardados.numeroPoliza || '');
+                setAseguradora(datosGuardados.aseguradora || '');
+                setRamoPoliza(datosGuardados.ramoPoliza || '');
+                setProrrogaRef(datosGuardados.prorrogaRef || null);
+
                 let estadoNormalizado = estadoNube || 'Pre-Orden';
                 if (estadoNormalizado === 'Emitida') estadoNormalizado = 'En Trámite';
                 if (estadoNormalizado === 'Finalizada') estadoNormalizado = 'Emitida-Entregada';
@@ -355,7 +444,7 @@
 
             const limpiarFormularioCotizador = () => {
                 showConfirm('Nueva Cotización', '¿Está seguro de que desea iniciar una nueva cotización en blanco?', () => {
-                    setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { seriedadOferta: false, cumplimientoParticulares: false, cumplimientoEstatales: false, disposicionLegal: false, otros: false }, archivos: [] });
+                    setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { cumplimientoEstatales: false, cumplimientoParticulares: false, disposicionLegal: false, prorroga: false, responsabilidadCivil: false, seriedadOferta: false, otros: false }, archivos: [] });
                     setTomador({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
                     setAsegurado({ nombre: '', nit: '' });
                     setContrato({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '' });
@@ -365,8 +454,61 @@
                     setEstadoSolicitud('Nueva');
                     setObservacionesPoliza('');
                     setArchivosPoliza([]);
+                    setNumeroPoliza('');
+                    setAseguradora('');
+                    setRamoPoliza('');
+                    setProrrogaRef(null);
                     document.querySelectorAll('input[type="file"]').forEach(input => input.value = '');
                 });
+            };
+
+            // --- FUNCIÓN DE AUTOCOMPLETADO (MAGIA DE PRÓRROGAS) ---
+            const seleccionarPolizaProrroga = (p) => {
+                let parsedForm = {};
+                try { 
+                    parsedForm = JSON.parse(p.formularioCompleto); 
+                } catch(e) {}
+
+                // Guardamos la referencia oculta para Make.com
+                setProrrogaRef({
+                    consecutivo: p.consecutivo,
+                    numeroPoliza: parsedForm.numeroPoliza || '',
+                    aseguradora: parsedForm.aseguradora || '',
+                    ramoPoliza: parsedForm.ramoPoliza || ''
+                });
+
+                // AUTOCOMPLETAR CONTRATO
+                if (parsedForm.contrato) {
+                    setContrato(prev => ({
+                        ...prev,
+                        objeto: parsedForm.contrato.objeto || prev.objeto,
+                        numero: parsedForm.contrato.numero || prev.numero,
+                        // Mantenemos valorConIva, fechas y duración igual a la actual
+                        // para que el cliente digite las nuevas fechas/valores del anexo
+                    }));
+                }
+
+                // AUTOCOMPLETAR AMPAROS (Pre-encendemos los checks pero limpiamos valores)
+                if (parsedForm.amparos && parsedForm.amparos.length > 0) {
+                    const nuevosAmparos = parsedForm.amparos.map(a => {
+                        if(a.activo) {
+                            return {
+                                ...a,
+                                desde: '',
+                                hasta: '',
+                                dias: 0,
+                                porcentaje: '',
+                                valorAsegurado: 0,
+                                valorAseguradoStr: '',
+                                prima: 0
+                            };
+                        }
+                        return a;
+                    });
+                    setAmparos(nuevosAmparos);
+                }
+
+                showAlert('Póliza Vinculada y Autocompletada ✨', `Se importaron los datos base y amparos de la póliza ${parsedForm.numeroPoliza || p.consecutivo}. \n\nPor favor, actualice el Nuevo Valor con IVA, las Nuevas Fechas y cargue el PDF del Anexo.`);
             };
 
             const handleAmparoToggle = (id) => {
@@ -476,7 +618,6 @@
                 resumen += `--------------------------------------------------\n`;
                 resumen += `🎯 *GRAN TOTAL A PAGAR: ${formatCurrency(totalGeneral)}*\n`;
 
-                // Método de copiado seguro para evitar restricciones de iframes
                 const textArea = document.createElement("textarea");
                 textArea.value = resumen;
                 document.body.appendChild(textArea);
@@ -620,19 +761,46 @@
 
             const imprimirCotizacion = () => {
                 const printWindow = window.open('', '_blank');
-                const htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Orden de Servicio ${consecutivo} - AEGIS</title><style>@media print { @page { margin: 10mm; size: landscape; } body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; zoom: 0.85; } }</style></head><body style="margin:0; padding:0;">${getOrdenServicioHTML()}<script>window.onload = function() { setTimeout(() => { window.print(); }, 500); }<\/script></body></html>`;
+                const scriptEnd = '<' + '/script>';
+                const htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Orden de Servicio ${consecutivo} - AEGIS</title><style>@media print { @page { margin: 10mm; size: landscape; } body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; zoom: 0.85; } }</style></head><body style="margin:0; padding:0;">${getOrdenServicioHTML()}<script>window.onload = function() { setTimeout(() => { window.print(); }, 500); }${scriptEnd}</body></html>`;
                 printWindow.document.write(htmlContent);
                 printWindow.document.close();
             };
 
             // --- ACCIONES PRINCIPALES (WEBHOOK) ---
+            const confirmarGuardarPreOrden = () => {
+                if (!interno.solicitante || !interno.solicitanteEmail || !tomador.nombre) return showAlert('Faltan Datos', "⚠️ Llene Nombre del Solicitante, Correo Electrónico y Razón Social del Tomador.");
+                
+                if (interno.tipos.prorroga && (!prorrogaRef || !prorrogaRef.consecutivo)) {
+                    return showAlert('Falta Póliza Matriz', "⚠️ Ha marcado 'Prórroga'. Por favor busque y seleccione la póliza original en el Bloque 2.");
+                }
+
+                showConfirm(
+                    'Confirmar Solicitud',
+                    '¿Ha revisado que toda la información sea correcta y que los documentos estén adjuntos? Haga clic en Aceptar para generar la Pre-Orden.',
+                    guardarPreOrden
+                );
+            };
+
             const guardarPreOrden = async () => {
-                if (!interno.solicitante || !interno.solicitanteEmail || !tomador.nombre) return showAlert('Faltan Datos', "⚠️ Llene Nombre, Correo y Tomador.");
                 setIsSubmitting(true);
                 
                 try {
+                    let polizaReferencia = '';
+                    let anexoReferencia = '';
+                    let ramoReferencia = '';
+                    let aseguradoraReferencia = '';
+
+                    if (interno.tipos.prorroga && prorrogaRef) {
+                        const parts = (prorrogaRef.numeroPoliza || '').split('-');
+                        polizaReferencia = parts[0] ? parts[0].trim() : '';
+                        anexoReferencia = parts[1] ? parts[1].trim() : '';
+                        ramoReferencia = prorrogaRef.ramoPoliza || '';
+                        aseguradoraReferencia = prorrogaRef.aseguradora || '';
+                    }
+
                     if (db) {
-                        const dataToSave = { fechaRegistro: new Date().toISOString(), consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'Pre-Orden', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo }) };
+                        const dataToSave = { fechaRegistro: new Date().toISOString(), consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'Pre-Orden', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef }) };
                         await db.collection("solicitudes").doc(consecutivo).set(dataToSave, { merge: true });
                     }
 
@@ -651,6 +819,7 @@
                             contratoValorSinIvaFormateado: formatCurrency(valorSinIva), contratoValorConIvaFormateado: formatCurrency(valorConIva), contratoDuracionDias: contrato.duracion || 0,
                             amparosDetalleExcel, primaCumplimiento: 0, gastosCumplimiento: 0, ivaCumplimiento: 0, valorTotalCumplimiento: "$ 0", 
                             primaRCE: 0, gastosRCE: 0, ivaRCE: 0, valorTotalRCE: "$ 0", granTotal: 0, valorGranTotal: "$ 0",
+                            polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
                             adjuntos: attachments
                         };
                         const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -659,8 +828,7 @@
 
                     showAlert('Éxito', "✅ ¡Pre-Orden guardada! El equipo ha sido notificado para completarla.");
                     
-                    // Limpieza sin confirmación tras éxito para evitar doble alerta
-                    setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { seriedadOferta: false, cumplimientoParticulares: false, cumplimientoEstatales: false, disposicionLegal: false, otros: false }, archivos: [] });
+                    setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { cumplimientoEstatales: false, cumplimientoParticulares: false, disposicionLegal: false, prorroga: false, responsabilidadCivil: false, seriedadOferta: false, otros: false }, archivos: [] });
                     setTomador({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
                     setAsegurado({ nombre: '', nit: '' });
                     setContrato({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '' });
@@ -668,6 +836,10 @@
                     setAmparos(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault ? a.tasaDefault.toFixed(2) : '0.18', prima: 0 })));
                     setConsecutivo(generarConsecutivoLocal());
                     setEstadoSolicitud('Nueva');
+                    setNumeroPoliza('');
+                    setAseguradora('');
+                    setRamoPoliza('');
+                    setProrrogaRef(null);
                     document.querySelectorAll('input[type="file"]').forEach(input => input.value = '');
 
                 } catch (error) {
@@ -699,9 +871,21 @@
                 document.body.appendChild(cortina);
 
                 try {
-                    // CAMBIO A "En Trámite" SEGÚN SOLICITUD
+                    let polizaReferencia = '';
+                    let anexoReferencia = '';
+                    let ramoReferencia = '';
+                    let aseguradoraReferencia = '';
+
+                    if (interno.tipos.prorroga && prorrogaRef) {
+                        const parts = (prorrogaRef.numeroPoliza || '').split('-');
+                        polizaReferencia = parts[0] ? parts[0].trim() : '';
+                        anexoReferencia = parts[1] ? parts[1].trim() : '';
+                        ramoReferencia = prorrogaRef.ramoPoliza || '';
+                        aseguradoraReferencia = prorrogaRef.aseguradora || '';
+                    }
+
                     if (db) {
-                        const dataToSave = { fechaRegistro: new Date().toISOString(), consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'En Trámite', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo }) };
+                        const dataToSave = { fechaRegistro: new Date().toISOString(), consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'En Trámite', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef }) };
                         await db.collection("solicitudes").doc(consecutivo).set(dataToSave, { merge: true });
                         setEstadoSolicitud('En Trámite');
                     }
@@ -730,6 +914,7 @@
                             contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, contratoValorSinIva: valorSinIva, contratoValorConIva: valorConIva, contratoValorSinIvaFormateado: formatCurrency(valorSinIva), contratoValorConIvaFormateado: formatCurrency(valorConIva), contratoDuracionDias: contrato.duracion || 0,
                             amparosDetalleExcel, primaCumplimiento, gastosCumplimiento: gastosCalculadosCump, ivaCumplimiento: ivaCump, valorTotalCumplimiento: formatCurrency(totalCump), 
                             primaRCE, gastosRCE: gastosCalculadosRCE, ivaRCE: ivaRCE, valorTotalRCE: formatCurrency(totalRCE), granTotal: totalGeneral, valorGranTotal: formatCurrency(totalGeneral), 
+                            polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
                             adjuntos: attachments
                         };
                         const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -746,12 +931,14 @@
             };
 
             const enviarPolizaFinal = async () => {
+                if (!numeroPoliza || !aseguradora || !ramoPoliza) return showAlert('Faltan Datos', "⚠️ Complete # de póliza, aseguradora y ramo antes de enviar.");
                 if (archivosPoliza.length === 0) return showAlert('Atención', "⚠️ Debe adjuntar al menos un documento PDF de la póliza.");
                 setIsSubmitting(true);
                 
                 try {
                     if (db) {
-                        const dataToSave = { estado: 'Emitida-Entregada' };
+                        const formCompleto = JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef });
+                        const dataToSave = { estado: 'Emitida-Entregada', numeroPoliza, aseguradora, ramoPoliza, formularioCompleto: formCompleto };
                         await db.collection("solicitudes").doc(consecutivo).set(dataToSave, { merge: true });
                         setEstadoSolicitud('Emitida-Entregada');
                     }
@@ -766,6 +953,9 @@
                             tomadorNombre: tomador.nombre,
                             observaciones: observacionesPoliza || "Sin observaciones.",
                             fechaEntregaPoliza: new Date().toLocaleString('es-CO'),
+                            numeroPoliza,
+                            aseguradora,
+                            ramoPoliza,
                             adjuntos: attachments
                         };
                         const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -778,13 +968,6 @@
                 } finally { 
                     setIsSubmitting(false); 
                 }
-            };
-
-            const downloadTemplate = (type) => {
-                let csvContent = "data:text/csv;charset=utf-8,\uFEFF";
-                if (type === 'produccion') csvContent += "Cliente;Poliza;Aseguradora;Asegurado;Ramo;HorasANS;Estado;ValorPrima\nGrupo Sandor;12345;Mundial;Alcaldia;Cumplimiento;4.5;Completado;1500000";
-                else csvContent += "Tomador;Beneficiario;Ramo;Poliza;DiasCartera;ValorTotal\nGrupo Sandor;Alcaldia;Cumplimiento;12345;12;2500000";
-                const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent)); link.setAttribute("download", `Plantilla_AEGIS_${type}.csv`); document.body.appendChild(link); link.click(); document.body.removeChild(link);
             };
 
             const handleCsvUpload = (e, type) => {
@@ -991,26 +1174,28 @@
                                             <div><label className={labelCls}>Correo Electrónico *</label><input type="email" className={inputCls} disabled={isDirector} value={interno.solicitanteEmail} onChange={e => setInterno({...interno, solicitanteEmail: e.target.value})} /></div>
                                             <div className="md:col-span-2"><label className={labelCls}>Asunto / Proyecto</label><input type="text" className={inputCls} disabled={isDirector} value={interno.asunto} onChange={e => setInterno({...interno, asunto: e.target.value})} /></div>
                                         </div>
+                                        
+                                        {/* TIPO DE SOLICITUD (ALFABÉTICO) */}
                                         <div className="mt-4 mb-4">
                                             <label className={labelCls}>Tipo de Solicitud</label>
                                             <div className="flex flex-wrap gap-4 mt-2">
-                                                {Object.keys(interno.tipos).map(key => {
-                                                    let labelStr = '';
-                                                    if(key === 'seriedadOferta') labelStr = 'Seriedad de la oferta';
-                                                    else if(key === 'cumplimientoParticulares') labelStr = 'Cumplimiento Particulares';
-                                                    else if(key === 'cumplimientoEstatales') labelStr = 'Cumplimiento Estatales';
-                                                    else if(key === 'disposicionLegal') labelStr = 'Disposición Legal';
-                                                    else labelStr = 'Otros';
-
-                                                    return (
-                                                        <label key={key} className={`flex items-center gap-2 text-sm text-gray-700 ${isDirector ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}>
-                                                            <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" disabled={isDirector} checked={interno.tipos[key]} onChange={() => handleCheckboxTipos(key)} />
-                                                            {labelStr}
-                                                        </label>
-                                                    );
-                                                })}
+                                                {[
+                                                    { key: 'cumplimientoEstatales', label: 'Cumplimiento Estatales' },
+                                                    { key: 'cumplimientoParticulares', label: 'Cumplimiento Particulares' },
+                                                    { key: 'disposicionLegal', label: 'Disposición Legal' },
+                                                    { key: 'prorroga', label: 'Prórroga' },
+                                                    { key: 'responsabilidadCivil', label: 'Responsabilidad Civil' },
+                                                    { key: 'seriedadOferta', label: 'Seriedad de la Oferta' },
+                                                    { key: 'otros', label: 'Otros' }
+                                                ].map(({key, label}) => (
+                                                    <label key={key} className={`flex items-center gap-2 text-sm text-gray-700 ${isDirector ? 'opacity-70 cursor-not-allowed' : 'cursor-pointer'}`}>
+                                                        <input type="checkbox" className="w-4 h-4 text-[#58C9E8] rounded" disabled={isDirector} checked={interno.tipos[key] || false} onChange={() => handleCheckboxTipos(key)} />
+                                                        {label}
+                                                    </label>
+                                                ))}
                                             </div>
                                         </div>
+                                        
                                         {!isDirector && (
                                             <div className="bg-[#eef3f8] p-4 rounded-lg border border-[#cdd7e0]">
                                                 <label className={labelCls}>Soportes y Contratos (PDF)</label>
@@ -1042,10 +1227,67 @@
                                         </div>
                                     </div>
 
-                                    {/* Bloque 2: Contrato */}
+                                    {/* Bloque 2: Contrato y Prórroga */}
                                     <div className={sectionCls}>
                                         {isDirector && <div className="absolute top-0 right-0 p-3"><Lock size={20} className="text-gray-300" /></div>}
                                         <h3 className="flex items-center gap-2 font-bold text-[#163f73] mb-4 border-b border-[#dce4ec] pb-2"><FileText size={20} className="text-[#58C9E8]" /> 2. Datos del Contrato</h3>
+                                        
+                                        {/* NUEVO BLOQUE DE BÚSQUEDA DE PRÓRROGA */}
+                                        {interno.tipos.prorroga && (
+                                            <div className="bg-yellow-50 p-5 rounded-xl border border-yellow-200 mb-6 shadow-sm transition-all">
+                                                <h4 className="font-bold text-yellow-800 mb-3 flex items-center gap-2">
+                                                    <Search size={18} /> Búsqueda de Póliza Matriz (Prórroga)
+                                                </h4>
+                                                {(!tomador.nit || !asegurado.nit) ? (
+                                                    <p className="text-sm text-yellow-700">Por favor, diligencie el <b>NIT del Tomador</b> y el <b>NIT del Asegurado</b> en el Bloque 1 para buscar pólizas previas en el sistema.</p>
+                                                ) : polizasDisponiblesProrroga.length === 0 ? (
+                                                    <p className="text-sm text-red-600 font-bold">No se encontraron pólizas emitidas y entregadas para esta combinación de NITs.</p>
+                                                ) : (
+                                                    <div className="space-y-3">
+                                                        <p className="text-sm text-yellow-800 font-medium">Seleccione la póliza sobre la cual se aplicará la prórroga:</p>
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-60 overflow-y-auto pr-2">
+                                                            {polizasDisponiblesProrroga.map(p => {
+                                                                let parsedForm = {};
+                                                                try { parsedForm = JSON.parse(p.formularioCompleto); } catch(e){}
+                                                                return (
+                                                                    <label key={p.consecutivo} className={`flex items-start gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${prorrogaRef?.consecutivo === p.consecutivo ? 'bg-yellow-100 border-yellow-400 shadow-sm' : 'bg-white hover:bg-yellow-50 border-yellow-200'}`}>
+                                                                        <input type="radio" name="prorrogaSelect" className="mt-1 w-4 h-4 text-yellow-600" 
+                                                                            checked={prorrogaRef?.consecutivo === p.consecutivo}
+                                                                            onChange={() => {
+                                                                                let pf = {};
+                                                                                try { pf = JSON.parse(p.formularioCompleto); } catch(e) {}
+                                                                                setProrrogaRef({
+                                                                                    consecutivo: p.consecutivo,
+                                                                                    numeroPoliza: pf.numeroPoliza || '',
+                                                                                    aseguradora: pf.aseguradora || '',
+                                                                                    ramoPoliza: pf.ramoPoliza || ''
+                                                                                });
+                                                                                if (pf.contrato) {
+                                                                                    setContrato(prev => ({
+                                                                                        ...prev,
+                                                                                        objeto: pf.contrato.objeto || prev.objeto,
+                                                                                        numero: pf.contrato.numero || prev.numero
+                                                                                    }));
+                                                                                }
+                                                                                showAlert('Póliza Enlazada', `Se han importado los datos de la póliza ${pf.numeroPoliza || p.consecutivo}. Por favor ingrese las nuevas fechas y el valor de la adición.`);
+                                                                            }}
+                                                                            disabled={isDirector}
+                                                                        />
+                                                                        <div className="flex flex-col">
+                                                                            <span className="font-black text-[#12334F] text-sm mb-1">Póliza / Anexo: {parsedForm.numeroPoliza || 'N/A'}</span>
+                                                                            <span className="text-xs text-gray-600"><b>Aseguradora:</b> {parsedForm.aseguradora || 'N/A'}</span>
+                                                                            <span className="text-xs text-gray-600"><b>Ramo:</b> {parsedForm.ramoPoliza || 'N/A'}</span>
+                                                                            <span className="text-[10px] text-gray-400 mt-1 uppercase tracking-wider">Ref Original: {p.consecutivo}</span>
+                                                                        </div>
+                                                                    </label>
+                                                                );
+                                                            })}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
+
                                         <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
                                             <div className="md:col-span-6"><label className={labelCls}>Objeto del Contrato *</label><textarea maxLength="2000" className={`${inputCls} h-20`} disabled={isDirector} value={contrato.objeto} onChange={e => setContrato({...contrato, objeto: e.target.value})}></textarea></div>
                                             <div className="md:col-span-2"><label className={labelCls}>Número</label><input type="text" className={inputCls} disabled={isDirector} value={contrato.numero} onChange={e => setContrato({...contrato, numero: e.target.value})} /></div>
@@ -1078,7 +1320,7 @@
                                     </div>
 
                                     {/* BLOQUES EXCLUSIVOS DEL DIRECTOR (Amparos y Totales) */}
-                                    {(isDirector && ['Pre-Orden', 'Nueva'].includes(estadoSolicitud)) && (
+                                    {(isDirector && (estadoSolicitud === 'Pre-Orden' || estadoSolicitud === 'Nueva')) && (
                                         <div className="space-y-6 mt-8 border-t-4 border-[#58C9E8] pt-8 max-w-[1600px] mx-auto">
                                             <div className="bg-[#e8f7fb] text-[#163f73] px-6 py-4 rounded-xl border border-[#58C9E8]/30 flex items-center justify-between">
                                                 <div>
@@ -1189,18 +1431,43 @@
                                         </div>
                                     )}
 
-                                    {/* FASE 3: ENTREGA DE PÓLIZA (Para Directores en estados avanzados) */}
+                                    {/* FASE 3: ENTREGA DE PÓLIZA (Solo Director si estado = Emitida) */}
                                     {(isDirector && ['En Trámite', 'Emitida', 'Emitida-Entregada', 'Finalizada'].includes(estadoSolicitud)) && (
                                         <div className="space-y-6 mt-8 border-t-4 border-green-500 pt-8 max-w-[1600px] mx-auto">
                                             <div className="bg-green-50 text-green-800 px-6 py-4 rounded-xl border border-green-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                                                 <div>
                                                     <h3 className="font-bold text-lg flex items-center gap-2"><CheckCircle size={20}/> 4. Entrega de Póliza Final al Cliente</h3>
-                                                    <p className="text-sm opacity-80">La Orden de Servicio ya fue emitida. Cargue el PDF de la póliza definitiva para finalizar este requerimiento.</p>
+                                                    <p className="text-sm opacity-80">La Orden de Servicio ya fue emitida. Diligencie los datos de la póliza y cargue el PDF definitivo para alimentar el Dashboard de Producción.</p>
                                                 </div>
                                             </div>
 
                                             <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-200">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                                                    <div>
+                                                        <label className={labelCls}># de Póliza - Anexo *</label>
+                                                        <input type="text" className={inputCls} placeholder="Ej: 123456 - 0" value={numeroPoliza} onChange={e => setNumeroPoliza(e.target.value)} />
+                                                    </div>
+                                                    <div>
+                                                        <label className={labelCls}>Aseguradora *</label>
+                                                        <input type="text" list="lista-aseguradoras" className={inputCls} placeholder="Seleccione o escriba..." value={aseguradora} onChange={e => setAseguradora(e.target.value)} />
+                                                        <datalist id="lista-aseguradoras">
+                                                            {listaAseguradoras.map(a => <option key={a} value={a} />)}
+                                                        </datalist>
+                                                    </div>
+                                                    <div>
+                                                        <label className={labelCls}>Ramo Principal *</label>
+                                                        <select className={`${inputCls} bg-white`} value={ramoPoliza} onChange={e => setRamoPoliza(e.target.value)}>
+                                                            <option value="">Seleccione un ramo...</option>
+                                                            <option value="Cumplimiento">Cumplimiento</option>
+                                                            <option value="Cumplimiento Particulares">Cumplimiento Particulares</option>
+                                                            <option value="Disposición Legal">Disposición Legal</option>
+                                                            <option value="Responsabilidad Civil">Responsabilidad Civil</option>
+                                                            <option value="Seriedad de la Oferta">Seriedad de la Oferta</option>
+                                                        </select>
+                                                    </div>
+                                                </div>
+
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-dashed border-gray-200">
                                                     <div>
                                                         <label className={labelCls}>Observaciones / Notas para el cliente</label>
                                                         <textarea 
@@ -1286,7 +1553,7 @@
                                                 </button>
                                             )
                                         ) : (
-                                            <button onClick={guardarPreOrden} disabled={isSubmitting || isLoadingNube} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                            <button onClick={confirmarGuardarPreOrden} disabled={isSubmitting || isLoadingNube} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
                                                 {isSubmitting ? "GUARDANDO..." : <><Cloud size={18}/> GUARDAR PRE-ORDEN</>}
                                             </button>
                                         )}
@@ -1311,53 +1578,109 @@
                                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                                         <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/80 flex justify-between items-center">
                                             <h4 className="text-lg font-bold text-[#163f73] flex items-center gap-2"><Cloud size={20} className="text-[#58C9E8]"/> Base de Datos en Tiempo Real</h4>
-                                            <span className="text-xs font-bold bg-[#e8f7fb] text-[#163f73] px-3 py-1 rounded-full border border-[#58C9E8]/30">Mostrando {solicitudesDb.length} registros</span>
+                                            <span className="text-xs font-bold bg-[#e8f7fb] text-[#163f73] px-3 py-1 rounded-full border border-[#58C9E8]/30">Mostrando {solicitudesFiltradas.length} registros</span>
                                         </div>
                                         <div className="overflow-x-auto min-h-[400px]">
-                                            <table className="w-full text-left border-collapse min-w-[1000px]">
+                                            <table className="w-full text-left border-collapse min-w-[1200px]">
                                                 <thead className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
                                                     <tr className="text-gray-500 text-xs uppercase tracking-wider">
-                                                        <th className="px-6 py-4 font-semibold">ID Solicitud</th>
-                                                        <th className="px-6 py-4 font-semibold">Fecha Radicación</th>
-                                                        <th className="px-6 py-4 font-semibold">Tomador / Empresa</th>
-                                                        <th className="px-6 py-4 font-semibold">Solicitante</th>
-                                                        <th className="px-6 py-4 font-semibold">Valor Contrato</th>
-                                                        <th className="px-6 py-4 font-semibold text-center">Estado</th>
-                                                        <th className="px-6 py-4 font-semibold text-center">Acciones</th>
+                                                        <th className="px-4 py-4 font-semibold w-40">
+                                                            <div className="flex flex-col gap-2">
+                                                                <span>ID Solicitud</span>
+                                                                <div className="relative">
+                                                                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/>
+                                                                    <input type="text" placeholder="Filtrar ID" className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosSolicitudes.consecutivo} onChange={(e) => handleFiltroChange(e, 'consecutivo')} />
+                                                                </div>
+                                                            </div>
+                                                        </th>
+                                                        <th className="px-4 py-4 font-semibold w-40">
+                                                            <div className="flex flex-col gap-2">
+                                                                <span>Fecha Radicación</span>
+                                                                <input type="date" className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosSolicitudes.fecha} onChange={(e) => handleFiltroChange(e, 'fecha')} />
+                                                            </div>
+                                                        </th>
+                                                        <th className="px-4 py-4 font-semibold w-56">
+                                                            <div className="flex flex-col gap-2">
+                                                                <span>Tomador / Empresa</span>
+                                                                <div className="relative">
+                                                                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/>
+                                                                    <input type="text" placeholder="Buscar tomador..." className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosSolicitudes.tomador} onChange={(e) => handleFiltroChange(e, 'tomador')} />
+                                                                </div>
+                                                            </div>
+                                                        </th>
+                                                        <th className="px-4 py-4 font-semibold w-48">
+                                                            <div className="flex flex-col gap-2">
+                                                                <span>Solicitante</span>
+                                                                <div className="relative">
+                                                                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/>
+                                                                    <input type="text" placeholder="Buscar solicitante..." className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosSolicitudes.solicitante} onChange={(e) => handleFiltroChange(e, 'solicitante')} />
+                                                                </div>
+                                                            </div>
+                                                        </th>
+                                                        <th className="px-4 py-4 font-semibold w-40">
+                                                            <div className="flex flex-col gap-2">
+                                                                <span>Valor Contrato (≥)</span>
+                                                                <div className="relative">
+                                                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
+                                                                    <input type="text" placeholder="Ej: 1000000" className="w-full pl-6 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosSolicitudes.valor} onChange={(e) => {
+                                                                        const val = e.target.value.replace(/\D/g, '');
+                                                                        setFiltrosSolicitudes(prev => ({...prev, valor: val ? parseInt(val).toLocaleString('es-CO') : ''}));
+                                                                    }} />
+                                                                </div>
+                                                            </div>
+                                                        </th>
+                                                        <th className="px-4 py-4 font-semibold text-center w-40">
+                                                            <div className="flex flex-col gap-2">
+                                                                <span>Estado</span>
+                                                                <select className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700 bg-white" value={filtrosSolicitudes.estado} onChange={(e) => handleFiltroChange(e, 'estado')}>
+                                                                    <option value="">Todos los estados</option>
+                                                                    <option value="Pre-Orden">Pre-Orden</option>
+                                                                    <option value="En Trámite">En Trámite</option>
+                                                                    <option value="Emitida-Entregada">Emitida-Entregada</option>
+                                                                </select>
+                                                            </div>
+                                                        </th>
+                                                        <th className="px-4 py-4 font-semibold text-center w-32 align-top">
+                                                            <div className="mt-1">Acciones</div>
+                                                        </th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-100 text-sm">
-                                                    {solicitudesDb.length === 0 ? (
+                                                    {solicitudesFiltradas.length === 0 ? (
                                                         <tr>
                                                             <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
                                                                 <Cloud size={40} className="mx-auto text-gray-300 mb-3" />
-                                                                <p>No hay solicitudes registradas en la base de datos en la nube.</p>
+                                                                <p>No se encontraron solicitudes que coincidan con los filtros de búsqueda.</p>
+                                                                <button onClick={() => setFiltrosSolicitudes({consecutivo: '', fecha: '', tomador: '', solicitante: '', valor: '', estado: ''})} className="mt-4 text-[#58C9E8] font-bold hover:underline">Limpiar Filtros</button>
                                                             </td>
                                                         </tr>
-                                                    ) : solicitudesDb.map((sol, i) => (
+                                                    ) : solicitudesFiltradas.map((sol, i) => (
                                                         <tr key={i} className="hover:bg-blue-50/30 transition-colors">
-                                                            <td className="px-6 py-4 font-bold text-[#12334F]">{sol.consecutivo}</td>
-                                                            <td className="px-6 py-4 text-gray-600">
-                                                                {new Date(sol.fechaRegistro).toLocaleDateString('es-CO')} <span className="text-xs text-gray-400">{new Date(sol.fechaRegistro).toLocaleTimeString('es-CO', {hour: '2-digit', minute:'2-digit'})}</span>
+                                                            <td className="px-4 py-4 font-bold text-[#12334F] text-xs">{sol.consecutivo}</td>
+                                                            <td className="px-4 py-4 text-gray-600 text-xs">
+                                                                {sol.fechaRegistro ? new Date(sol.fechaRegistro).toLocaleDateString('es-CO') : 'N/A'} 
+                                                                <span className="text-[10px] text-gray-400 block">
+                                                                    {sol.fechaRegistro ? new Date(sol.fechaRegistro).toLocaleTimeString('es-CO', {hour: '2-digit', minute:'2-digit'}) : ''}
+                                                                </span>
                                                             </td>
-                                                            <td className="px-6 py-4 text-[#12334F] font-medium truncate max-w-[200px]" title={sol.tomadorNombre}>
+                                                            <td className="px-4 py-4 text-[#12334F] font-medium truncate max-w-[200px]" title={sol.tomadorNombre}>
                                                                 {sol.tomadorNombre || 'N/A'}
                                                             </td>
-                                                            <td className="px-6 py-4 text-gray-600 truncate max-w-[200px]" title={sol.solicitanteNombre}>
+                                                            <td className="px-4 py-4 text-gray-600 truncate max-w-[180px]" title={sol.solicitanteNombre}>
                                                                 {sol.solicitanteNombre || 'N/A'}
                                                             </td>
-                                                            <td className="px-6 py-4 font-bold text-[#163f73]">
+                                                            <td className="px-4 py-4 font-bold text-[#163f73]">
                                                                 {sol.valorConIva ? formatCurrency(sol.valorConIva) : '$ 0'}
                                                             </td>
-                                                            <td className="px-6 py-4 text-center">
-                                                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold border ${(sol.estado === 'Finalizada' || sol.estado === 'Emitida-Entregada') ? 'bg-green-50 text-green-700 border-green-200' : (sol.estado === 'Emitida' || sol.estado === 'En Trámite') ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
-                                                                    {(sol.estado === 'Finalizada' || sol.estado === 'Emitida-Entregada') ? <CheckCircle size={14}/> : (sol.estado === 'Emitida' || sol.estado === 'En Trámite') ? <Award size={14}/> : <ClockIcon size={14}/>}
+                                                            <td className="px-4 py-4 text-center">
+                                                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border ${(sol.estado === 'Finalizada' || sol.estado === 'Emitida-Entregada') ? 'bg-green-50 text-green-700 border-green-200' : (sol.estado === 'Emitida' || sol.estado === 'En Trámite') ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
+                                                                    {(sol.estado === 'Finalizada' || sol.estado === 'Emitida-Entregada') ? <CheckCircle size={12}/> : (sol.estado === 'Emitida' || sol.estado === 'En Trámite') ? <Award size={12}/> : <ClockIcon size={12}/>}
                                                                     {sol.estado || 'Pre-Orden'}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-6 py-4 text-center flex justify-center gap-2">
-                                                                <button onClick={() => abrirSolicitud(sol.consecutivo)} className="px-4 py-2 bg-white text-[#163f73] hover:bg-[#163f73] hover:text-white rounded-lg font-bold text-xs transition-colors border border-[#cdd7e0] shadow-sm flex items-center gap-2" title="Abrir para revisar o reenviar datos">
-                                                                    Ver / Reenviar &rarr;
+                                                            <td className="px-4 py-4 text-center flex justify-center gap-2">
+                                                                <button onClick={() => abrirSolicitud(sol.consecutivo)} className="px-3 py-2 bg-white text-[#163f73] hover:bg-[#163f73] hover:text-white rounded-lg font-bold text-[10px] uppercase tracking-wider transition-colors border border-[#cdd7e0] shadow-sm flex items-center gap-1" title="Abrir para revisar o reenviar datos">
+                                                                    Abrir &rarr;
                                                                 </button>
                                                                 {isDirectorUnlocked && (
                                                                     <button onClick={() => eliminarSolicitud(sol.consecutivo)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200" title="Eliminar registro de Firebase">
