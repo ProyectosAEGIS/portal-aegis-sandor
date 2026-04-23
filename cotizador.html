@@ -69,6 +69,7 @@
         const UploadCloud = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><polyline points="16 16 12 12 8 16"/><line x1="12" y1="12" x2="12" y2="21"/><path d="M20.39 18.39A5 5 0 0 0 18 9h-1.26A8 8 0 1 0 3 16.3"/><polyline points="16 16 12 12 8 16"/></svg>;
         const Download = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
         const Search = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
+        const Award = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>;
 
         // ==========================================
         // 2. CONFIGURACIÓN INICIAL
@@ -141,6 +142,7 @@
             const [isSubmitting, setIsSubmitting] = React.useState(false);
             const [isLoadingNube, setIsLoadingNube] = React.useState(false);
             
+            // LA BASE DE DATOS DE SOLICITUDES EN LA NUBE
             const [db, setDb] = React.useState(null);
             const [solicitudesDb, setSolicitudesDb] = React.useState([]);
 
@@ -179,7 +181,7 @@
             const [numeroPoliza, setNumeroPoliza] = React.useState('');
             const [aseguradora, setAseguradora] = React.useState('');
             const [ramoPoliza, setRamoPoliza] = React.useState('');
-            const [prorrogaRef, setProrrogaRef] = React.useState(null);
+            const [prorrogaRef, setProrrogaRef] = React.useState(null); // Memoria interna prorroga
 
             const listaAseguradoras = [
                 "Aseguradora Solidaria de Colombia", "Berkley", "Chubb", "Liberty Seguros", "Mapfre",
@@ -1431,13 +1433,13 @@
                                         </div>
                                     )}
 
-                                    {/* FASE 3: ENTREGA DE PÓLIZA (Solo Director si estado = Emitida) */}
-                                    {(isDirector && ['En Trámite', 'Emitida', 'Emitida-Entregada', 'Finalizada'].includes(estadoSolicitud)) && (
+                                    {/* NUEVA FASE 3: ENTREGA DE PÓLIZA (Solo Director si estado = Emitida) */}
+                                    {(isDirector && estadoSolicitud === 'Emitida') && (
                                         <div className="space-y-6 mt-8 border-t-4 border-green-500 pt-8 max-w-[1600px] mx-auto">
                                             <div className="bg-green-50 text-green-800 px-6 py-4 rounded-xl border border-green-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                                                 <div>
                                                     <h3 className="font-bold text-lg flex items-center gap-2"><CheckCircle size={20}/> 4. Entrega de Póliza Final al Cliente</h3>
-                                                    <p className="text-sm opacity-80">La Orden de Servicio ya fue emitida. Diligencie los datos de la póliza y cargue el PDF definitivo para alimentar el Dashboard de Producción.</p>
+                                                    <p className="text-sm opacity-80">La Orden de Servicio ya fue emitida. Cargue el PDF de la póliza definitiva para finalizar este requerimiento.</p>
                                                 </div>
                                             </div>
 
@@ -1532,20 +1534,13 @@
                                         )}
 
                                         {isDirector ? (
-                                            ['En Trámite', 'Emitida'].includes(estadoSolicitud) ? (
-                                                <div className="flex flex-wrap justify-center gap-2">
-                                                    <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-4 py-3 bg-[#163f73] text-white hover:bg-[#0e273d] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-[#58C9E8]/30" title="Reenviar Orden Final a Make">
-                                                        <RefreshCw size={18}/>
-                                                    </button>
-                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-500 text-white hover:bg-green-600 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
-                                                        {isSubmitting ? "ENVIANDO PÓLIZA..." : <><Send size={18}/> ENVIAR PÓLIZA A CLIENTE</>}
-                                                    </button>
-                                                </div>
-                                            ) : ['Finalizada', 'Emitida-Entregada'].includes(estadoSolicitud) ? (
-                                                <div className="flex flex-wrap justify-center gap-2">
-                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-600 text-white hover:bg-green-700 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-green-400">
-                                                        {isSubmitting ? "REENVIANDO PÓLIZA..." : <><RefreshCw size={18}/> REENVIAR PÓLIZA (CORRECCIÓN)</>}
-                                                    </button>
+                                            estadoSolicitud === 'Emitida' ? (
+                                                <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-500 text-white hover:bg-green-600 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                                    {isSubmitting ? "ENVIANDO PÓLIZA..." : <><Send size={18}/> ENVIAR PÓLIZA A CLIENTE</>}
+                                                </button>
+                                            ) : (estadoSolicitud === 'Finalizada' || estadoSolicitud === 'Emitida-Entregada') ? (
+                                                <div className="px-6 py-3 bg-gray-500 text-white rounded-xl font-bold flex items-center gap-2 opacity-80 cursor-not-allowed">
+                                                    <CheckCircle size={18}/> PROCESO FINALIZADO
                                                 </div>
                                             ) : (
                                                 <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
@@ -1553,7 +1548,7 @@
                                                 </button>
                                             )
                                         ) : (
-                                            <button onClick={confirmarGuardarPreOrden} disabled={isSubmitting || isLoadingNube} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                            <button onClick={guardarPreOrden} disabled={isSubmitting || isLoadingNube} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
                                                 {isSubmitting ? "GUARDANDO..." : <><Cloud size={18}/> GUARDAR PRE-ORDEN</>}
                                             </button>
                                         )}
