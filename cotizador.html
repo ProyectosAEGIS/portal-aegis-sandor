@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Servicios 2.11 - AEGIS Insurance</title>
+    <title>Portal de Servicios 2.12 - AEGIS Insurance</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -129,68 +129,105 @@
         // 3. COMPONENTE PRINCIPAL REACT
         // ==========================================
         function App() {
+            // --- 1. ESTADOS PRINCIPALES ---
             const [activeMenu, setActiveMenu] = React.useState('cotizador');
             const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
             const [rolActivo, setRolActivo] = React.useState('cliente');
-            
-            // ESTADOS DE SEGURIDAD, MODALES Y NUBE
             const [isDirectorUnlocked, setIsDirectorUnlocked] = React.useState(false);
+            
+            // Modales
             const [uiDialog, setUiDialog] = React.useState({ isOpen: false, type: 'alert', title: '', message: '', onConfirm: null });
             const [pinDialog, setPinDialog] = React.useState({ isOpen: false, pin: '', error: '' });
-
+            
+            // Nube
             const [isFirebaseReady, setIsFirebaseReady] = React.useState(false);
             const [isSubmitting, setIsSubmitting] = React.useState(false);
             const [isLoadingNube, setIsLoadingNube] = React.useState(false);
-            
-            // LA BASE DE DATOS DE SOLICITUDES EN LA NUBE
             const [db, setDb] = React.useState(null);
             const [solicitudesDb, setSolicitudesDb] = React.useState([]);
 
-            // ESTADO DE FILTROS PARA "MIS SOLICITUDES"
-            const [filtrosSolicitudes, setFiltrosSolicitudes] = React.useState({
-                consecutivo: '', fecha: '', tomador: '', solicitante: '', valor: '', estado: ''
-            });
-
-            // ESTADO PRINCIPAL DE LA SOLICITUD ACTUAL
+            // Formulario Base
             const [estadoSolicitud, setEstadoSolicitud] = React.useState('Nueva'); 
             const [consecutivo, setConsecutivo] = React.useState('');
-            const [interno, setInterno] = React.useState({ 
-                solicitante: '', 
-                solicitanteEmail: '', 
-                asunto: '', 
-                tipos: { 
-                    cumplimientoEstatales: false, 
-                    cumplimientoParticulares: false, 
-                    disposicionLegal: false, 
-                    prorroga: false, 
-                    responsabilidadCivil: false,
-                    seriedadOferta: false, 
-                    otros: false 
-                }, 
-                archivos: [] 
-            });
+            const [interno, setInterno] = React.useState({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { cumplimientoEstatales: false, cumplimientoParticulares: false, disposicionLegal: false, prorroga: false, responsabilidadCivil: false, seriedadOferta: false, otros: false }, archivos: [] });
             const [tomador, setTomador] = React.useState({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
             const [asegurado, setAsegurado] = React.useState({ nombre: '', nit: '' });
             const [contrato, setContrato] = React.useState({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '' });
             const [costos, setCostos] = React.useState({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
             const [amparos, setAmparos] = React.useState(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault ? a.tasaDefault.toFixed(2) : '0.18', prima: 0 })));
 
-            // ESTADOS DE LA FASE 3: ENTREGA DE PÓLIZA Y PRÓRROGAS
+            // Fase 3 (Póliza y Prórrogas)
             const [observacionesPoliza, setObservacionesPoliza] = React.useState('');
             const [archivosPoliza, setArchivosPoliza] = React.useState([]);
             const [numeroPoliza, setNumeroPoliza] = React.useState('');
             const [aseguradora, setAseguradora] = React.useState('');
             const [ramoPoliza, setRamoPoliza] = React.useState('');
-            const [prorrogaRef, setProrrogaRef] = React.useState(null); // Memoria interna prorroga
+            const [prorrogaRef, setProrrogaRef] = React.useState(null); 
 
-            const listaAseguradoras = [
-                "Aseguradora Solidaria de Colombia", "Berkley", "Chubb", "Liberty Seguros", "Mapfre",
-                "Mundial de Seguros", "Previsora", "Seguros Bolívar", "Seguros del Estado", "SURA", "Zúrich", "Otra"
-            ];
-
+            // Reportes y Filtros
             const [produccionData, setProduccionData] = React.useState(defaultProduccionData);
             const [carteraData, setCarteraData] = React.useState(defaultCarteraData);
+            const [filtrosSolicitudes, setFiltrosSolicitudes] = React.useState({ consecutivo: '', fecha: '', tomador: '', solicitante: '', valor: '', estado: '' });
 
+            // --- 2. GESTIÓN DE FILTROS SEGUROS (MEMOIZADOS) ---
+            const solicitudesFiltradas = React.useMemo(() => {
+                return solicitudesDb.filter(sol => {
+                    const solConsecutivo = sol.consecutivo || '';
+                    const solTomador = sol.tomadorNombre || '';
+                    const solSolicitante = sol.solicitanteNombre || '';
+                    const solEstado = sol.estado || '';
+
+                    const filterConsecutivo = (filtrosSolicitudes.consecutivo || '').toLowerCase();
+                    const filterTomador = (filtrosSolicitudes.tomador || '').toLowerCase();
+                    const filterSolicitante = (filtrosSolicitudes.solicitante || '').toLowerCase();
+                    const filterEstado = (filtrosSolicitudes.estado || '').toLowerCase();
+
+                    const matchConsecutivo = solConsecutivo.toLowerCase().includes(filterConsecutivo);
+                    const matchTomador = solTomador.toLowerCase().includes(filterTomador);
+                    const matchSolicitante = solSolicitante.toLowerCase().includes(filterSolicitante);
+                    const matchEstado = solEstado.toLowerCase().includes(filterEstado);
+                    
+                    let matchFecha = true;
+                    if (filtrosSolicitudes.fecha) {
+                        try {
+                            const solFecha = sol.fechaRegistro ? new Date(sol.fechaRegistro).toISOString().split('T')[0] : '';
+                            matchFecha = solFecha === filtrosSolicitudes.fecha;
+                        } catch(e) {}
+                    }
+
+                    let matchValor = true;
+                    if (filtrosSolicitudes.valor) {
+                        const valorFiltro = parseCurrency(filtrosSolicitudes.valor);
+                        const valorSol = sol.valorConIva || 0;
+                        matchValor = valorSol >= valorFiltro;
+                    }
+
+                    return matchConsecutivo && matchTomador && matchSolicitante && matchEstado && matchFecha && matchValor;
+                });
+            }, [solicitudesDb, filtrosSolicitudes]);
+
+            const polizasDisponiblesProrroga = React.useMemo(() => {
+                if (!interno.tipos.prorroga) return [];
+                const cleanNitT = (tomador.nit || '').replace(/\D/g, '');
+                const cleanNitA = (asegurado.nit || '').replace(/\D/g, '');
+                if (!cleanNitT || !cleanNitA) return [];
+
+                return solicitudesDb.filter(sol => {
+                    if (!['Emitida-Entregada', 'Finalizada'].includes(sol.estado)) return false;
+                    try {
+                        if (sol.formularioCompleto) {
+                            const form = JSON.parse(sol.formularioCompleto);
+                            const solNitT = (form.tomador && form.tomador.nit) ? String(form.tomador.nit).replace(/\D/g, '') : '';
+                            const solNitA = (form.asegurado && form.asegurado.nit) ? String(form.asegurado.nit).replace(/\D/g, '') : '';
+                            return cleanNitT === solNitT && cleanNitA === solNitA;
+                        }
+                    } catch(e) {}
+                    return false;
+                });
+            }, [interno.tipos.prorroga, tomador.nit, asegurado.nit, solicitudesDb]);
+
+            // --- 3. CONSTANTES Y CÁLCULOS ESTÁTICOS ---
+            const listaAseguradoras = ["Aseguradora Solidaria de Colombia", "Berkley", "Chubb", "Liberty Seguros", "Mapfre", "Mundial de Seguros", "Previsora", "Seguros Bolívar", "Seguros del Estado", "SURA", "Zúrich", "Otra"];
             const menuItems = [
                 { id: 'inicio', icon: Home, label: 'Inicio' },
                 { id: 'cotizador', icon: Calculator, label: 'Cotizador Cumplimiento' },
@@ -200,7 +237,6 @@
                 { id: 'soporte', icon: LifeBuoy, label: 'Centro de Ayuda' },
             ];
 
-            // --- Cálculos Dinámicos del Cotizador ---
             const valorConIva = contrato.valorConIva || 0;
             const valorSinIva = valorConIva / (1 + (costos.tasaIva / 100));
             const amparosCumplimiento = amparos.slice(0, 8);
@@ -220,7 +256,6 @@
             const totalRCE = subtotalRCE + ivaRCE;
             const totalGeneral = totalCump + totalRCE;
 
-            // --- Cálculos Producción y Cartera ---
             const prodTotal = produccionData.length;
             const prodMenorUnDia = produccionData.filter(p => p.ansHoras <= 24).length;
             const prodPorcentaje = prodTotal > 0 ? Math.round((prodMenorUnDia / prodTotal) * 100) : 0;
@@ -244,65 +279,11 @@
                 return acc;
             }, {})).map(k => ({ tomador: k, ...carteraData.reduce((acc, curr) => { if (!acc[curr.tomador]) acc[curr.tomador] = { count: 0, total: 0 }; acc[curr.tomador].count += 1; acc[curr.tomador].total += curr.total; return acc; }, {})[k] })).sort((a, b) => b.total - a.total);
 
-            // --- FILTRO SEGURO DE SOLICITUDES (TABLA) ---
-            const solicitudesFiltradas = React.useMemo(() => {
-                return solicitudesDb.filter(sol => {
-                    const solConsecutivo = sol.consecutivo || '';
-                    const solTomador = sol.tomadorNombre || '';
-                    const solSolicitante = sol.solicitanteNombre || '';
-                    const solEstado = sol.estado || '';
-
-                    const matchConsecutivo = solConsecutivo.toLowerCase().includes((filtrosSolicitudes.consecutivo || '').toLowerCase());
-                    const matchTomador = solTomador.toLowerCase().includes((filtrosSolicitudes.tomador || '').toLowerCase());
-                    const matchSolicitante = solSolicitante.toLowerCase().includes((filtrosSolicitudes.solicitante || '').toLowerCase());
-                    const matchEstado = solEstado.toLowerCase().includes((filtrosSolicitudes.estado || '').toLowerCase());
-                    
-                    let matchFecha = true;
-                    if (filtrosSolicitudes.fecha && sol.fechaRegistro) {
-                        try {
-                            const solFecha = new Date(sol.fechaRegistro).toISOString().split('T')[0];
-                            matchFecha = solFecha === filtrosSolicitudes.fecha;
-                        } catch(e) {}
-                    }
-
-                    let matchValor = true;
-                    if (filtrosSolicitudes.valor) {
-                        const valorFiltro = parseCurrency(filtrosSolicitudes.valor);
-                        const valorSol = sol.valorConIva || 0;
-                        matchValor = valorSol >= valorFiltro;
-                    }
-
-                    return matchConsecutivo && matchTomador && matchSolicitante && matchEstado && matchFecha && matchValor;
-                });
-            }, [solicitudesDb, filtrosSolicitudes]);
-
-            // --- FILTRO DINÁMICO DE PÓLIZAS PARA PRÓRROGA ---
-            const polizasDisponiblesProrroga = React.useMemo(() => {
-                if (!interno.tipos.prorroga) return [];
-                const cleanNitT = (tomador.nit || '').replace(/\D/g, '');
-                const cleanNitA = (asegurado.nit || '').replace(/\D/g, '');
-                if (!cleanNitT || !cleanNitA) return [];
-
-                return solicitudesDb.filter(sol => {
-                    if (!['Emitida-Entregada', 'Finalizada'].includes(sol.estado)) return false;
-                    try {
-                        if (sol.formularioCompleto) {
-                            const form = JSON.parse(sol.formularioCompleto);
-                            const solNitT = (form.tomador && form.tomador.nit) ? String(form.tomador.nit).replace(/\D/g, '') : '';
-                            const solNitA = (form.asegurado && form.asegurado.nit) ? String(form.asegurado.nit).replace(/\D/g, '') : '';
-                            return cleanNitT === solNitT && cleanNitA === solNitA;
-                        }
-                    } catch(e) {}
-                    return false;
-                });
-            }, [interno.tipos.prorroga, tomador.nit, asegurado.nit, solicitudesDb]);
-
-            // --- FUNCIONES DE DIÁLOGOS PERSONALIZADOS ---
+            // --- 4. FUNCIONES DE AYUDA Y LOGICA ---
             const showAlert = (title, message) => setUiDialog({ isOpen: true, type: 'alert', title, message, onConfirm: null });
             const showConfirm = (title, message, onConfirm) => setUiDialog({ isOpen: true, type: 'confirm', title, message, onConfirm });
             const closeDialog = () => setUiDialog({ ...uiDialog, isOpen: false });
 
-            // --- FUNCIONES DE FILTRADO PARA LA TABLA "MIS SOLICITUDES" ---
             const handleFiltroChange = (e, campo) => {
                 setFiltrosSolicitudes(prev => ({ ...prev, [campo]: e.target.value }));
             };
@@ -462,55 +443,6 @@
                     setProrrogaRef(null);
                     document.querySelectorAll('input[type="file"]').forEach(input => input.value = '');
                 });
-            };
-
-            // --- FUNCIÓN DE AUTOCOMPLETADO (MAGIA DE PRÓRROGAS) ---
-            const seleccionarPolizaProrroga = (p) => {
-                let parsedForm = {};
-                try { 
-                    parsedForm = JSON.parse(p.formularioCompleto); 
-                } catch(e) {}
-
-                // Guardamos la referencia oculta para Make.com
-                setProrrogaRef({
-                    consecutivo: p.consecutivo,
-                    numeroPoliza: parsedForm.numeroPoliza || '',
-                    aseguradora: parsedForm.aseguradora || '',
-                    ramoPoliza: parsedForm.ramoPoliza || ''
-                });
-
-                // AUTOCOMPLETAR CONTRATO
-                if (parsedForm.contrato) {
-                    setContrato(prev => ({
-                        ...prev,
-                        objeto: parsedForm.contrato.objeto || prev.objeto,
-                        numero: parsedForm.contrato.numero || prev.numero,
-                        // Mantenemos valorConIva, fechas y duración igual a la actual
-                        // para que el cliente digite las nuevas fechas/valores del anexo
-                    }));
-                }
-
-                // AUTOCOMPLETAR AMPAROS (Pre-encendemos los checks pero limpiamos valores)
-                if (parsedForm.amparos && parsedForm.amparos.length > 0) {
-                    const nuevosAmparos = parsedForm.amparos.map(a => {
-                        if(a.activo) {
-                            return {
-                                ...a,
-                                desde: '',
-                                hasta: '',
-                                dias: 0,
-                                porcentaje: '',
-                                valorAsegurado: 0,
-                                valorAseguradoStr: '',
-                                prima: 0
-                            };
-                        }
-                        return a;
-                    });
-                    setAmparos(nuevosAmparos);
-                }
-
-                showAlert('Póliza Vinculada y Autocompletada ✨', `Se importaron los datos base y amparos de la póliza ${parsedForm.numeroPoliza || p.consecutivo}. \n\nPor favor, actualice el Nuevo Valor con IVA, las Nuevas Fechas y cargue el PDF del Anexo.`);
             };
 
             const handleAmparoToggle = (id) => {
@@ -1433,13 +1365,13 @@
                                         </div>
                                     )}
 
-                                    {/* NUEVA FASE 3: ENTREGA DE PÓLIZA (Solo Director si estado = Emitida) */}
-                                    {(isDirector && estadoSolicitud === 'Emitida') && (
+                                    {/* FASE 3: ENTREGA DE PÓLIZA (Para Directores en estados avanzados) */}
+                                    {(isDirector && ['En Trámite', 'Emitida', 'Emitida-Entregada', 'Finalizada'].includes(estadoSolicitud)) && (
                                         <div className="space-y-6 mt-8 border-t-4 border-green-500 pt-8 max-w-[1600px] mx-auto">
                                             <div className="bg-green-50 text-green-800 px-6 py-4 rounded-xl border border-green-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
                                                 <div>
                                                     <h3 className="font-bold text-lg flex items-center gap-2"><CheckCircle size={20}/> 4. Entrega de Póliza Final al Cliente</h3>
-                                                    <p className="text-sm opacity-80">La Orden de Servicio ya fue emitida. Cargue el PDF de la póliza definitiva para finalizar este requerimiento.</p>
+                                                    <p className="text-sm opacity-80">La Orden de Servicio ya fue emitida. Diligencie los datos de la póliza y cargue el PDF definitivo para alimentar el Dashboard de Producción.</p>
                                                 </div>
                                             </div>
 
@@ -1534,13 +1466,20 @@
                                         )}
 
                                         {isDirector ? (
-                                            estadoSolicitud === 'Emitida' ? (
-                                                <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-500 text-white hover:bg-green-600 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
-                                                    {isSubmitting ? "ENVIANDO PÓLIZA..." : <><Send size={18}/> ENVIAR PÓLIZA A CLIENTE</>}
-                                                </button>
-                                            ) : (estadoSolicitud === 'Finalizada' || estadoSolicitud === 'Emitida-Entregada') ? (
-                                                <div className="px-6 py-3 bg-gray-500 text-white rounded-xl font-bold flex items-center gap-2 opacity-80 cursor-not-allowed">
-                                                    <CheckCircle size={18}/> PROCESO FINALIZADO
+                                            ['En Trámite', 'Emitida'].includes(estadoSolicitud) ? (
+                                                <div className="flex flex-wrap justify-center gap-2">
+                                                    <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-4 py-3 bg-[#163f73] text-white hover:bg-[#0e273d] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-[#58C9E8]/30" title="Reenviar Orden Final a Make">
+                                                        <RefreshCw size={18}/>
+                                                    </button>
+                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-500 text-white hover:bg-green-600 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                                        {isSubmitting ? "ENVIANDO PÓLIZA..." : <><Send size={18}/> ENVIAR PÓLIZA A CLIENTE</>}
+                                                    </button>
+                                                </div>
+                                            ) : ['Finalizada', 'Emitida-Entregada'].includes(estadoSolicitud) ? (
+                                                <div className="flex flex-wrap justify-center gap-2">
+                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-600 text-white hover:bg-green-700 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-green-400">
+                                                        {isSubmitting ? "REENVIANDO PÓLIZA..." : <><RefreshCw size={18}/> REENVIAR PÓLIZA (CORRECCIÓN)</>}
+                                                    </button>
                                                 </div>
                                             ) : (
                                                 <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
@@ -1548,7 +1487,7 @@
                                                 </button>
                                             )
                                         ) : (
-                                            <button onClick={guardarPreOrden} disabled={isSubmitting || isLoadingNube} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                            <button onClick={confirmarGuardarPreOrden} disabled={isSubmitting || isLoadingNube} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
                                                 {isSubmitting ? "GUARDANDO..." : <><Cloud size={18}/> GUARDAR PRE-ORDEN</>}
                                             </button>
                                         )}
