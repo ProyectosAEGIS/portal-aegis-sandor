@@ -160,12 +160,10 @@
             const [observacionesPoliza, setObservacionesPoliza] = React.useState('');
             const [archivosPoliza, setArchivosPoliza] = React.useState([]);
 
-            // INICIO PARCHE V2.13: Buffer de Archivos
+            // INICIO PARCHE V2.13/V2.13.1: Buffer documental y bitácora
             const [fileBuffer, setFileBuffer] = React.useState([]);
-            // INICIO PARCHE V2.13.1: Bitácora
             const [logTransmision, setLogTransmision] = React.useState('');
-            // FIN PARCHE V2.13.1
-            // FIN PARCHE V2.13
+            // FIN PARCHE V2.13/V2.13.1
             const [numeroPoliza, setNumeroPoliza] = React.useState('');
             const [aseguradora, setAseguradora] = React.useState('');
             const [ramoPoliza, setRamoPoliza] = React.useState('');
@@ -544,7 +542,48 @@
                 setInterno(prev => ({ ...prev, archivos: files }));
             };
 
-            const getBase64 = (file) => new Promise((resolve, reject) => {
+                        // INICIO PARCHE V2.13/V2.13.1: Controladores documentales robustos
+            const handleFileBufferChange = (e) => {
+                if (e.target.files) {
+                    const nuevosArchivos = Array.from(e.target.files);
+                    const MAX_SIZE_MB = 50;
+                    const extensionesValidas = ['pdf', 'jpg', 'jpeg', 'png', 'xlsx'];
+
+                    let archivosAceptados = [];
+                    let currentSize = fileBuffer.reduce((acc, f) => acc + f.size, 0);
+
+                    nuevosArchivos.forEach(file => {
+                        const extension = file.name.split('.').pop().toLowerCase();
+                        const isDuplicated = fileBuffer.some(f => f.name === file.name && f.size === file.size)
+                            || archivosAceptados.some(f => f.name === file.name && f.size === file.size);
+
+                        if (!extensionesValidas.includes(extension)) {
+                            showAlert('Formato Inválido', `El archivo ${file.name} no es admitido.`);
+                            return;
+                        }
+                        if (isDuplicated) {
+                            return;
+                        }
+                        if (currentSize + file.size > MAX_SIZE_MB * 1024 * 1024) {
+                            showAlert('Límite Excedido', `No se puede superar el límite total de ${MAX_SIZE_MB}MB.`);
+                            return;
+                        }
+
+                        archivosAceptados.push(file);
+                        currentSize += file.size;
+                    });
+
+                    setFileBuffer(prev => [...prev, ...archivosAceptados]);
+                    e.target.value = null;
+                }
+            };
+
+            const removeFileFromBuffer = (indexToRemove) => {
+                setFileBuffer(prev => prev.filter((_, index) => index !== indexToRemove));
+            };
+            // FIN PARCHE V2.13/V2.13.1
+
+const getBase64 = (file) => new Promise((resolve, reject) => {
                 const reader = new FileReader(); reader.readAsDataURL(file);
                 reader.onload = () => resolve({ name: file.name, contentBytes: reader.result.split(',')[1] });
                 reader.onerror = error => reject(error);
@@ -780,8 +819,6 @@
                             polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
                             adjuntos: attachments
                         };
-                        const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                        if (!res.ok) throw new Error(res.status);
                     }
 
                     showAlert('Éxito', "✅ ¡Pre-Orden guardada! El equipo ha sido notificado para completarla.");
@@ -875,8 +912,6 @@
                             polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
                             adjuntos: attachments
                         };
-                        const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                        if (!res.ok) throw new Error(res.status);
                     }
 
                     showAlert('Éxito', "✅ ¡Orden enviada al cliente con éxito!");
@@ -889,70 +924,71 @@
             };
 
             const enviarPolizaFinal = async (e) => {
-            if (e && e.preventDefault) e.preventDefault();
-            if (!numeroPoliza || !aseguradora || !ramoPoliza) return showAlert('Faltan Datos', 'Complete número de póliza, aseguradora y ramo antes de enviar.');
-            if (fileBuffer.length === 0) return showAlert('Atención', 'Debe adjuntar al menos un documento de la póliza o anexo.');
+                if (e && e.preventDefault) e.preventDefault();
+                if (!numeroPoliza || !aseguradora || !ramoPoliza) return showAlert('Faltan Datos', 'Complete número de póliza, aseguradora y ramo antes de enviar.');
+                if (fileBuffer.length === 0) return showAlert('Atención', 'Debe adjuntar al menos un documento de la póliza o anexo.');
 
-            setIsSubmitting(true);
-            setLogTransmision('Iniciando empaquetado de documentos...');
-            try {
-                if (db) {
-                    const formCompleto = JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef });
-                    const dataToSave = {
-                        estado: 'Emitida-Entregada',
-                        numeroPoliza,
-                        aseguradora,
-                        ramoPoliza,
-                        formularioCompleto: formCompleto
-                    };
-                    await db.collection('solicitudes').doc(consecutivo).set(dataToSave, { merge: true });
-                    setEstadoSolicitud('Emitida-Entregada');
-                }
-
-                if (WEBHOOKURL) {
-                    const payload = new FormData();
-                    payload.append('flujo', 'ENTREGA-POLIZA');
-                    payload.append('consecutivo', consecutivo);
-                    payload.append('solicitanteNombre', interno.solicitante || '');
-                    payload.append('solicitanteEmail', interno.solicitanteEmail || '');
-                    payload.append('tomadorNombre', tomador.nombre || '');
-                    payload.append('observaciones', observacionesPoliza || 'Sin observaciones.');
-                    payload.append('fechaEntregaPoliza', new Date().toLocaleString('es-CO'));
-                    payload.append('fechaTramiteDirector', new Date().toISOString());
-                    payload.append('numeroPoliza', numeroPoliza || '');
-                    payload.append('aseguradora', aseguradora || '');
-                    payload.append('ramoPoliza', ramoPoliza || '');
-
-                    fileBuffer.forEach((archivo, index) => {
-                        payload.append(`archivo_adjunto_${index + 1}`, archivo);
-                    });
-
-                    setLogTransmision('Conectando con servidor seguro (Make.com)...');
-                    const respuesta = await fetch(WEBHOOKURL, {
-                        method: 'POST',
-                        body: payload,
-                        mode: 'no-cors'
-                    });
-
-                    setLogTransmision('Analizando respuesta de la matriz...');
-                    if (respuesta.ok || respuesta.type === 'opaque' || respuesta.status === 200) {
-                        showAlert('Éxito', 'Póliza enviada al cliente con éxito!');
-                        setFileBuffer([]);
-                        setObservacionesPoliza('');
-                    } else {
-                        throw new Error(`Fallo de servidor: ${respuesta.status}`);
+                setIsSubmitting(true);
+                setLogTransmision('Iniciando empaquetado de documentos...');
+                try {
+                    if (db) {
+                        const formCompleto = JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef });
+                        const dataToSave = {
+                            estado: 'Emitida-Entregada',
+                            numeroPoliza,
+                            aseguradora,
+                            ramoPoliza,
+                            formularioCompleto: formCompleto
+                        };
+                        await db.collection('solicitudes').doc(consecutivo).set(dataToSave, { merge: true });
+                        setEstadoSolicitud('Emitida-Entregada');
                     }
+
+                    if (WEBHOOK_URL) {
+                        const payload = new FormData();
+                        payload.append('flujo', 'ENTREGA-POLIZA');
+                        payload.append('consecutivo', consecutivo);
+                        payload.append('solicitanteNombre', interno.solicitante || '');
+                        payload.append('solicitanteEmail', interno.solicitanteEmail || '');
+                        payload.append('tomadorNombre', tomador.nombre || '');
+                        payload.append('observaciones', observacionesPoliza || 'Sin observaciones.');
+                        payload.append('fechaEntregaPoliza', new Date().toLocaleString('es-CO'));
+                        payload.append('fechaTramiteDirector', new Date().toISOString());
+                        payload.append('numeroPoliza', numeroPoliza || '');
+                        payload.append('aseguradora', aseguradora || '');
+                        payload.append('ramoPoliza', ramoPoliza || '');
+
+                        fileBuffer.forEach((archivo, index) => {
+                            payload.append(`archivo_adjunto_${index + 1}`, archivo);
+                        });
+
+                        setLogTransmision('Conectando con servidor seguro (Make.com)...');
+                        const respuesta = await fetch(WEBHOOK_URL, {
+                            method: 'POST',
+                            body: payload,
+                            mode: 'no-cors'
+                        });
+
+                        setLogTransmision('Analizando respuesta de la matriz...');
+                        if (!(respuesta.ok || respuesta.type === 'opaque' || respuesta.status === 200)) {
+                            throw new Error(`Fallo de servidor: ${respuesta.status}`);
+                        }
+                    }
+
+                    showAlert('Éxito', 'Póliza enviada al cliente con éxito!');
+                    setFileBuffer([]);
+                    setArchivosPoliza([]);
+                    setObservacionesPoliza('');
+                    setLogTransmision('');
+                    document.querySelectorAll('input[type=file]').forEach(input => input.value = '');
+                } catch (e) {
+                    console.error('[AEGIS Telemetry]:', e);
+                    showAlert('Error de Conexión', 'Hubo una interrupción en el envío.');
+                } finally {
+                    setIsSubmitting(false);
+                    setLogTransmision('');
                 }
-            } catch (e) {
-                console.error('[AEGIS Telemetry]:', e);
-                showAlert('Error de Conexión', 'Hubo una interrupción en el envío.');
-            } finally {
-                setIsSubmitting(false);
-                setLogTransmision('');
-            }
-        };
-                        const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                        if (!res.ok) throw new Error(res.status);
+            };
                     }
 
                     showAlert('Éxito', "✅ ¡Póliza enviada al cliente con éxito!");
