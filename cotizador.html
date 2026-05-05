@@ -966,7 +966,8 @@
                 setIsSubmitting(true);
                 setLogTransmision(`Procesando ${tipoFlujoParam}...`);
 
-                const payload = new FormData(e.target || document.createElement('form'));
+                const formElement = (e && e.currentTarget && e.currentTarget.form) || (e && e.target && e.target.form) || document.querySelector('form');
+                const payload = new FormData(formElement || document.createElement('form'));
                 payload.append('fechaTramiteDirector', new Date().toISOString());
 
                 // === LÓGICA DE ENRUTAMIENTO (MAKE.COM ROUTER) ===
