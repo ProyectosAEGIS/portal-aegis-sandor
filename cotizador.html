@@ -969,11 +969,129 @@
                 try {
                     const formElement = (e && e.currentTarget && e.currentTarget.form) || (e && e.target && e.target.form) || document.querySelector('form');
                     const payload = formElement ? new FormData(formElement) : new FormData();
+
+                    // Bandera obligatoria para el Router de Make
+                    payload.append('tipo_flujo', tipoFlujoParam);
                     payload.append('fechaTramiteDirector', new Date().toISOString());
 
-                    // === LÓGICA DE ENRUTAMIENTO (MAKE.COM ROUTER) ===
-                    // Valores esperados: 'PRE-ORDEN', 'ORDEN-SERVICIO', 'EMISION-FINAL'
-                    payload.append('tipo_flujo', tipoFlujoParam);
+                    // Campos comunes
+                    payload.append('consecutivo', consecutivo || '');
+
+                    // Inyección de campos específicos por flujo, replicando V2.12
+                    if (tipoFlujoParam === 'PRE-ORDEN') {
+                        let polizaReferencia = '';
+                        let anexoReferencia = '';
+                        let ramoReferencia = '';
+                        let aseguradoraReferencia = '';
+
+                        if (interno.tipos?.prorroga && prorrogaRef) {
+                            const parts = (prorrogaRef.numeroPoliza || '').split('-');
+                            polizaReferencia = parts[0] ? parts[0].trim() : '';
+                            anexoReferencia = parts[1] ? parts[1].trim() : '';
+                            ramoReferencia = prorrogaRef.ramoPoliza || '';
+                            aseguradoraReferencia = prorrogaRef.aseguradora || '';
+                        }
+
+                        const amparosDetalleExcel = armarAmparosExcel();
+
+                        payload.append('flujo', 'PRE-ORDEN');
+                        payload.append('fechaRegistro', new Date().toLocaleString('es-CO'));
+                        payload.append('solicitanteNombre', interno.solicitante || '');
+                        payload.append('solicitanteEmail', interno.solicitanteEmail || '');
+                        payload.append('asunto', interno.asunto || '');
+                        payload.append('tiposSolicitud', Object.keys(interno.tipos || {}).filter(k => interno.tipos[k]).join(', '));
+                        payload.append('tomadorNombre', tomador.nombre || '');
+                        payload.append('tomadorNit', tomador.nit || '');
+                        payload.append('tomadorDireccion', tomador.direccion || '');
+                        payload.append('tomadorTelefono', tomador.telefono || '');
+                        payload.append('tomadorEmail', tomador.email || '');
+                        payload.append('aseguradoNombre', asegurado.nombre || '');
+                        payload.append('aseguradoNit', asegurado.nit || '');
+                        payload.append('contratoObjeto', contrato.objeto || '');
+                        payload.append('contratoNumero', contrato.numero || '');
+                        payload.append('contratoValorSinIva', String(valorSinIva || 0));
+                        payload.append('contratoValorConIva', String(valorConIva || 0));
+                        payload.append('contratoValorSinIvaFormateado', formatCurrency(valorSinIva || 0));
+                        payload.append('contratoValorConIvaFormateado', formatCurrency(valorConIva || 0));
+                        payload.append('contratoDuracionDias', String(contrato.duracion || 0));
+                        payload.append('amparosDetalleExcel', amparosDetalleExcel || '');
+                        payload.append('primaCumplimiento', '0');
+                        payload.append('gastosCumplimiento', '0');
+                        payload.append('ivaCumplimiento', '0');
+                        payload.append('valorTotalCumplimiento', '$ 0');
+                        payload.append('primaRCE', '0');
+                        payload.append('gastosRCE', '0');
+                        payload.append('ivaRCE', '0');
+                        payload.append('valorTotalRCE', '$ 0');
+                        payload.append('granTotal', '0');
+                        payload.append('valorGranTotal', '$ 0');
+                        payload.append('polizaReferencia', polizaReferencia || '');
+                        payload.append('anexoReferencia', anexoReferencia || '');
+                        payload.append('ramoReferencia', ramoReferencia || '');
+                        payload.append('aseguradoraReferencia', aseguradoraReferencia || '');
+                    } else if (tipoFlujoParam === 'ORDEN-SERVICIO') {
+                        let polizaReferencia = '';
+                        let anexoReferencia = '';
+                        let ramoReferencia = '';
+                        let aseguradoraReferencia = '';
+
+                        if (interno.tipos?.prorroga && prorrogaRef) {
+                            const parts = (prorrogaRef.numeroPoliza || '').split('-');
+                            polizaReferencia = parts[0] ? parts[0].trim() : '';
+                            anexoReferencia = parts[1] ? parts[1].trim() : '';
+                            ramoReferencia = prorrogaRef.ramoPoliza || '';
+                            aseguradoraReferencia = prorrogaRef.aseguradora || '';
+                        }
+
+                        const amparosDetalleExcel = armarAmparosExcel();
+
+                        payload.append('flujo', 'ORDEN-FINAL');
+                        payload.append('fechaRegistro', new Date().toLocaleString('es-CO'));
+                        payload.append('fechaTramiteDirector', new Date().toLocaleString('es-CO'));
+                        payload.append('solicitanteNombre', interno.solicitante || '');
+                        payload.append('solicitanteEmail', interno.solicitanteEmail || '');
+                        payload.append('asunto', interno.asunto || '');
+                        payload.append('tiposSolicitud', Object.keys(interno.tipos || {}).filter(k => interno.tipos[k]).join(', '));
+                        payload.append('tomadorNombre', tomador.nombre || '');
+                        payload.append('tomadorNit', tomador.nit || '');
+                        payload.append('tomadorDireccion', tomador.direccion || '');
+                        payload.append('tomadorTelefono', tomador.telefono || '');
+                        payload.append('tomadorEmail', tomador.email || '');
+                        payload.append('aseguradoNombre', asegurado.nombre || '');
+                        payload.append('aseguradoNit', asegurado.nit || '');
+                        payload.append('contratoObjeto', contrato.objeto || '');
+                        payload.append('contratoNumero', contrato.numero || '');
+                        payload.append('contratoValorSinIva', String(valorSinIva || 0));
+                        payload.append('contratoValorConIva', String(valorConIva || 0));
+                        payload.append('contratoValorSinIvaFormateado', formatCurrency(valorSinIva || 0));
+                        payload.append('contratoValorConIvaFormateado', formatCurrency(valorConIva || 0));
+                        payload.append('contratoDuracionDias', String(contrato.duracion || 0));
+                        payload.append('amparosDetalleExcel', amparosDetalleExcel || '');
+                        payload.append('primaCumplimiento', String(primaCumplimiento || 0));
+                        payload.append('gastosCumplimiento', String(gastosCalculadosCump || 0));
+                        payload.append('ivaCumplimiento', String(ivaCump || 0));
+                        payload.append('valorTotalCumplimiento', formatCurrency(totalCump || 0));
+                        payload.append('primaRCE', String(primaRCE || 0));
+                        payload.append('gastosRCE', String(gastosCalculadosRCE || 0));
+                        payload.append('ivaRCE', String(ivaRCE || 0));
+                        payload.append('valorTotalRCE', formatCurrency(totalRCE || 0));
+                        payload.append('granTotal', String(totalGeneral || 0));
+                        payload.append('valorGranTotal', formatCurrency(totalGeneral || 0));
+                        payload.append('polizaReferencia', polizaReferencia || '');
+                        payload.append('anexoReferencia', anexoReferencia || '');
+                        payload.append('ramoReferencia', ramoReferencia || '');
+                        payload.append('aseguradoraReferencia', aseguradoraReferencia || '');
+                    } else if (tipoFlujoParam === 'EMISION-FINAL') {
+                        payload.append('flujo', 'ENTREGA-POLIZA');
+                        payload.append('solicitanteNombre', interno.solicitante || '');
+                        payload.append('solicitanteEmail', interno.solicitanteEmail || '');
+                        payload.append('tomadorNombre', tomador.nombre || '');
+                        payload.append('observaciones', observacionesPoliza || 'Sin observaciones.');
+                        payload.append('fechaEntregaPoliza', new Date().toLocaleString('es-CO'));
+                        payload.append('numeroPoliza', numeroPoliza || '');
+                        payload.append('aseguradora', aseguradora || '');
+                        payload.append('ramoPoliza', ramoPoliza || '');
+                    }
 
                     // Inyección del File Buffer (Flujo C principalmente, pero soportado en todos)
                     if (Array.isArray(fileBuffer)) {
