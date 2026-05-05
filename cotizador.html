@@ -542,7 +542,7 @@
                 setInterno(prev => ({ ...prev, archivos: files }));
             };
 
-                        // INICIO PARCHE V2.13/V2.13.1: Controladores documentales robustos
+            // INICIO PARCHE V2.13/V2.13.1: Controladores documentales robustos
             const handleFileBufferChange = (e) => {
                 if (e.target.files) {
                     const nuevosArchivos = Array.from(e.target.files);
@@ -583,7 +583,7 @@
             };
             // FIN PARCHE V2.13/V2.13.1
 
-const getBase64 = (file) => new Promise((resolve, reject) => {
+            const getBase64 = (file) => new Promise((resolve, reject) => {
                 const reader = new FileReader(); reader.readAsDataURL(file);
                 reader.onload = () => resolve({ name: file.name, contentBytes: reader.result.split(',')[1] });
                 reader.onerror = error => reject(error);
@@ -1507,25 +1507,54 @@ const getBase64 = (file) => new Promise((resolve, reject) => {
                                                             onChange={e => setObservacionesPoliza(e.target.value)}
                                                         ></textarea>
                                                     </div>
-                                                    <div className="bg-gray-50 p-6 rounded-lg border border-dashed border-gray-300 flex flex-col items-center justify-center text-center">
-                                                        <UploadCloud size={40} className="text-[#58C9E8] mb-3" />
-                                                        <label className="cursor-pointer bg-[#163f73] text-white px-6 py-2.5 rounded-md font-bold text-sm hover:bg-[#12334F] transition-colors mb-2 shadow-sm">
-                                                            Seleccionar Póliza (PDF)
-                                                            <input type="file" className="hidden" accept=".pdf" onChange={(e) => {
-                                                                const files = Array.from(e.target.files);
-                                                                const totalSize = files.reduce((acc, file) => acc + file.size, 0);
-                                                                if (totalSize > 50 * 1024 * 1024) {
-                                                                    showAlert('Límite Excedido', '⚠️ El archivo de la póliza supera los 50MB permitidos.');
-                                                                    e.target.value = '';
-                                                                    return;
-                                                                }
-                                                                setArchivosPoliza(files);
-                                                            }} />
+                                                    <div className="mb-4 p-4 rounded-lg border-2 border-dashed border-[#76B2DB] bg-[#fdfdfd] hover:bg-slate-50 transition-colors">
+                                                        <label className="block text-sm font-bold text-[#12334F] mb-1">
+                                                            Soportes y Anexos (PDF, XLSX, JPG)
                                                         </label>
-                                                        <span className="text-xs text-gray-500 font-bold">
-                                                            {archivosPoliza.length === 0 ? "Ningún archivo seleccionado" : `✅ ${archivosPoliza[0].name} cargado.`}
-                                                        </span>
+                                                        <p className="text-xs text-gray-500 mb-3">
+                                                            Puede adjuntar archivos navegando en diferentes carpetas. El sistema conservará la memoria.
+                                                        </p>
+                                                        <input
+                                                            type="file"
+                                                            multiple
+                                                            accept=".pdf,.jpg,.jpeg,.png,.xlsx"
+                                                            onChange={handleFileBufferChange}
+                                                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#163F73] file:text-white cursor-pointer hover:file:bg-[#12334F] transition-all"
+                                                        />
+                                                        {fileBuffer.length > 0 && (
+                                                            <div className="mt-4">
+                                                                <h6 className="text-sm font-bold text-[#163F73] mb-2">Documentos en Cola para Sincronización:</h6>
+                                                                <ul className="divide-y divide-gray-200 border rounded-md shadow-sm bg-white">
+                                                                    {fileBuffer.map((file, index) => (
+                                                                        <li key={index} className="flex justify-between items-center p-3 text-sm gap-3">
+                                                                            <span className="truncate max-w-[80%] text-[#12334F]">
+                                                                                <strong>{file.name}</strong>
+                                                                                <span className="text-gray-400 text-xs ml-2">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
+                                                                            </span>
+                                                                            <button
+                                                                                type="button"
+                                                                                onClick={() => removeFileFromBuffer(index)}
+                                                                                className="text-red-500 hover:text-red-700 font-bold px-2 py-1 rounded hover:bg-red-50 transition-colors"
+                                                                                title="Retirar archivo"
+                                                                            >
+                                                                                X
+                                                                            </button>
+                                                                        </li>
+                                                                    ))}
+                                                                </ul>
+                                                            </div>
+                                                        )}
                                                     </div>
+
+                                                    {isSubmitting && (
+                                                        <div className="w-full mb-3 p-2 bg-[#f0f7ff] border border-[#76B2DB] rounded text-xs text-[#163F73] font-mono animate-pulse flex items-center">
+                                                            <span className="flex h-2 w-2 relative mr-2">
+                                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                                                            </span>
+                                                            [Proceso Sistema AEGIS]: {logTransmision}
+                                                        </div>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
