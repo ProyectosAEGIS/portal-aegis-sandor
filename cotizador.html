@@ -962,10 +962,6 @@
 
             // INICIO PARCHE V2.13.4: Enrutamiento Tripartito (Make.com)
             const enviarFlujoMake = async (e, tipoFlujoParam) => {
-            // Wrappers semánticos por flujo A/B/C
-            const enviarPreOrden = (e) => enviarFlujoMake(e, 'PRE-ORDEN');
-            const enviarOrdenServicio = (e) => enviarFlujoMake(e, 'ORDEN-SERVICIO');
-            const enviarEmisionFinal = (e) => enviarFlujoMake(e, 'EMISION-FINAL');
 
                 e.preventDefault();
                 setIsSubmitting(true);
@@ -1144,6 +1140,11 @@
                     setLogTransmision('');
                 }
             };
+
+            const enviarPreOrden = (e) => enviarFlujoMake(e, 'PRE-ORDEN');
+            const enviarOrdenServicio = (e) => enviarFlujoMake(e, 'ORDEN-SERVICIO');
+            const enviarEmisionFinal = (e) => enviarFlujoMake(e, 'EMISION-FINAL');
+
             // FIN PARCHE V2.13.4
 
             const handleCsvUpload = (e, type) => {
