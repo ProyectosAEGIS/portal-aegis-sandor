@@ -532,56 +532,93 @@
             };
 
             const handleFileChange = (e) => {
-                const files = Array.from(e.target.files);
-                const totalSize = files.reduce((acc, file) => acc + file.size, 0);
-                if (totalSize > 50 * 1024 * 1024) {
-                    showAlert('Límite Excedido', '⚠️ El peso total de los archivos supera los 50MB permitidos.');
-                    e.target.value = '';
-                    return;
-                }
-                setInterno(prev => ({ ...prev, archivos: files }));
+                const nuevosArchivos = Array.from(e.target.files || []);
+                if (nuevosArchivos.length === 0) return;
+
+                const MAX_SIZE = 50 * 1024 * 1024; // 50MB globales
+
+                setInterno(prev => {
+                    const existentes = Array.isArray(prev.archivos) ? prev.archivos : [];
+
+                    let currentSize = existentes.reduce((acc, file) => acc + (file.size || 0), 0);
+                    const archivosAceptados = [];
+
+                    for (const file of nuevosArchivos) {
+                        const isDuplicated = existentes.some(f => f.name === file.name && f.size === file.size)
+                            || archivosAceptados.some(f => f.name === file.name && f.size === file.size);
+
+                        if (isDuplicated) {
+                            continue;
+                        }
+
+                        if (currentSize + file.size > MAX_SIZE) {
+                            showAlert('Límite Excedido', '⚠️ El peso total de los archivos supera los 50MB permitidos.');
+                            break;
+                        }
+
+                        archivosAceptados.push(file)
+                        currentSize += file.size;
+                    }
+
+                    if (archivosAceptados.length === 0) {
+                        return prev;
+                    }
+
+                    return { ...prev, archivos: [...existentes, ...archivosAceptados] };
+                });
+
+                e.target.value = '';
             };
 
-            // INICIO PARCHE V2.13/V2.13.1: Controladores documentales robustos
+            // INICIO PARCHE V2.13.2: Gestor documental a prueba de fallos
             const handleFileBufferChange = (e) => {
-                if (e.target.files) {
-                    const nuevosArchivos = Array.from(e.target.files);
-                    const MAX_SIZE_MB = 50;
-                    const extensionesValidas = ['pdf', 'jpg', 'jpeg', 'png', 'xlsx'];
+                // Si el usuario cancela el diálogo, no hacemos nada
+                if (!e.target.files || e.target.files.length === 0) return;
 
-                    let archivosAceptados = [];
-                    let currentSize = fileBuffer.reduce((acc, f) => acc + f.size, 0);
+                const nuevosArchivos = Array.from(e.target.files);
+                const MAX_SIZE_MB = 50;
+                const extensionesValidas = ['pdf', 'jpg', 'jpeg', 'png', 'xlsx'];
 
-                    nuevosArchivos.forEach(file => {
+                // Toda la lógica dentro de setFileBuffer para evitar closures obsoletas
+                setFileBuffer((prevBuffer) => {
+                    let bufferActualizado = [...prevBuffer];
+                    let pesoActual = prevBuffer.reduce((acc, f) => acc + (f.size || 0), 0);
+
+                    nuevosArchivos.forEach((file) => {
                         const extension = file.name.split('.').pop().toLowerCase();
-                        const isDuplicated = fileBuffer.some(f => f.name === file.name && f.size === file.size)
-                            || archivosAceptados.some(f => f.name === file.name && f.size === file.size);
+                        const isDuplicated = bufferActualizado.some(
+                            (f) => f.name === file.name && f.size === file.size
+                        );
 
                         if (!extensionesValidas.includes(extension)) {
                             showAlert('Formato Inválido', `El archivo ${file.name} no es admitido.`);
                             return;
                         }
+
                         if (isDuplicated) {
                             return;
                         }
-                        if (currentSize + file.size > MAX_SIZE_MB * 1024 * 1024) {
+
+                        if (pesoActual + file.size > MAX_SIZE_MB * 1024 * 1024) {
                             showAlert('Límite Excedido', `No se puede superar el límite total de ${MAX_SIZE_MB}MB.`);
                             return;
                         }
 
-                        archivosAceptados.push(file);
-                        currentSize += file.size;
+                        bufferActualizado.push(file);
+                        pesoActual += file.size;
                     });
 
-                    setFileBuffer(prev => [...prev, ...archivosAceptados]);
-                    e.target.value = null;
-                }
+                    return bufferActualizado;
+                });
+
+                // Reseteo explícito del input para permitir nuevas rutas
+                e.target.value = '';
             };
 
             const removeFileFromBuffer = (indexToRemove) => {
-                setFileBuffer(prev => prev.filter((_, index) => index !== indexToRemove));
+                setFileBuffer((prev) => prev.filter((_, index) => index !== indexToRemove));
             };
-            // FIN PARCHE V2.13/V2.13.1
+            // FIN PARCHE V2.13.2
 
             const getBase64 = (file) => new Promise((resolve, reject) => {
                 const reader = new FileReader(); reader.readAsDataURL(file);
