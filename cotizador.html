@@ -989,15 +989,7 @@
                     setLogTransmision('');
                 }
             };
-                    }
 
-                    showAlert('Éxito', "✅ ¡Póliza enviada al cliente con éxito!");
-                } catch (e) { 
-                    showAlert('Error', "❌ Error enviando póliza: " + e.message); 
-                } finally { 
-                    setIsSubmitting(false); 
-                }
-            };
 
             const handleCsvUpload = (e, type) => {
                 const file = e.target.files[0]; if (!file) return;
