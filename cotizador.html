@@ -966,22 +966,22 @@
                 setIsSubmitting(true);
                 setLogTransmision(`Procesando ${tipoFlujoParam}...`);
 
-                const formElement = (e && e.currentTarget && e.currentTarget.form) || (e && e.target && e.target.form) || document.querySelector('form');
-                const payload = new FormData(formElement || document.createElement('form'));
-                payload.append('fechaTramiteDirector', new Date().toISOString());
-
-                // === LÓGICA DE ENRUTAMIENTO (MAKE.COM ROUTER) ===
-                // Valores esperados: 'PRE-ORDEN', 'ORDEN-SERVICIO', 'EMISION-FINAL'
-                payload.append('tipo_flujo', tipoFlujoParam);
-
-                // Inyección del File Buffer (Flujo C principalmente, pero soportado en todos)
-                if (Array.isArray(fileBuffer)) {
-                    fileBuffer.forEach((archivo, index) => {
-                        payload.append(`archivo_adjunto_${index + 1}`, archivo);
-                    });
-                }
-
                 try {
+                    const formElement = (e && e.currentTarget && e.currentTarget.form) || (e && e.target && e.target.form) || document.querySelector('form');
+                    const payload = formElement ? new FormData(formElement) : new FormData();
+                    payload.append('fechaTramiteDirector', new Date().toISOString());
+
+                    // === LÓGICA DE ENRUTAMIENTO (MAKE.COM ROUTER) ===
+                    // Valores esperados: 'PRE-ORDEN', 'ORDEN-SERVICIO', 'EMISION-FINAL'
+                    payload.append('tipo_flujo', tipoFlujoParam);
+
+                    // Inyección del File Buffer (Flujo C principalmente, pero soportado en todos)
+                    if (Array.isArray(fileBuffer)) {
+                        fileBuffer.forEach((archivo, index) => {
+                            payload.append(`archivo_adjunto_${index + 1}`, archivo);
+                        });
+                    }
+
                     setLogTransmision('Transmitiendo datos a la matriz (Make.com)...');
 
                     // ÚNICA URL DE WEBHOOK PARA TODOS LOS FLUJOS
