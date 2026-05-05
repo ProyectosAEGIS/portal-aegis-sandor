@@ -527,14 +527,33 @@
             };
 
             const handleFileChange = (e) => {
-                const files = Array.from(e.target.files);
-                const totalSize = files.reduce((acc, file) => acc + file.size, 0);
-                if (totalSize > 50 * 1024 * 1024) {
-                    showAlert('Límite Excedido', '⚠️ El peso total de los archivos supera los 50MB permitidos.');
-                    e.target.value = '';
-                    return;
-                }
-                setInterno(prev => ({ ...prev, archivos: files }));
+                const nuevosArchivos = Array.from(e.target.files || []);
+                if (nuevosArchivos.length === 0) return;
+
+                const MAX_SIZE = 50 * 1024 * 1024;
+
+                setInterno(prev => {
+                    const existentes = Array.isArray(prev.archivos) ? prev.archivos : [];
+                    let currentSize = existentes.reduce((acc, file) => acc + (file.size || 0), 0);
+                    const archivosAceptados = [];
+
+                    for (const file of nuevosArchivos) {
+                        const isDuplicated = existentes.some(f => f.name === file.name && f.size === file.size)
+                            || archivosAceptados.some(f => f.name === file.name && f.size === file.size);
+                        if (isDuplicated) continue;
+                        if (currentSize + file.size > MAX_SIZE) {
+                            showAlert('Límite Excedido', '⚠️ El peso total de los archivos supera los 50MB permitidos.');
+                            break;
+                        }
+                        archivosAceptados.push(file);
+                        currentSize += file.size;
+                    }
+
+                    if (archivosAceptados.length === 0) return prev;
+                    return { ...prev, archivos: [...existentes, ...archivosAceptados] };
+                });
+
+                e.target.value = '';
             };
 
             const getBase64 = (file) => new Promise((resolve, reject) => {
@@ -1436,7 +1455,7 @@
                                                         <UploadCloud size={40} className="text-[#58C9E8] mb-3" />
                                                         <label className="cursor-pointer bg-[#163f73] text-white px-6 py-2.5 rounded-md font-bold text-sm hover:bg-[#12334F] transition-colors mb-2 shadow-sm">
                                                             Seleccionar Póliza (PDF)
-                                                            <input type="file" className="hidden" accept=".pdf" onChange={(e) => {
+                                                            <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png,.xlsx" onChange={(e) => {
                                                                 const files = Array.from(e.target.files);
                                                                 const totalSize = files.reduce((acc, file) => acc + file.size, 0);
                                                                 if (totalSize > 50 * 1024 * 1024) {
