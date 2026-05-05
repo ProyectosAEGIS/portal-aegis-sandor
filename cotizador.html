@@ -1022,57 +1022,6 @@
             };
             // FIN PARCHE V2.13.4
 
-                        await db.collection('solicitudes').doc(consecutivo).set(dataToSave, { merge: true });
-                        setEstadoSolicitud('Emitida-Entregada');
-                    }
-
-                    if (WEBHOOK_URL) {
-                        const payload = new FormData();
-                        payload.append('flujo', 'ENTREGA-POLIZA');
-                        payload.append('consecutivo', consecutivo);
-                        payload.append('solicitanteNombre', interno.solicitante || '');
-                        payload.append('solicitanteEmail', interno.solicitanteEmail || '');
-                        payload.append('tomadorNombre', tomador.nombre || '');
-                        payload.append('observaciones', observacionesPoliza || 'Sin observaciones.');
-                        payload.append('fechaEntregaPoliza', new Date().toLocaleString('es-CO'));
-                        payload.append('fechaTramiteDirector', new Date().toISOString());
-                        payload.append('numeroPoliza', numeroPoliza || '');
-                        payload.append('aseguradora', aseguradora || '');
-                        payload.append('ramoPoliza', ramoPoliza || '');
-
-                        fileBuffer.forEach((archivo, index) => {
-                            payload.append(`archivo_adjunto_${index + 1}`, archivo);
-                        });
-
-                        setLogTransmision('Conectando con servidor seguro (Make.com)...');
-                        const respuesta = await fetch(WEBHOOK_URL, {
-                            method: 'POST',
-                            body: payload,
-                            mode: 'no-cors'
-                        });
-
-                        setLogTransmision('Analizando respuesta de la matriz...');
-                        if (!(respuesta.ok || respuesta.type === 'opaque' || respuesta.status === 200)) {
-                            throw new Error(`Fallo de servidor: ${respuesta.status}`);
-                        }
-                    }
-
-                    showAlert('Éxito', 'Póliza enviada al cliente con éxito!');
-                    setFileBuffer([]);
-                    setArchivosPoliza([]);
-                    setObservacionesPoliza('');
-                    setLogTransmision('');
-                    document.querySelectorAll('input[type=file]').forEach(input => input.value = '');
-                } catch (e) {
-                    console.error('[AEGIS Telemetry]:', e);
-                    showAlert('Error de Conexión', 'Hubo una interrupción en el envío.');
-                } finally {
-                    setIsSubmitting(false);
-                    setLogTransmision('');
-                }
-            };
-
-
             const handleCsvUpload = (e, type) => {
                 const file = e.target.files[0]; if (!file) return;
                 const reader = new FileReader();
