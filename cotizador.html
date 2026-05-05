@@ -159,11 +159,6 @@
             // Fase 3 (Póliza y Prórrogas)
             const [observacionesPoliza, setObservacionesPoliza] = React.useState('');
             const [archivosPoliza, setArchivosPoliza] = React.useState([]);
-
-            // INICIO PARCHE V2.13/V2.13.1: Buffer documental y bitácora
-            const [fileBuffer, setFileBuffer] = React.useState([]);
-            const [logTransmision, setLogTransmision] = React.useState('');
-            // FIN PARCHE V2.13/V2.13.1
             const [numeroPoliza, setNumeroPoliza] = React.useState('');
             const [aseguradora, setAseguradora] = React.useState('');
             const [ramoPoliza, setRamoPoliza] = React.useState('');
@@ -532,93 +527,15 @@
             };
 
             const handleFileChange = (e) => {
-                const nuevosArchivos = Array.from(e.target.files || []);
-                if (nuevosArchivos.length === 0) return;
-
-                const MAX_SIZE = 50 * 1024 * 1024; // 50MB globales
-
-                setInterno(prev => {
-                    const existentes = Array.isArray(prev.archivos) ? prev.archivos : [];
-
-                    let currentSize = existentes.reduce((acc, file) => acc + (file.size || 0), 0);
-                    const archivosAceptados = [];
-
-                    for (const file of nuevosArchivos) {
-                        const isDuplicated = existentes.some(f => f.name === file.name && f.size === file.size)
-                            || archivosAceptados.some(f => f.name === file.name && f.size === file.size);
-
-                        if (isDuplicated) {
-                            continue;
-                        }
-
-                        if (currentSize + file.size > MAX_SIZE) {
-                            showAlert('Límite Excedido', '⚠️ El peso total de los archivos supera los 50MB permitidos.');
-                            break;
-                        }
-
-                        archivosAceptados.push(file)
-                        currentSize += file.size;
-                    }
-
-                    if (archivosAceptados.length === 0) {
-                        return prev;
-                    }
-
-                    return { ...prev, archivos: [...existentes, ...archivosAceptados] };
-                });
-
-                e.target.value = '';
+                const files = Array.from(e.target.files);
+                const totalSize = files.reduce((acc, file) => acc + file.size, 0);
+                if (totalSize > 50 * 1024 * 1024) {
+                    showAlert('Límite Excedido', '⚠️ El peso total de los archivos supera los 50MB permitidos.');
+                    e.target.value = '';
+                    return;
+                }
+                setInterno(prev => ({ ...prev, archivos: files }));
             };
-
-            // INICIO PARCHE V2.13.2: Gestor documental a prueba de fallos
-            const handleFileBufferChange = (e) => {
-                // Si el usuario cancela el diálogo, no hacemos nada
-                if (!e.target.files || e.target.files.length === 0) return;
-
-                const nuevosArchivos = Array.from(e.target.files);
-                const MAX_SIZE_MB = 50;
-                const extensionesValidas = ['pdf', 'jpg', 'jpeg', 'png', 'xlsx'];
-
-                // Toda la lógica dentro de setFileBuffer para evitar closures obsoletas
-                setFileBuffer((prevBuffer) => {
-                    let bufferActualizado = [...prevBuffer];
-                    let pesoActual = prevBuffer.reduce((acc, f) => acc + (f.size || 0), 0);
-
-                    nuevosArchivos.forEach((file) => {
-                        const extension = file.name.split('.').pop().toLowerCase();
-                        const isDuplicated = bufferActualizado.some(
-                            (f) => f.name === file.name && f.size === file.size
-                        );
-
-                        if (!extensionesValidas.includes(extension)) {
-                            showAlert('Formato Inválido', `El archivo ${file.name} no es admitido.`);
-                            return;
-                        }
-
-                        if (isDuplicated) {
-                            return;
-                        }
-
-                        if (pesoActual + file.size > MAX_SIZE_MB * 1024 * 1024) {
-                            showAlert('Límite Excedido', `No se puede superar el límite total de ${MAX_SIZE_MB}MB.`);
-                            return;
-                        }
-
-                        bufferActualizado.push(file);
-                        pesoActual += file.size;
-                    });
-
-                    return bufferActualizado;
-                });
-
-                // Reseteo explícito del input para permitir nuevas rutas
-                e.target.value = '';
-            };
-
-            const removeFileFromBuffer = (indexToRemove) => {
-                setFileBuffer((prev) => prev.filter((_, index) => index !== indexToRemove));
-            };
-            // FIN PARCHE V2.13.2
 
             const getBase64 = (file) => new Promise((resolve, reject) => {
                 const reader = new FileReader(); reader.readAsDataURL(file);
@@ -857,12 +774,8 @@
                             polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
                             adjuntos: attachments
                         };
-                        const res = await fetch(WEBHOOK_URL, {
-                            method: 'POST',
-                            headers: { 'Content-Type': 'application/json' },
-                            body: JSON.stringify(payload)
-                        });
-                        if (!res.ok) throw new Error(`Webhook PRE-ORDEN respondió ${res.status}`);
+                        const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        if (!res.ok) throw new Error(res.status);
                     }
 
                     showAlert('Éxito', "✅ ¡Pre-Orden guardada! El equipo ha sido notificado para completarla.");
@@ -942,6 +855,7 @@
 
                     if (WEBHOOK_URL) {
                         const payload = {
+                            tipo_flujo: 'ORDEN-SERVICIO',
                             flujo: 'ORDEN-FINAL', 
                             fechaRegistro: new Date().toLocaleString('es-CO'),
                             fechaTramiteDirector: new Date().toLocaleString('es-CO'), 
@@ -956,6 +870,8 @@
                             polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
                             adjuntos: attachments
                         };
+                        const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        if (!res.ok) throw new Error(res.status);
                     }
 
                     showAlert('Éxito', "✅ ¡Orden enviada al cliente con éxito!");
@@ -967,287 +883,46 @@
                 }
             };
 
-            // INICIO PARCHE V2.13.4: Enrutamiento Tripartito (Make.com)
-            const enviarFlujoMake = async (e, tipoFlujoParam) => {
-
-                e.preventDefault();
+            const enviarPolizaFinal = async () => {
+                if (!numeroPoliza || !aseguradora || !ramoPoliza) return showAlert('Faltan Datos', "⚠️ Complete # de póliza, aseguradora y ramo antes de enviar.");
+                if (archivosPoliza.length === 0) return showAlert('Atención', "⚠️ Debe adjuntar al menos un documento PDF de la póliza.");
                 setIsSubmitting(true);
-                setLogTransmision(`Procesando ${tipoFlujoParam}...`);
-
+                
                 try {
-                    const formElement = (e && e.currentTarget && e.currentTarget.form) || (e && e.target && e.target.form) || document.querySelector('form');
-                    const payload = formElement ? new FormData(formElement) : new FormData();
-
-                    // Bandera obligatoria para el Router de Make
-                    payload.append('tipo_flujo', tipoFlujoParam);
-                    payload.append('fechaTramiteDirector', new Date().toISOString());
-
-                    // Campos comunes
-                    payload.append('consecutivo', consecutivo || '');
-
-                    // Inyección de campos específicos por flujo, replicando V2.12
-                    if (tipoFlujoParam === 'PRE-ORDEN') {
-                        let polizaReferencia = '';
-                        let anexoReferencia = '';
-                        let ramoReferencia = '';
-                        let aseguradoraReferencia = '';
-
-                        if (interno.tipos?.prorroga && prorrogaRef) {
-                            const parts = (prorrogaRef.numeroPoliza || '').split('-');
-                            polizaReferencia = parts[0] ? parts[0].trim() : '';
-                            anexoReferencia = parts[1] ? parts[1].trim() : '';
-                            ramoReferencia = prorrogaRef.ramoPoliza || '';
-                            aseguradoraReferencia = prorrogaRef.aseguradora || '';
-                        }
-
-                        const amparosDetalleExcel = armarAmparosExcel();
-
-                        payload.append('flujo', 'PRE-ORDEN');
-                        payload.append('fechaRegistro', new Date().toLocaleString('es-CO'));
-                        payload.append('solicitanteNombre', interno.solicitante || '');
-                        payload.append('solicitanteEmail', interno.solicitanteEmail || '');
-                        payload.append('asunto', interno.asunto || '');
-                        payload.append('tiposSolicitud', Object.keys(interno.tipos || {}).filter(k => interno.tipos[k]).join(', '));
-                        payload.append('tomadorNombre', tomador.nombre || '');
-                        payload.append('tomadorNit', tomador.nit || '');
-                        payload.append('tomadorDireccion', tomador.direccion || '');
-                        payload.append('tomadorTelefono', tomador.telefono || '');
-                        payload.append('tomadorEmail', tomador.email || '');
-                        payload.append('aseguradoNombre', asegurado.nombre || '');
-                        payload.append('aseguradoNit', asegurado.nit || '');
-                        payload.append('contratoObjeto', contrato.objeto || '');
-                        payload.append('contratoNumero', contrato.numero || '');
-                        payload.append('contratoValorSinIva', String(valorSinIva || 0));
-                        payload.append('contratoValorConIva', String(valorConIva || 0));
-                        payload.append('contratoValorSinIvaFormateado', formatCurrency(valorSinIva || 0));
-                        payload.append('contratoValorConIvaFormateado', formatCurrency(valorConIva || 0));
-                        payload.append('contratoDuracionDias', String(contrato.duracion || 0));
-                        payload.append('amparosDetalleExcel', amparosDetalleExcel || '');
-                        payload.append('primaCumplimiento', '0');
-                        payload.append('gastosCumplimiento', '0');
-                        payload.append('ivaCumplimiento', '0');
-                        payload.append('valorTotalCumplimiento', '$ 0');
-                        payload.append('primaRCE', '0');
-                        payload.append('gastosRCE', '0');
-                        payload.append('ivaRCE', '0');
-                        payload.append('valorTotalRCE', '$ 0');
-                        payload.append('granTotal', '0');
-                        payload.append('valorGranTotal', '$ 0');
-                        payload.append('polizaReferencia', polizaReferencia || '');
-                        payload.append('anexoReferencia', anexoReferencia || '');
-                        payload.append('ramoReferencia', ramoReferencia || '');
-                        payload.append('aseguradoraReferencia', aseguradoraReferencia || '');
-                    } else if (tipoFlujoParam === 'ORDEN-SERVICIO') {
-                        let polizaReferencia = '';
-                        let anexoReferencia = '';
-                        let ramoReferencia = '';
-                        let aseguradoraReferencia = '';
-
-                        if (interno.tipos?.prorroga && prorrogaRef) {
-                            const parts = (prorrogaRef.numeroPoliza || '').split('-');
-                            polizaReferencia = parts[0] ? parts[0].trim() : '';
-                            anexoReferencia = parts[1] ? parts[1].trim() : '';
-                            ramoReferencia = prorrogaRef.ramoPoliza || '';
-                            aseguradoraReferencia = prorrogaRef.aseguradora || '';
-                        }
-
-                        const amparosDetalleExcel = armarAmparosExcel();
-
-                        payload.append('flujo', 'ORDEN-FINAL');
-                        payload.append('fechaRegistro', new Date().toLocaleString('es-CO'));
-                        payload.append('fechaTramiteDirector', new Date().toLocaleString('es-CO'));
-                        payload.append('solicitanteNombre', interno.solicitante || '');
-                        payload.append('solicitanteEmail', interno.solicitanteEmail || '');
-                        payload.append('asunto', interno.asunto || '');
-                        payload.append('tiposSolicitud', Object.keys(interno.tipos || {}).filter(k => interno.tipos[k]).join(', '));
-                        payload.append('tomadorNombre', tomador.nombre || '');
-                        payload.append('tomadorNit', tomador.nit || '');
-                        payload.append('tomadorDireccion', tomador.direccion || '');
-                        payload.append('tomadorTelefono', tomador.telefono || '');
-                        payload.append('tomadorEmail', tomador.email || '');
-                        payload.append('aseguradoNombre', asegurado.nombre || '');
-                        payload.append('aseguradoNit', asegurado.nit || '');
-                        payload.append('contratoObjeto', contrato.objeto || '');
-                        payload.append('contratoNumero', contrato.numero || '');
-                        payload.append('contratoValorSinIva', String(valorSinIva || 0));
-                        payload.append('contratoValorConIva', String(valorConIva || 0));
-                        payload.append('contratoValorSinIvaFormateado', formatCurrency(valorSinIva || 0));
-                        payload.append('contratoValorConIvaFormateado', formatCurrency(valorConIva || 0));
-                        payload.append('contratoDuracionDias', String(contrato.duracion || 0));
-                        payload.append('amparosDetalleExcel', amparosDetalleExcel || '');
-                        payload.append('primaCumplimiento', String(primaCumplimiento || 0));
-                        payload.append('gastosCumplimiento', String(gastosCalculadosCump || 0));
-                        payload.append('ivaCumplimiento', String(ivaCump || 0));
-                        payload.append('valorTotalCumplimiento', formatCurrency(totalCump || 0));
-                        payload.append('primaRCE', String(primaRCE || 0));
-                        payload.append('gastosRCE', String(gastosCalculadosRCE || 0));
-                        payload.append('ivaRCE', String(ivaRCE || 0));
-                        payload.append('valorTotalRCE', formatCurrency(totalRCE || 0));
-                        payload.append('granTotal', String(totalGeneral || 0));
-                        payload.append('valorGranTotal', formatCurrency(totalGeneral || 0));
-                        payload.append('polizaReferencia', polizaReferencia || '');
-                        payload.append('anexoReferencia', anexoReferencia || '');
-                        payload.append('ramoReferencia', ramoReferencia || '');
-                        payload.append('aseguradoraReferencia', aseguradoraReferencia || '');
-                    } else if (tipoFlujoParam === 'EMISION-FINAL') {
-                        payload.append('flujo', 'ENTREGA-POLIZA');
-                        payload.append('solicitanteNombre', interno.solicitante || '');
-                        payload.append('solicitanteEmail', interno.solicitanteEmail || '');
-                        payload.append('tomadorNombre', tomador.nombre || '');
-                        payload.append('observaciones', observacionesPoliza || 'Sin observaciones.');
-                        payload.append('fechaEntregaPoliza', new Date().toLocaleString('es-CO'));
-                        payload.append('numeroPoliza', numeroPoliza || '');
-                        payload.append('aseguradora', aseguradora || '');
-                        payload.append('ramoPoliza', ramoPoliza || '');
-                    }
-
-                    // Inyección del File Buffer (Flujo C principalmente, pero soportado en todos)
-                    if (Array.isArray(fileBuffer)) {
-                        fileBuffer.forEach((archivo, index) => {
-                            payload.append(`archivo_adjunto_${index + 1}`, archivo);
-                        });
-                    }
-
-                    setLogTransmision('Transmitiendo datos a la matriz (Make.com)...');
-
-                    // ÚNICA URL DE WEBHOOK PARA TODOS LOS FLUJOS
-                    const WEBHOOK_URL = "https://hook.us2.make.com/6oy0xm0wdgimjdyb39wnxuxlbs2wunlw";
-
-                    const respuesta = await fetch(WEBHOOK_URL, {
-                        method: 'POST',
-                        body: payload
-                    });
-
-                    setLogTransmision('Analizando respuesta del servidor...');
-
-                    if (respuesta.ok || respuesta.type === 'opaque' || respuesta.status === 200) {
-                        let mensajeExito = '';
-                        if (tipoFlujoParam === 'PRE-ORDEN') mensajeExito = 'Pre-Orden (Flujo A) registrada correctamente.';
-                        else if (tipoFlujoParam === 'ORDEN-SERVICIO') mensajeExito = 'Orden de Servicio (Flujo B) generada con éxito.';
-                        else mensajeExito = 'Emisión Final (Flujo C) y póliza sincronizados en SharePoint.';
-
-                        showAlert('Gestión Exitosa', mensajeExito);
-
-                        // Limpieza de memoria
-                        setFileBuffer([]);
-
-                        if (typeof setArchivosPoliza === 'function') setArchivosPoliza([]);
-                        if (typeof setObservacionesPoliza === 'function') setObservacionesPoliza('');
-
-                        setLogTransmision('');
-                        document.querySelectorAll('input[type=file]').forEach(input => input.value = '');
-                    } else {
-                        throw new Error(`Fallo de servidor: ${respuesta.status}`);
-                    }
-                } catch (error) {
-                    console.error('[AEGIS Telemetry]:', error);
-                    showAlert('Error de Conexión', 'Hubo una interrupción en la transmisión al Webhook.');
-                } finally {
-                    setIsSubmitting(false);
-                    setLogTransmision('');
-                }
-            };
-
-            const enviarPreOrden = (e) => enviarFlujoMake(e, 'PRE-ORDEN');
-
-            // FIN PARCHE V2.13.4
-
-            // INICIO PARCHE V2.13.11: Estabilización operativa B/C
-            const enviarOrdenServicio = async (e) => {
-                e.preventDefault();
-                if (!interno.solicitante || !tomador.nombre) return showAlert('Faltan Datos', 'Faltan datos base.');
-                setIsSubmitting(true);
-                try {
-                    let polizaReferencia = '';
-                    let anexoReferencia = '';
-                    let ramoReferencia = '';
-                    let aseguradoraReferencia = '';
-                    if (interno.tipos?.prorroga && prorrogaRef) {
-                        const parts = (prorrogaRef.numeroPoliza || '').split('-');
-                        polizaReferencia = parts[0] ? parts[0].trim() : '';
-                        anexoReferencia = parts[1] ? parts[1].trim() : '';
-                        ramoReferencia = prorrogaRef.ramoPoliza || '';
-                        aseguradoraReferencia = prorrogaRef.aseguradora || '';
-                    }
                     if (db) {
-                        const dataToSave = { fechaRegistro: new Date().toISOString(), consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'En Trámite', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef }) };
-                        await db.collection('solicitudes').doc(consecutivo).set(dataToSave, { merge: true });
-                        setEstadoSolicitud('En Trámite');
+                        const formCompleto = JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef });
+                        const dataToSave = { estado: 'Emitida-Entregada', numeroPoliza, aseguradora, ramoPoliza, formularioCompleto: formCompleto };
+                        await db.collection("solicitudes").doc(consecutivo).set(dataToSave, { merge: true });
+                        setEstadoSolicitud('Emitida-Entregada');
                     }
-                    const attachments = [];
-                    try {
-                        const htmlString = getOrdenServicioHTML();
-                        const opt = { margin: 10, filename: `${consecutivo}_Orden_Servicio.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, logging: false, useCORS: true, letterRendering: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } };
-                        const pdfDataUri = await html2pdf().set(opt).from(htmlString).outputPdf('datauristring');
-                        const pdfBase64 = pdfDataUri.split(',')[1];
-                        if (pdfBase64) attachments.push({ name: `${consecutivo} - Orden de Servicio.pdf`, contentBytes: pdfBase64 });
-                    } catch (pdfError) { console.error('Error PDF:', pdfError); }
-                    const amparosDetalleExcel = armarAmparosExcel();
+
                     if (WEBHOOK_URL) {
+                        const attachments = await Promise.all(archivosPoliza.map(getBase64));
                         const payload = {
-                            tipo_flujo: 'ORDEN-SERVICIO',
-                            flujo: 'ORDEN-FINAL',
-                            fechaRegistro: new Date().toLocaleString('es-CO'),
-                            fechaTramiteDirector: new Date().toLocaleString('es-CO'),
-                            consecutivo,
-                            solicitanteNombre: interno.solicitante, solicitanteEmail: interno.solicitanteEmail, asunto: interno.asunto,
-                            tiposSolicitud: Object.keys(interno.tipos).filter(k => interno.tipos[k]).join(', '),
-                            tomadorNombre: tomador.nombre, tomadorNit: tomador.nit, tomadorDireccion: tomador.direccion, tomadorTelefono: tomador.telefono, tomadorEmail: tomador.email,
-                            aseguradoNombre: asegurado.nombre, aseguradoNit: asegurado.nit,
-                            contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, contratoValorSinIva: valorSinIva, contratoValorConIva: valorConIva, contratoValorSinIvaFormateado: formatCurrency(valorSinIva), contratoValorConIvaFormateado: formatCurrency(valorConIva), contratoDuracionDias: contrato.duracion || 0,
-                            amparosDetalleExcel, primaCumplimiento, gastosCumplimiento: gastosCalculadosCump, ivaCumplimiento: ivaCump, valorTotalCumplimiento: formatCurrency(totalCump),
-                            primaRCE, gastosRCE: gastosCalculadosRCE, ivaRCE: ivaRCE, valorTotalRCE: formatCurrency(totalRCE), granTotal: totalGeneral, valorGranTotal: formatCurrency(totalGeneral),
-                            polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
+                            tipo_flujo: 'EMISION-FINAL',
+                            flujo: 'ENTREGA-POLIZA', 
+                            consecutivo, 
+                            solicitanteNombre: interno.solicitante, 
+                            solicitanteEmail: interno.solicitanteEmail,
+                            tomadorNombre: tomador.nombre,
+                            observaciones: observacionesPoliza || "Sin observaciones.",
+                            fechaEntregaPoliza: new Date().toLocaleString('es-CO'),
+                            numeroPoliza,
+                            aseguradora,
+                            ramoPoliza,
                             adjuntos: attachments
                         };
                         const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                        if (!res.ok) throw new Error(`Webhook ORDEN-SERVICIO respondió ${res.status}`);
+                        if (!res.ok) throw new Error(res.status);
                     }
-                    showAlert('Éxito', '✅ ¡Orden enviada al cliente con éxito!');
-                } catch (e) {
-                    showAlert('Error', '❌ Error: ' + e.message);
-                } finally {
-                    setIsSubmitting(false);
-                }
-            };
 
-            const enviarEmisionFinal = async (e) => {
-                e.preventDefault();
-                setIsSubmitting(true);
-                try {
-                    if (db) {
-                        const dataToSave = { fechaRegistro: new Date().toISOString(), consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'Emitida-Entregada', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef, observacionesPoliza, archivosPoliza }) };
-                        await db.collection('solicitudes').doc(consecutivo).set(dataToSave, { merge: true });
-                        setEstadoSolicitud('Emitida-Entregada');
-                    }
-                    const payload = new FormData();
-                    payload.append('tipo_flujo', 'EMISION-FINAL');
-                    payload.append('flujo', 'ENTREGA-POLIZA');
-                    payload.append('fechaTramiteDirector', new Date().toISOString());
-                    payload.append('consecutivo', consecutivo || '');
-                    payload.append('solicitanteNombre', interno.solicitante || '');
-                    payload.append('solicitanteEmail', interno.solicitanteEmail || '');
-                    payload.append('tomadorNombre', tomador.nombre || '');
-                    payload.append('observaciones', observacionesPoliza || 'Sin observaciones.');
-                    payload.append('fechaEntregaPoliza', new Date().toLocaleString('es-CO'));
-                    payload.append('numeroPoliza', numeroPoliza || '');
-                    payload.append('aseguradora', aseguradora || '');
-                    payload.append('ramoPoliza', ramoPoliza || '');
-                    if (Array.isArray(fileBuffer)) fileBuffer.forEach((archivo, index) => payload.append(`archivo_adjunto_${index + 1}`, archivo));
-                    if (WEBHOOK_URL) {
-                        const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'multipart/form-data' }, body: payload });
-                        if (!res.ok && res.status !== 0) throw new Error(`Webhook EMISION-FINAL respondió ${res.status}`);
-                    }
-                    showAlert('Éxito', '✅ Póliza sincronizada y entregada.');
-                    if (typeof setArchivosPoliza === 'function') setArchivosPoliza([]);
-                    if (typeof setObservacionesPoliza === 'function') setObservacionesPoliza('');
-                } catch (e) {
-                    showAlert('Error', '❌ Error: ' + e.message);
-                } finally {
-                    setIsSubmitting(false);
+                    showAlert('Éxito', "✅ ¡Póliza enviada al cliente con éxito!");
+                } catch (e) { 
+                    showAlert('Error', "❌ Error enviando póliza: " + e.message); 
+                } finally { 
+                    setIsSubmitting(false); 
                 }
             };
-            // FIN PARCHE V2.13.11
 
             const handleCsvUpload = (e, type) => {
                 const file = e.target.files[0]; if (!file) return;
@@ -1757,54 +1432,25 @@
                                                             onChange={e => setObservacionesPoliza(e.target.value)}
                                                         ></textarea>
                                                     </div>
-                                                    <div className="mb-4 p-4 rounded-lg border-2 border-dashed border-[#76B2DB] bg-[#fdfdfd] hover:bg-slate-50 transition-colors">
-                                                        <label className="block text-sm font-bold text-[#12334F] mb-1">
-                                                            Soportes y Anexos (PDF, XLSX, JPG)
+                                                    <div className="bg-gray-50 p-6 rounded-lg border border-dashed border-gray-300 flex flex-col items-center justify-center text-center">
+                                                        <UploadCloud size={40} className="text-[#58C9E8] mb-3" />
+                                                        <label className="cursor-pointer bg-[#163f73] text-white px-6 py-2.5 rounded-md font-bold text-sm hover:bg-[#12334F] transition-colors mb-2 shadow-sm">
+                                                            Seleccionar Póliza (PDF)
+                                                            <input type="file" className="hidden" accept=".pdf" onChange={(e) => {
+                                                                const files = Array.from(e.target.files);
+                                                                const totalSize = files.reduce((acc, file) => acc + file.size, 0);
+                                                                if (totalSize > 50 * 1024 * 1024) {
+                                                                    showAlert('Límite Excedido', '⚠️ El archivo de la póliza supera los 50MB permitidos.');
+                                                                    e.target.value = '';
+                                                                    return;
+                                                                }
+                                                                setArchivosPoliza(files);
+                                                            }} />
                                                         </label>
-                                                        <p className="text-xs text-gray-500 mb-3">
-                                                            Puede adjuntar archivos navegando en diferentes carpetas. El sistema conservará la memoria.
-                                                        </p>
-                                                        <input
-                                                            type="file"
-                                                            multiple
-                                                            accept=".pdf,.jpg,.jpeg,.png,.xlsx"
-                                                            onChange={handleFileBufferChange}
-                                                            className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#163F73] file:text-white cursor-pointer hover:file:bg-[#12334F] transition-all"
-                                                        />
-                                                        {fileBuffer.length > 0 && (
-                                                            <div className="mt-4">
-                                                                <h6 className="text-sm font-bold text-[#163F73] mb-2">Documentos en Cola para Sincronización:</h6>
-                                                                <ul className="divide-y divide-gray-200 border rounded-md shadow-sm bg-white">
-                                                                    {fileBuffer.map((file, index) => (
-                                                                        <li key={index} className="flex justify-between items-center p-3 text-sm gap-3">
-                                                                            <span className="truncate max-w-[80%] text-[#12334F]">
-                                                                                <strong>{file.name}</strong>
-                                                                                <span className="text-gray-400 text-xs ml-2">({(file.size / 1024 / 1024).toFixed(2)} MB)</span>
-                                                                            </span>
-                                                                            <button
-                                                                                type="button"
-                                                                                onClick={() => removeFileFromBuffer(index)}
-                                                                                className="text-red-500 hover:text-red-700 font-bold px-2 py-1 rounded hover:bg-red-50 transition-colors"
-                                                                                title="Retirar archivo"
-                                                                            >
-                                                                                X
-                                                                            </button>
-                                                                        </li>
-                                                                    ))}
-                                                                </ul>
-                                                            </div>
-                                                        )}
+                                                        <span className="text-xs text-gray-500 font-bold">
+                                                            {archivosPoliza.length === 0 ? "Ningún archivo seleccionado" : `✅ ${archivosPoliza[0].name} cargado.`}
+                                                        </span>
                                                     </div>
-
-                                                    {isSubmitting && (
-                                                        <div className="w-full mb-3 p-2 bg-[#f0f7ff] border border-[#76B2DB] rounded text-xs text-[#163F73] font-mono animate-pulse flex items-center">
-                                                            <span className="flex h-2 w-2 relative mr-2">
-                                                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-                                                                <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
-                                                            </span>
-                                                            [Proceso Sistema AEGIS]: {logTransmision}
-                                                        </div>
-                                                    )}
                                                 </div>
                                             </div>
                                         </div>
@@ -1843,26 +1489,26 @@
                                         {isDirector ? (
                                             ['En Trámite', 'Emitida'].includes(estadoSolicitud) ? (
                                                 <div className="flex flex-wrap justify-center gap-2">
-                                                    <button onClick={enviarOrdenServicio} disabled={isSubmitting} className="px-4 py-3 bg-[#163f73] text-white hover:bg-[#0e273d] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-[#58C9E8]/30" title="Reenviar Orden Final a Make">
+                                                    <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-4 py-3 bg-[#163f73] text-white hover:bg-[#0e273d] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-[#58C9E8]/30" title="Reenviar Orden Final a Make">
                                                         <RefreshCw size={18}/>
                                                     </button>
-                                                    <button onClick={enviarEmisionFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-500 text-white hover:bg-green-600 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-500 text-white hover:bg-green-600 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
                                                         {isSubmitting ? "ENVIANDO PÓLIZA..." : <><Send size={18}/> ENVIAR PÓLIZA A CLIENTE</>}
                                                     </button>
                                                 </div>
                                             ) : ['Finalizada', 'Emitida-Entregada'].includes(estadoSolicitud) ? (
                                                 <div className="flex flex-wrap justify-center gap-2">
-                                                    <button onClick={enviarEmisionFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-600 text-white hover:bg-green-700 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-green-400">
+                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-600 text-white hover:bg-green-700 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-green-400">
                                                         {isSubmitting ? "REENVIANDO PÓLIZA..." : <><RefreshCw size={18}/> REENVIAR PÓLIZA (CORRECCIÓN)</>}
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <button onClick={enviarOrdenServicio} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                                <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
                                                     {isSubmitting ? "PROCESANDO..." : <><Send size={18}/> GENERAR ORDEN FINAL</>}
                                                 </button>
                                             )
                                         ) : (
-                                            <button onClick={guardarPreOrden} disabled={isSubmitting || isLoadingNube} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                            <button onClick={confirmarGuardarPreOrden} disabled={isSubmitting || isLoadingNube} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
                                                 {isSubmitting ? "GUARDANDO..." : <><Cloud size={18}/> GUARDAR PRE-ORDEN</>}
                                             </button>
                                         )}
