@@ -1149,8 +1149,6 @@
             };
 
             const enviarPreOrden = (e) => enviarFlujoMake(e, 'PRE-ORDEN');
-            const enviarOrdenServicio = (e) => enviarFlujoMake(e, 'ORDEN-SERVICIO');
-            const enviarEmisionFinal = (e) => enviarFlujoMake(e, 'EMISION-FINAL');
 
             // FIN PARCHE V2.13.4
 
@@ -1237,7 +1235,7 @@
                     payload.append('ramoPoliza', ramoPoliza || '');
                     if (Array.isArray(fileBuffer)) fileBuffer.forEach((archivo, index) => payload.append(`archivo_adjunto_${index + 1}`, archivo));
                     if (WEBHOOK_URL) {
-                        const res = await fetch(WEBHOOK_URL, { method: 'POST', body: payload });
+                        const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'multipart/form-data' }, body: payload });
                         if (!res.ok && res.status !== 0) throw new Error(`Webhook EMISION-FINAL respondió ${res.status}`);
                     }
                     showAlert('Éxito', '✅ Póliza sincronizada y entregada.');
