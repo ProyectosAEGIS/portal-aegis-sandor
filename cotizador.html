@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Servicios 2.12 - AEGIS Insurance</title>
+    <title>Portal de Servicios 2.14.2 - AEGIS Insurance</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -135,13 +135,14 @@
             const [rolActivo, setRolActivo] = React.useState('cliente');
             const [isDirectorUnlocked, setIsDirectorUnlocked] = React.useState(false);
             
-            // Modales
+            // Modales y Estado de Envío (Agregado retryStatus v2.14.2)
             const [uiDialog, setUiDialog] = React.useState({ isOpen: false, type: 'alert', title: '', message: '', onConfirm: null });
             const [pinDialog, setPinDialog] = React.useState({ isOpen: false, pin: '', error: '' });
+            const [isSubmitting, setIsSubmitting] = React.useState(false);
+            const [retryStatus, setRetryStatus] = React.useState({ attempt: 0, total: 3, active: false });
             
             // Nube
             const [isFirebaseReady, setIsFirebaseReady] = React.useState(false);
-            const [isSubmitting, setIsSubmitting] = React.useState(false);
             const [isLoadingNube, setIsLoadingNube] = React.useState(false);
             const [db, setDb] = React.useState(null);
             const [solicitudesDb, setSolicitudesDb] = React.useState([]);
@@ -168,6 +169,24 @@
             const [produccionData, setProduccionData] = React.useState(defaultProduccionData);
             const [carteraData, setCarteraData] = React.useState(defaultCarteraData);
             const [filtrosSolicitudes, setFiltrosSolicitudes] = React.useState({ consecutivo: '', fecha: '', tomador: '', solicitante: '', valor: '', estado: '' });
+
+            // --- FUNCIÓN HELPER DE REINTENTOS (Añadido v2.14.2) ---
+            const sendWithRetry = async (url, options, maxAttempts = 3) => {
+                const send = async (attempt) => {
+                    try {
+                        const res = await fetch(url, options);
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        return res;
+                    } catch (err) {
+                        if (attempt >= maxAttempts) throw err;
+                        setRetryStatus({ attempt: attempt + 1, total: maxAttempts, active: true });
+                        // Esperar 2.5 segundos antes de reintentar
+                        await new Promise(resolve => setTimeout(resolve, 2500));
+                        return send(attempt + 1);
+                    }
+                };
+                return send(1);
+            };
 
             // --- 2. GESTIÓN DE FILTROS SEGUROS (MEMOIZADOS) ---
             const solicitudesFiltradas = React.useMemo(() => {
@@ -228,23 +247,13 @@
 
             // --- 3. CONSTANTES Y CÁLCULOS ESTÁTICOS ---
             const listaAseguradoras = [
-    "ALLIANZ SEGUROS S.A.", 
-    "ASEGURADORA SOLIDARIA DE COLOMBIA ENTIDAD COOPERATIVA", 
-    "AXA COLPATRIA SEGUROS S.A", 
-    "BERKLEY INTERNATIONAL SEGUROS S.A", 
-    "CHUBB SEGUROS COLOMBIA S.A.", 
-    "COLMENA SEGUROS GENERALES S.A.", 
-    "COMPAÑÍA MUNDIAL DE SEGUROS S.A.", 
-    "HDI SEGUROS COLOMBIA S.A.", 
-    "LA EQUIDAD SEGUROS GENERALES ORGANISMO COOPERATIVO", 
-    "LA PREVISORA S.A.", 
-    "MAPFRE SEGUROS GENERALES DE COLOMBIA S.A.", 
-    "SBS SEGUROS COLOMBIA S.A", 
-    "SEGUROS COMERCIALES BOLÍVAR S.A.", 
-    "SEGUROS DEL ESTADO S.A.", 
-    "SEGUROS GENERALES SURAMERICANA S.A",
-    "OTRA"
-];
+                "ALLIANZ SEGUROS S.A.", "ASEGURADORA SOLIDARIA DE COLOMBIA ENTIDAD COOPERATIVA", "AXA COLPATRIA SEGUROS S.A", 
+                "BERKLEY INTERNATIONAL SEGUROS S.A", "CHUBB SEGUROS COLOMBIA S.A.", "COLMENA SEGUROS GENERALES S.A.", 
+                "COMPAÑÍA MUNDIAL DE SEGUROS S.A.", "HDI SEGUROS COLOMBIA S.A.", "LA EQUIDAD SEGUROS GENERALES ORGANISMO COOPERATIVO", 
+                "LA PREVISORA S.A.", "MAPFRE SEGUROS GENERALES DE COLOMBIA S.A.", "SBS SEGUROS COLOMBIA S.A", 
+                "SEGUROS COMERCIALES BOLÍVAR S.A.", "SEGUROS DEL ESTADO S.A.", "SEGUROS GENERALES SURAMERICANA S.A", "OTRA"
+            ];
+            
             const menuItems = [
                 { id: 'inicio', icon: Home, label: 'Inicio' },
                 { id: 'cotizador', icon: Calculator, label: 'Cotizador Cumplimiento' },
@@ -737,7 +746,7 @@
                 printWindow.document.close();
             };
 
-            // --- ACCIONES PRINCIPALES (WEBHOOK) ---
+            // --- ACCIONES PRINCIPALES (WEBHOOK) CON REINTENTO v2.14.2 ---
             const confirmarGuardarPreOrden = () => {
                 if (!interno.solicitante || !interno.solicitanteEmail || !tomador.nombre) return showAlert('Faltan Datos', "⚠️ Llene Nombre del Solicitante, Correo Electrónico y Razón Social del Tomador.");
                 
@@ -754,6 +763,7 @@
 
             const guardarPreOrden = async () => {
                 setIsSubmitting(true);
+                setRetryStatus({ attempt: 1, total: 3, active: true });
                 
                 try {
                     let polizaReferencia = '';
@@ -769,6 +779,7 @@
                         aseguradoraReferencia = prorrogaRef.aseguradora || '';
                     }
 
+                    // GUARDADO SIEMPRE PRIMERO EN FIREBASE
                     if (db) {
                         const dataToSave = { fechaRegistro: new Date().toISOString(), consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'Pre-Orden', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef }) };
                         await db.collection("solicitudes").doc(consecutivo).set(dataToSave, { merge: true });
@@ -793,8 +804,9 @@
                             polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
                             adjuntos: attachments
                         };
-                        const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                        if (!res.ok) throw new Error(res.status);
+                        
+                        // USO DE LA FUNCIÓN DE REINTENTO
+                        await sendWithRetry(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     }
 
                     showAlert('Éxito', "✅ ¡Pre-Orden guardada! El equipo ha sido notificado para completarla.");
@@ -814,33 +826,18 @@
                     document.querySelectorAll('input[type="file"]').forEach(input => input.value = '');
 
                 } catch (error) {
-                    showAlert('Error', "❌ Error guardando: " + error.message);
+                    showAlert('Aviso de Red', "⚠️ Su solicitud quedó guardada en el sistema de manera segura, pero la notificación automática (correo) falló por problemas de red tras varios intentos. Un director revisará su caso manualmente.");
                 } finally {
                     setIsSubmitting(false);
+                    setRetryStatus({ attempt: 0, total: 3, active: false });
                 }
             };
 
             const enviarOrdenFinal = async () => {
                 if (!interno.solicitante || !tomador.nombre) return showAlert('Faltan Datos', "Faltan datos base.");
                 setIsSubmitting(true);
+                setRetryStatus({ attempt: 1, total: 3, active: true });
                 
-                const cortina = document.createElement('div');
-                cortina.id = 'cortina-pdf';
-                cortina.style.position = 'fixed';
-                cortina.style.inset = '0';
-                cortina.style.backgroundColor = 'rgba(18, 51, 79, 0.95)';
-                cortina.style.zIndex = '999999';
-                cortina.style.display = 'flex';
-                cortina.style.flexDirection = 'column';
-                cortina.style.alignItems = 'center';
-                cortina.style.justifyContent = 'center';
-                cortina.style.color = 'white';
-                cortina.innerHTML = `
-                    <svg class="animate-spin h-12 w-12 text-[#58C9E8] mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                    <h3 class="text-xl font-bold">Generando Orden de Servicio...</h3>
-                    <p class="text-sm mt-2 text-gray-300">Liquidando amparos y conectando con Make.</p>`;
-                document.body.appendChild(cortina);
-
                 try {
                     let polizaReferencia = '';
                     let anexoReferencia = '';
@@ -855,6 +852,7 @@
                         aseguradoraReferencia = prorrogaRef.aseguradora || '';
                     }
 
+                    // GUARDADO SIEMPRE PRIMERO EN FIREBASE
                     if (db) {
                         const dataToSave = { fechaRegistro: new Date().toISOString(), consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'En Trámite', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef }) };
                         await db.collection("solicitudes").doc(consecutivo).set(dataToSave, { merge: true });
@@ -889,16 +887,17 @@
                             polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
                             adjuntos: attachments
                         };
-                        const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                        if (!res.ok) throw new Error(res.status);
+                        
+                        // USO DE LA FUNCIÓN DE REINTENTO
+                        await sendWithRetry(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     }
 
                     showAlert('Éxito', "✅ ¡Orden enviada al cliente con éxito!");
                 } catch (e) { 
-                    showAlert('Error', "❌ Error: " + e.message); 
+                    showAlert('Aviso de Red', "⚠️ La orden se guardó correctamente, pero el envío de correo al cliente falló por problemas de red. Intente usar el botón de reenviar más tarde."); 
                 } finally { 
                     setIsSubmitting(false); 
-                    if(document.getElementById('cortina-pdf')) document.body.removeChild(document.getElementById('cortina-pdf'));
+                    setRetryStatus({ attempt: 0, total: 3, active: false });
                 }
             };
 
@@ -906,8 +905,10 @@
                 if (!numeroPoliza || !aseguradora || !ramoPoliza) return showAlert('Faltan Datos', "⚠️ Complete # de póliza, aseguradora y ramo antes de enviar.");
                 if (archivosPoliza.length === 0) return showAlert('Atención', "⚠️ Debe adjuntar al menos un documento PDF de la póliza.");
                 setIsSubmitting(true);
+                setRetryStatus({ attempt: 1, total: 3, active: true });
                 
                 try {
+                    // GUARDADO SIEMPRE PRIMERO EN FIREBASE
                     if (db) {
                         const formCompleto = JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef });
                         const dataToSave = { estado: 'Emitida-Entregada', numeroPoliza, aseguradora, ramoPoliza, formularioCompleto: formCompleto };
@@ -931,15 +932,17 @@
                             ramoPoliza,
                             adjuntos: attachments
                         };
-                        const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                        if (!res.ok) throw new Error(res.status);
+                        
+                        // USO DE LA FUNCIÓN DE REINTENTO
+                        await sendWithRetry(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                     }
 
                     showAlert('Éxito', "✅ ¡Póliza enviada al cliente con éxito!");
                 } catch (e) { 
-                    showAlert('Error', "❌ Error enviando póliza: " + e.message); 
+                    showAlert('Aviso de Red', "⚠️ Póliza guardada, pero el envío del correo falló por inestabilidad de red. Puede reenviar usando el botón correspondiente."); 
                 } finally { 
                     setIsSubmitting(false); 
+                    setRetryStatus({ attempt: 0, total: 3, active: false });
                 }
             };
 
@@ -974,6 +977,31 @@
             return (
                 <div className="fixed inset-0 flex bg-[#f4f7f9] overflow-hidden w-full h-full">
                     
+                    {/* MODAL GLOBAL DE CARGA Y REINTENTOS DE RED (Añadido v2.14.2) */}
+                    {retryStatus.active && (
+                        <div className="fixed inset-0 bg-[#12334F]/95 z-[999999] flex flex-col items-center justify-center text-white backdrop-blur-sm transition-opacity">
+                            <div className="relative mb-6">
+                                <svg className={`animate-spin h-24 w-24 ${retryStatus.attempt > 1 ? 'text-orange-400' : 'text-[#58C9E8]'}`} viewBox="0 0 24 24">
+                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                {retryStatus.attempt > 1 && (
+                                    <span className="absolute inset-0 flex items-center justify-center font-bold text-2xl text-orange-400">
+                                        {retryStatus.attempt}
+                                    </span>
+                                )}
+                            </div>
+                            <h3 className="text-2xl font-bold uppercase tracking-widest text-center px-4">
+                                {retryStatus.attempt > 1 ? 'Reintentando Conexión...' : 'Sincronizando con AEGIS...'}
+                            </h3>
+                            <p className={`mt-3 text-center text-sm max-w-md px-4 transition-colors ${retryStatus.attempt > 1 ? 'text-orange-300 font-bold' : 'text-gray-400'}`}>
+                                {retryStatus.attempt > 1 
+                                    ? `Se detectó inestabilidad en la red. Intento ${retryStatus.attempt} de ${retryStatus.total}. Por favor, no cierre esta ventana.` 
+                                    : 'Procesando documentos y enviando datos de forma segura.'}
+                            </p>
+                        </div>
+                    )}
+
                     {/* MODAL PARA SOLICITAR PIN DE ACCESO */}
                     {pinDialog.isOpen && (
                         <div className="fixed inset-0 bg-[#12334F]/80 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm">
@@ -1508,26 +1536,26 @@
                                         {isDirector ? (
                                             ['En Trámite', 'Emitida'].includes(estadoSolicitud) ? (
                                                 <div className="flex flex-wrap justify-center gap-2">
-                                                    <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-4 py-3 bg-[#163f73] text-white hover:bg-[#0e273d] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-[#58C9E8]/30" title="Reenviar Orden Final a Make">
+                                                    <button onClick={enviarOrdenFinal} disabled={isSubmitting || retryStatus.active} className="px-4 py-3 bg-[#163f73] text-white hover:bg-[#0e273d] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-[#58C9E8]/30" title="Reenviar Orden Final a Make">
                                                         <RefreshCw size={18}/>
                                                     </button>
-                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-500 text-white hover:bg-green-600 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting || retryStatus.active} className="px-6 md:px-8 py-3 bg-green-500 text-white hover:bg-green-600 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
                                                         {isSubmitting ? "ENVIANDO PÓLIZA..." : <><Send size={18}/> ENVIAR PÓLIZA A CLIENTE</>}
                                                     </button>
                                                 </div>
                                             ) : ['Finalizada', 'Emitida-Entregada'].includes(estadoSolicitud) ? (
                                                 <div className="flex flex-wrap justify-center gap-2">
-                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-600 text-white hover:bg-green-700 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-green-400">
+                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting || retryStatus.active} className="px-6 md:px-8 py-3 bg-green-600 text-white hover:bg-green-700 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-green-400">
                                                         {isSubmitting ? "REENVIANDO PÓLIZA..." : <><RefreshCw size={18}/> REENVIAR PÓLIZA (CORRECCIÓN)</>}
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                                <button onClick={enviarOrdenFinal} disabled={isSubmitting || retryStatus.active} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
                                                     {isSubmitting ? "PROCESANDO..." : <><Send size={18}/> GENERAR ORDEN FINAL</>}
                                                 </button>
                                             )
                                         ) : (
-                                            <button onClick={confirmarGuardarPreOrden} disabled={isSubmitting || isLoadingNube} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                            <button onClick={confirmarGuardarPreOrden} disabled={isSubmitting || isLoadingNube || retryStatus.active} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
                                                 {isSubmitting ? "GUARDANDO..." : <><Cloud size={18}/> GUARDAR PRE-ORDEN</>}
                                             </button>
                                         )}
@@ -1895,4 +1923,3 @@
     </script>
 </body>
 </html>
-  
