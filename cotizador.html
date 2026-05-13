@@ -1,10 +1,10 @@
-<!-- AEGIS v2.15.1 - 12/05/2026 - Evolutivos E1 a E5 (Dashboard Live, Objeto 5k, Asuntos unificados, Filtros SLA, Horas Hábiles) -->
+<!-- AEGIS v2.15.3 - Parches PDF en blanco Webhook y Payload Fase 3 -->
 <!DOCTYPE html> 
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Servicios 2.15.1 - AEGIS Insurance</title>
+    <title>Portal de Servicios 2.15.3 - AEGIS Insurance</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -198,7 +198,7 @@
             const [interno, setInterno] = React.useState({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { cumplimientoEstatales: false, cumplimientoParticulares: false, disposicionLegal: false, prorroga: false, responsabilidadCivil: false, seriedadOferta: false, otros: false }, archivos: [] });
             const [tomador, setTomador] = React.useState({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
             const [asegurado, setAsegurado] = React.useState({ nombre: '', nit: '' });
-            const [contrato, setContrato] = React.useState({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '', cierreLicitacion: '' }); // E4: Agregado cierreLicitacion
+            const [contrato, setContrato] = React.useState({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '', cierreLicitacion: '' }); 
             const [costos, setCostos] = React.useState({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
             const [amparos, setAmparos] = React.useState(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault ? a.tasaDefault.toFixed(2) : '0.18', prima: 0 })));
 
@@ -213,13 +213,13 @@
             // Reportes y Filtros
             const [carteraData, setCarteraData] = React.useState(defaultCarteraData);
             const [filtrosSolicitudes, setFiltrosSolicitudes] = React.useState({ consecutivo: '', fecha: '', tomador: '', solicitante: '', valor: '', estado: '' });
-            const [filtrosProduccion, setFiltrosProduccion] = React.useState({ cliente: '', poliza: '', aseguradora: '', estado: '' }); // E1: Nuevo estado para filtros en Producción
+            const [filtrosProduccion, setFiltrosProduccion] = React.useState({ cliente: '', poliza: '', aseguradora: '', estado: '' }); 
 
             // --- 2. GESTIÓN DE DATOS EN VIVO (E1) ---
             const solicitudesFiltradas = React.useMemo(() => {
                 return solicitudesDb.filter(sol => {
                     const solConsecutivo = sol.consecutivo || '';
-                    const solTomador = unificarNombreEmpresa(sol.tomadorNombre); // E1 Fix: Búsqueda sobre nombre unificado
+                    const solTomador = unificarNombreEmpresa(sol.tomadorNombre); 
                     const solSolicitante = sol.solicitanteNombre || '';
                     const solEstado = sol.estado || '';
 
@@ -274,7 +274,7 @@
 
                     // Extraer prima para el consolidado si existe
                     let primaTotal = 0;
-                    let aseguradoNombre = ''; // E1 Fix: Variable para extraer Asegurado real
+                    let aseguradoNombre = ''; 
                     try {
                         if (sol.formularioCompleto) {
                             const form = JSON.parse(sol.formularioCompleto);
@@ -289,11 +289,11 @@
                     } catch(e) {}
 
                     return {
-                        cliente: unificarNombreEmpresa(sol.tomadorNombre), // E1 Fix: Unifica el dashboard
+                        cliente: unificarNombreEmpresa(sol.tomadorNombre), 
                         id: sol.consecutivo || '-',
                         aseguradora: sol.aseguradora || 'Por asignar',
-                        asegurado: aseguradoNombre || 'Sin Asegurado Registrado', // E1 Fix: Nombre real extraído sin prefijo
-                        poliza: sol.numeroPoliza || 'Pendiente', // E1: Captura de Póliza/Anexo
+                        asegurado: aseguradoNombre || 'Sin Asegurado Registrado', 
+                        poliza: sol.numeroPoliza || 'Pendiente', 
                         ramo: sol.ramoPoliza || 'CUMPLIMIENTO',
                         ansHoras: ansHoras,
                         estado: sol.estado || 'Pre-Orden',
@@ -1031,44 +1031,33 @@
                     const attachments = []; 
                     try {
                         const htmlString = getOrdenServicioHTML();
-                        const tempContainer = document.createElement('div');
-                        tempContainer.style.position = 'absolute';
-                        tempContainer.style.left = '-9999px';
-                        tempContainer.style.top = '0';
-                        tempContainer.style.width = '1200px';
-                        tempContainer.style.backgroundColor = '#ffffff';
-                        tempContainer.innerHTML = htmlString;
-                        document.body.appendChild(tempContainer);
-
+                        
+                        // Generamos el PDF directamente desde el string de HTML (Sin hack invisible)
                         const opt = {
-                            margin: [0.5, 0.5, 0.5, 0.5],
+                            margin: [10, 10, 10, 10], // Márgenes adecuados
                             filename: 'Orden_Final.pdf',
                             image: { type: 'jpeg', quality: 0.98 },
                             html2canvas: {
                                 scale: 2,
                                 useCORS: true,
-                                logging: false,
-                                windowWidth: 1200
+                                logging: false
                             },
-                            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
+                            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
                         };
 
                         let pdfBase64Final = '';
                         try {
-                            const dataUri = await html2pdf().set(opt).from(tempContainer).outputPdf('datauristring');
+                            // html2pdf soporta renderizar directamente un HTML String 
+                            const dataUri = await html2pdf().set(opt).from(htmlString).outputPdf('datauristring');
                             pdfBase64Final = dataUri.split(',')[1];
                         } catch (error) {
-                            console.error('Error en renderizado de PDF para Webhook:', error);
-                            alert('Hubo un error al procesar el PDF adjunto.');
+                            console.error('Error en renderizado directo de PDF para Webhook:', error);
+                            alert('Hubo un error al generar el archivo PDF adjunto.');
                             return;
-                        } finally {
-                            if (document.body.contains(tempContainer)) {
-                                document.body.removeChild(tempContainer);
-                            }
                         }
 
                         if (pdfBase64Final) attachments.push({ name: `${consecutivo} - Orden de Servicio.pdf`, contentBytes: pdfBase64Final });
-                    } catch (pdfError) { console.error("Error PDF:", pdfError); }
+                    } catch (pdfError) { console.error("Error PDF general:", pdfError); }
 
                     const amparosDetalleExcel = armarAmparosExcel();
 
@@ -1137,6 +1126,8 @@
                             solicitanteNombre: interno.solicitante, 
                             solicitanteEmail: interno.solicitanteEmail,
                             tomadorNombre: tomador.nombre,
+                            aseguradoNombre: asegurado.nombre, // ¡CORRECCIÓN APLICADA AQUÍ!
+                            cierreLicitacion: contrato.cierreLicitacion ? new Date(contrato.cierreLicitacion).toLocaleString('es-CO') : 'No aplica', // ¡CORRECCIÓN APLICADA AQUÍ!
                             observaciones: observacionesPoliza || "Sin observaciones.",
                             fechaEntregaPoliza: new Date().toLocaleString('es-CO'),
                             numeroPoliza,
