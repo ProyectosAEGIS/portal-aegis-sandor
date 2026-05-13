@@ -1,9 +1,10 @@
+<!-- AEGIS v2.15.1 - 12/05/2026 - Evolutivos E1 a E5 (Dashboard Live, Objeto 5k, Asuntos unificados, Filtros SLA, Horas Hábiles) -->
 <!DOCTYPE html> 
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Servicios 2.14.2 - AEGIS Insurance</title>
+    <title>Portal de Servicios 2.15.1 - AEGIS Insurance</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -99,12 +100,6 @@
             { id: 9, nombre: 'Responsabilidad Civil Extracontractual', tasaDefault: 0.20 }
         ];
 
-        const defaultProduccionData = [
-            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "101133204", aseguradora: "SEGUROS DEL ESTADO", asegurado: "MEDICARTE S.A.S", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.0, estado: "Completado", valor: 150000 },
-            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "4452077", aseguradora: "SURAMERICANA", asegurado: "DROGUERIAS Y FARMACIAS CRUZ VERDE S.A.S", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.0, estado: "Completado", valor: 150000 },
-            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "100029109", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "INST. UNIV. COLEGIO MAYOR DE ANTIOQUIA", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.6, estado: "Completado", valor: 150000 }
-        ];
-
         const defaultCarteraData = [
             { tomador: "SARUPETROL SAS", beneficiario: "INST. UNIV. COLEGIO MAYOR DE ANTIOQUIA", ramo: "CUMPLIMIENTO", poliza: "100029109", dias: 26, total: 92582 },
             { tomador: "ELITE FACILITY MANAGEMENT SAS", beneficiario: "UNIVERSIDAD NACIONAL SEDE ORINOQUIA", ramo: "CUMPLIMIENTO", poliza: "100110019", dias: 23, total: 59500 }
@@ -125,6 +120,57 @@
             return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
         }
 
+        // E1: Función para calcular ANS estrictamente en horas hábiles (Lun-Vie, 08:00 - 17:00)
+        function calcularHorasHabiles(startDate, endDate) {
+            if (!startDate || !endDate || startDate >= endDate) return 0;
+            let ms = 0;
+            let current = new Date(startDate);
+            
+            while (current < endDate) {
+                let dayOfWeek = current.getDay();
+                let isSameDay = current.toDateString() === endDate.toDateString();
+                
+                // Procesar solo si es de lunes (1) a viernes (5)
+                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+                    let startOfDay = new Date(current); startOfDay.setHours(8, 0, 0, 0);
+                    let endOfDay = new Date(current); endOfDay.setHours(17, 0, 0, 0);
+                    
+                    let start = current > startOfDay ? current : startOfDay;
+                    let end = isSameDay ? (endDate < endOfDay ? endDate : endOfDay) : endOfDay;
+                    
+                    if (start < end) {
+                        ms += (end - start);
+                    }
+                }
+                
+                if (isSameDay) break;
+                
+                // Avanzar al día siguiente a las 00:00:00
+                current.setDate(current.getDate() + 1);
+                current.setHours(0, 0, 0, 0);
+            }
+            
+            return ms / (1000 * 60 * 60);
+        }
+
+        // E1 Fix: Función inteligente para estandarizar y unificar nombres de empresas (Tomadores)
+        function unificarNombreEmpresa(nombre) {
+            if (!nombre) return 'Sin Cliente';
+            let norm = String(nombre).toUpperCase().trim();
+            
+            // 1. Reglas específicas de negocio para agrupar (Casos recurrentes)
+            if (norm.includes('ELITE FACILITY')) return 'ELITE FACILITY MANAGEMENT S.A.S.';
+            if (norm.includes('SARUPETROL')) return 'SARUPETROL S.A.S.';
+            if (norm.includes('SANDOR')) return 'GRUPO SANDOR S.A.S.';
+            
+            // 2. Regla general para el resto: quitar puntuación y estandarizar sufijos
+            return norm.replace(/\./g, '')
+                       .replace(/\bS A S\b/g, 'SAS')
+                       .replace(/\bS A\b/g, 'SA')
+                       .replace(/\s+/g, ' ') // Limpia espacios dobles
+                       .trim();
+        }
+
         // ==========================================
         // 3. COMPONENTE PRINCIPAL REACT
         // ==========================================
@@ -135,14 +181,13 @@
             const [rolActivo, setRolActivo] = React.useState('cliente');
             const [isDirectorUnlocked, setIsDirectorUnlocked] = React.useState(false);
             
-            // Modales y Estado de Envío (Agregado retryStatus v2.14.2)
+            // Modales
             const [uiDialog, setUiDialog] = React.useState({ isOpen: false, type: 'alert', title: '', message: '', onConfirm: null });
             const [pinDialog, setPinDialog] = React.useState({ isOpen: false, pin: '', error: '' });
-            const [isSubmitting, setIsSubmitting] = React.useState(false);
-            const [retryStatus, setRetryStatus] = React.useState({ attempt: 0, total: 3, active: false });
             
             // Nube
             const [isFirebaseReady, setIsFirebaseReady] = React.useState(false);
+            const [isSubmitting, setIsSubmitting] = React.useState(false);
             const [isLoadingNube, setIsLoadingNube] = React.useState(false);
             const [db, setDb] = React.useState(null);
             const [solicitudesDb, setSolicitudesDb] = React.useState([]);
@@ -153,7 +198,7 @@
             const [interno, setInterno] = React.useState({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { cumplimientoEstatales: false, cumplimientoParticulares: false, disposicionLegal: false, prorroga: false, responsabilidadCivil: false, seriedadOferta: false, otros: false }, archivos: [] });
             const [tomador, setTomador] = React.useState({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
             const [asegurado, setAsegurado] = React.useState({ nombre: '', nit: '' });
-            const [contrato, setContrato] = React.useState({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '' });
+            const [contrato, setContrato] = React.useState({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '', cierreLicitacion: '' }); // E4: Agregado cierreLicitacion
             const [costos, setCostos] = React.useState({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
             const [amparos, setAmparos] = React.useState(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault ? a.tasaDefault.toFixed(2) : '0.18', prima: 0 })));
 
@@ -166,33 +211,15 @@
             const [prorrogaRef, setProrrogaRef] = React.useState(null); 
 
             // Reportes y Filtros
-            const [produccionData, setProduccionData] = React.useState(defaultProduccionData);
             const [carteraData, setCarteraData] = React.useState(defaultCarteraData);
             const [filtrosSolicitudes, setFiltrosSolicitudes] = React.useState({ consecutivo: '', fecha: '', tomador: '', solicitante: '', valor: '', estado: '' });
+            const [filtrosProduccion, setFiltrosProduccion] = React.useState({ cliente: '', poliza: '', aseguradora: '', estado: '' }); // E1: Nuevo estado para filtros en Producción
 
-            // --- FUNCIÓN HELPER DE REINTENTOS (Añadido v2.14.2) ---
-            const sendWithRetry = async (url, options, maxAttempts = 3) => {
-                const send = async (attempt) => {
-                    try {
-                        const res = await fetch(url, options);
-                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
-                        return res;
-                    } catch (err) {
-                        if (attempt >= maxAttempts) throw err;
-                        setRetryStatus({ attempt: attempt + 1, total: maxAttempts, active: true });
-                        // Esperar 2.5 segundos antes de reintentar
-                        await new Promise(resolve => setTimeout(resolve, 2500));
-                        return send(attempt + 1);
-                    }
-                };
-                return send(1);
-            };
-
-            // --- 2. GESTIÓN DE FILTROS SEGUROS (MEMOIZADOS) ---
+            // --- 2. GESTIÓN DE DATOS EN VIVO (E1) ---
             const solicitudesFiltradas = React.useMemo(() => {
                 return solicitudesDb.filter(sol => {
                     const solConsecutivo = sol.consecutivo || '';
-                    const solTomador = sol.tomadorNombre || '';
+                    const solTomador = unificarNombreEmpresa(sol.tomadorNombre); // E1 Fix: Búsqueda sobre nombre unificado
                     const solSolicitante = sol.solicitanteNombre || '';
                     const solEstado = sol.estado || '';
 
@@ -225,12 +252,79 @@
                 });
             }, [solicitudesDb, filtrosSolicitudes]);
 
+            // Transformar solicitudesDb a produccionData para alimentar gráficas en vivo (E1)
+            const produccionLive = React.useMemo(() => {
+                return solicitudesDb.map(sol => {
+                    let ansHoras = 0;
+                    if (sol.fechaRegistro) {
+                        const inicio = new Date(sol.fechaRegistro);
+                        // Usar fecha de entrega si existe (cierre ciclo), sino fecha tramite si existe, sino ahora
+                        let fin;
+                        if (sol.fechaEntregaPoliza) {
+                            fin = new Date(sol.fechaEntregaPoliza);
+                        } else if (sol.fechaTramiteDirector) {
+                            fin = new Date(sol.fechaTramiteDirector);
+                        } else {
+                            fin = new Date();
+                        }
+                        
+                        // Utilizar nueva función de horas hábiles
+                        ansHoras = calcularHorasHabiles(inicio, fin);
+                    }
+
+                    // Extraer prima para el consolidado si existe
+                    let primaTotal = 0;
+                    let aseguradoNombre = ''; // E1 Fix: Variable para extraer Asegurado real
+                    try {
+                        if (sol.formularioCompleto) {
+                            const form = JSON.parse(sol.formularioCompleto);
+                            // Extraer el nombre del asegurado directamente del formulario anidado
+                            if (form.asegurado && form.asegurado.nombre) {
+                                aseguradoNombre = form.asegurado.nombre;
+                            }
+                            if (form.amparos) {
+                                primaTotal = form.amparos.reduce((acc, a) => acc + (a.activo ? (a.prima || 0) : 0), 0);
+                            }
+                        }
+                    } catch(e) {}
+
+                    return {
+                        cliente: unificarNombreEmpresa(sol.tomadorNombre), // E1 Fix: Unifica el dashboard
+                        id: sol.consecutivo || '-',
+                        aseguradora: sol.aseguradora || 'Por asignar',
+                        asegurado: aseguradoNombre || 'Sin Asegurado Registrado', // E1 Fix: Nombre real extraído sin prefijo
+                        poliza: sol.numeroPoliza || 'Pendiente', // E1: Captura de Póliza/Anexo
+                        ramo: sol.ramoPoliza || 'CUMPLIMIENTO',
+                        ansHoras: ansHoras,
+                        estado: sol.estado || 'Pre-Orden',
+                        valor: sol.valorConIva || 0,
+                        primaTotal: primaTotal
+                    };
+                });
+            }, [solicitudesDb]);
+
+            // E1: Filtrar la tabla SLA (Producción en detalle)
+            const produccionLiveFiltrada = React.useMemo(() => {
+                return produccionLive.filter(policy => {
+                    const matchCliente = policy.cliente.toLowerCase().includes((filtrosProduccion.cliente || '').toLowerCase()) ||
+                                         (policy.asegurado || '').toLowerCase().includes((filtrosProduccion.cliente || '').toLowerCase());
+                    const matchPoliza = policy.id.toLowerCase().includes((filtrosProduccion.poliza || '').toLowerCase()) ||
+                                        policy.poliza.toLowerCase().includes((filtrosProduccion.poliza || '').toLowerCase());
+                    const matchAseguradora = policy.aseguradora.toLowerCase().includes((filtrosProduccion.aseguradora || '').toLowerCase()) ||
+                                             policy.ramo.toLowerCase().includes((filtrosProduccion.aseguradora || '').toLowerCase());
+                    const matchEstado = filtrosProduccion.estado === '' || policy.estado.toLowerCase() === filtrosProduccion.estado.toLowerCase();
+
+                    return matchCliente && matchPoliza && matchAseguradora && matchEstado;
+                });
+            }, [produccionLive, filtrosProduccion]);
+
             const polizasDisponiblesProrroga = React.useMemo(() => {
                 if (!interno.tipos.prorroga) return [];
                 const cleanNitT = (tomador.nit || '').replace(/\D/g, '');
                 const cleanNitA = (asegurado.nit || '').replace(/\D/g, '');
                 if (!cleanNitT || !cleanNitA) return [];
 
+                // E5: Asegurar que busca en TODA la base de datos solicitudesDb (ya lo hace por auth anónimo global)
                 return solicitudesDb.filter(sol => {
                     if (!['Emitida-Entregada', 'Finalizada'].includes(sol.estado)) return false;
                     try {
@@ -253,7 +347,6 @@
                 "LA PREVISORA S.A.", "MAPFRE SEGUROS GENERALES DE COLOMBIA S.A.", "SBS SEGUROS COLOMBIA S.A", 
                 "SEGUROS COMERCIALES BOLÍVAR S.A.", "SEGUROS DEL ESTADO S.A.", "SEGUROS GENERALES SURAMERICANA S.A", "OTRA"
             ];
-            
             const menuItems = [
                 { id: 'inicio', icon: Home, label: 'Inicio' },
                 { id: 'cotizador', icon: Calculator, label: 'Cotizador Cumplimiento' },
@@ -282,16 +375,29 @@
             const totalRCE = subtotalRCE + ivaRCE;
             const totalGeneral = totalCump + totalRCE;
 
-            const prodTotal = produccionData.length;
-            const prodMenorUnDia = produccionData.filter(p => p.ansHoras <= 24).length;
+            // Variables de Producción Live
+            const prodTotal = produccionLive.length;
+            const prodMenorUnDia = produccionLive.filter(p => p.ansHoras <= 24).length;
             const prodPorcentaje = prodTotal > 0 ? Math.round((prodMenorUnDia / prodTotal) * 100) : 0;
-            const prodMediana = getMedian(produccionData.map(p => p.ansHoras)).toFixed(1);
-            const prodTotalValor = produccionData.reduce((acc, curr) => acc + curr.valor, 0);
-            const prodSummaryArray = Object.keys(produccionData.reduce((acc, curr) => {
-                if (!acc[curr.cliente]) acc[curr.cliente] = { count: 0, totalValor: 0 };
-                acc[curr.cliente].count += 1; acc[curr.cliente].totalValor += curr.valor;
+            const prodMediana = getMedian(produccionLive.map(p => p.ansHoras)).toFixed(1);
+            const prodTotalValor = produccionLive.reduce((acc, curr) => acc + curr.valor, 0);
+            const prodTotalPrima = produccionLive.reduce((acc, curr) => acc + curr.primaTotal, 0); // E1: Suma primas
+            const prodSummaryArray = Object.keys(produccionLive.reduce((acc, curr) => {
+                if (!acc[curr.cliente]) acc[curr.cliente] = { count: 0, totalValor: 0, totalPrima: 0 };
+                acc[curr.cliente].count += 1; 
+                acc[curr.cliente].totalValor += curr.valor;
+                acc[curr.cliente].totalPrima += curr.primaTotal;
                 return acc;
-            }, {})).map(k => ({ cliente: k, ...produccionData.reduce((acc, curr) => { if (!acc[curr.cliente]) acc[curr.cliente] = { count: 0, totalValor: 0 }; acc[curr.cliente].count += 1; acc[curr.cliente].totalValor += curr.valor; return acc; }, {})[k] })).sort((a, b) => b.totalValor - a.totalValor);
+            }, {})).map(k => ({ 
+                cliente: k, 
+                ...produccionLive.reduce((acc, curr) => { 
+                    if (!acc[curr.cliente]) acc[curr.cliente] = { count: 0, totalValor: 0, totalPrima: 0 }; 
+                    acc[curr.cliente].count += 1; 
+                    acc[curr.cliente].totalValor += curr.valor; 
+                    acc[curr.cliente].totalPrima += curr.primaTotal;
+                    return acc; 
+                }, {})[k] 
+            })).sort((a, b) => b.totalValor - a.totalValor);
 
             const cartTotal = carteraData.length;
             const cartSumaTotal = carteraData.reduce((acc, curr) => acc + curr.total, 0);
@@ -403,7 +509,7 @@
                 setInterno({ ...internoSaved, tipos: loadedTipos });
                 setTomador(datosGuardados.tomador);
                 setAsegurado(datosGuardados.asegurado);
-                setContrato(datosGuardados.contrato);
+                setContrato({ ...datosGuardados.contrato, cierreLicitacion: datosGuardados.contrato.cierreLicitacion || '' }); // E4
                 if (datosGuardados.amparos) setAmparos(datosGuardados.amparos);
                 if (datosGuardados.costos) setCostos(datosGuardados.costos);
                 if (datosGuardados.consecutivo) setConsecutivo(datosGuardados.consecutivo);
@@ -456,7 +562,7 @@
                     setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { cumplimientoEstatales: false, cumplimientoParticulares: false, disposicionLegal: false, prorroga: false, responsabilidadCivil: false, seriedadOferta: false, otros: false }, archivos: [] });
                     setTomador({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
                     setAsegurado({ nombre: '', nit: '' });
-                    setContrato({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '' });
+                    setContrato({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '', cierreLicitacion: '' });
                     setCostos({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
                     setAmparos(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault ? a.tasaDefault.toFixed(2) : '0.18', prima: 0 })));
                     setConsecutivo(generarConsecutivoLocal());
@@ -588,6 +694,8 @@
                 resumen += `🛡️ *Asegurado:* ${asegurado.nombre} (NIT: ${asegurado.nit})\n\n`;
                 resumen += `📄 *DATOS DEL CONTRATO*\n`;
                 resumen += `   - Objeto: ${contrato.objeto}\n`;
+                resumen += `   - Número: ${contrato.numero || '-'}\n`;
+                if(contrato.cierreLicitacion) resumen += `   - Cierre Licitación: ${new Date(contrato.cierreLicitacion).toLocaleString('es-CO')}\n`; // E4
                 resumen += `   - Valor (Con IVA): ${formatCurrency(contrato.valorConIva)}\n\n`;
                 resumen += `⚖️ *AMPAROS LIQUIDADOS*\n`;
                 resumen += amparosTexto ? amparosTexto + `\n\n` : `   - Ningún amparo seleccionado.\n\n`;
@@ -622,6 +730,8 @@
                         <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-size: 13px; font-weight: bold; color:#163f73;">${formatCurrency(a.prima)}</td>
                     </tr>
                 `).join('');
+
+                const cierreHTML = contrato.cierreLicitacion ? `<tr><td class="label" style="width:20%;">Cierre Licitación:</td><td class="val" style="width:80%; font-weight:bold; color:#e11d48;">${new Date(contrato.cierreLicitacion).toLocaleString('es-CO')}</td></tr>` : '';
 
                 return `
                     <div id="pdf-content" style="font-family: 'Arial', sans-serif; color: #12334F; padding: 20px; background: white;">
@@ -679,6 +789,7 @@
                         <table>
                             <tr><td class="label" style="width:20%;">Objeto:</td><td class="val" style="width:80%; text-align: justify;">${contrato.objeto}</td></tr>
                             <tr><td class="label" style="width:20%;">No. Contrato:</td><td class="val" style="width:80%;">${contrato.numero || '-'}</td></tr>
+                            ${cierreHTML}
                             <tr><td class="label" style="width:20%;">Vigencia:</td><td class="val" style="width:80%;">${contrato.desde || '-'} al ${contrato.hasta || '-'} (${contrato.duracion || '-'} días)</td></tr>
                             <tr><td class="label" style="width:20%;">Valor SIN IVA:</td><td class="val" style="width:80%;">${formatCurrency(valorSinIva)}</td></tr>
                             <tr><td class="label" style="width:20%;">Valor CON IVA:</td><td class="val" style="width:80%;">${formatCurrency(valorConIva)}</td></tr>
@@ -746,9 +857,11 @@
                 printWindow.document.close();
             };
 
-            // --- ACCIONES PRINCIPALES (WEBHOOK) CON REINTENTO v2.14.2 ---
+            // --- ACCIONES PRINCIPALES (WEBHOOK) ---
             const confirmarGuardarPreOrden = () => {
-                if (!interno.solicitante || !interno.solicitanteEmail || !tomador.nombre) return showAlert('Faltan Datos', "⚠️ Llene Nombre del Solicitante, Correo Electrónico y Razón Social del Tomador.");
+                if (!interno.solicitante || !interno.solicitanteEmail || !tomador.nombre || !contrato.cierreLicitacion) {
+                    return showAlert('Faltan Datos', "⚠️ Revise los campos obligatorios: Nombre del Solicitante, Correo, Razón Social del Tomador y Fecha de Cierre Licitación.");
+                }
                 
                 if (interno.tipos.prorroga && (!prorrogaRef || !prorrogaRef.consecutivo)) {
                     return showAlert('Falta Póliza Matriz', "⚠️ Ha marcado 'Prórroga'. Por favor busque y seleccione la póliza original en el Bloque 2.");
@@ -763,7 +876,6 @@
 
             const guardarPreOrden = async () => {
                 setIsSubmitting(true);
-                setRetryStatus({ attempt: 1, total: 3, active: true });
                 
                 try {
                     let polizaReferencia = '';
@@ -779,9 +891,11 @@
                         aseguradoraReferencia = prorrogaRef.aseguradora || '';
                     }
 
-                    // GUARDADO SIEMPRE PRIMERO EN FIREBASE
+                    // E1: Guardar timestamp de Registro exacto
+                    const timestampRegistro = new Date().toISOString();
+
                     if (db) {
-                        const dataToSave = { fechaRegistro: new Date().toISOString(), consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'Pre-Orden', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef }) };
+                        const dataToSave = { fechaRegistro: timestampRegistro, consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'Pre-Orden', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef }) };
                         await db.collection("solicitudes").doc(consecutivo).set(dataToSave, { merge: true });
                     }
 
@@ -790,6 +904,9 @@
                         const amparosDetalleExcel = armarAmparosExcel(); 
                         
                         const payload = {
+                            // E3: Asuntos y etiquetas unificadas
+                            asunto_correo: `${consecutivo} - ${asegurado.nombre}`,
+                            etiqueta_proceso: 'PRE-ORDEN',
                             tipo_flujo: 'PRE-ORDEN',
                             flujo: 'PRE-ORDEN',
                             fechaRegistro: new Date().toLocaleString('es-CO'), consecutivo, 
@@ -797,16 +914,16 @@
                             tiposSolicitud: Object.keys(interno.tipos).filter(k => interno.tipos[k]).join(', '),
                             tomadorNombre: tomador.nombre, tomadorNit: tomador.nit, tomadorDireccion: tomador.direccion, tomadorTelefono: tomador.telefono, tomadorEmail: tomador.email,
                             aseguradoNombre: asegurado.nombre, aseguradoNit: asegurado.nit,
-                            contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, contratoValorSinIva: valorSinIva, contratoValorConIva: valorConIva, 
+                            contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, cierreLicitacion: contrato.cierreLicitacion ? new Date(contrato.cierreLicitacion).toLocaleString('es-CO') : 'No aplica', // E4
+                            contratoValorSinIva: valorSinIva, contratoValorConIva: valorConIva, 
                             contratoValorSinIvaFormateado: formatCurrency(valorSinIva), contratoValorConIvaFormateado: formatCurrency(valorConIva), contratoDuracionDias: contrato.duracion || 0,
                             amparosDetalleExcel, primaCumplimiento: 0, gastosCumplimiento: 0, ivaCumplimiento: 0, valorTotalCumplimiento: "$ 0", 
                             primaRCE: 0, gastosRCE: 0, ivaRCE: 0, valorTotalRCE: "$ 0", granTotal: 0, valorGranTotal: "$ 0",
                             polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
                             adjuntos: attachments
                         };
-                        
-                        // USO DE LA FUNCIÓN DE REINTENTO
-                        await sendWithRetry(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        if (!res.ok) throw new Error(res.status);
                     }
 
                     showAlert('Éxito', "✅ ¡Pre-Orden guardada! El equipo ha sido notificado para completarla.");
@@ -814,7 +931,7 @@
                     setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { cumplimientoEstatales: false, cumplimientoParticulares: false, disposicionLegal: false, prorroga: false, responsabilidadCivil: false, seriedadOferta: false, otros: false }, archivos: [] });
                     setTomador({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
                     setAsegurado({ nombre: '', nit: '' });
-                    setContrato({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '' });
+                    setContrato({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '', cierreLicitacion: '' });
                     setCostos({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
                     setAmparos(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault ? a.tasaDefault.toFixed(2) : '0.18', prima: 0 })));
                     setConsecutivo(generarConsecutivoLocal());
@@ -826,18 +943,33 @@
                     document.querySelectorAll('input[type="file"]').forEach(input => input.value = '');
 
                 } catch (error) {
-                    showAlert('Aviso de Red', "⚠️ Su solicitud quedó guardada en el sistema de manera segura, pero la notificación automática (correo) falló por problemas de red tras varios intentos. Un director revisará su caso manualmente.");
+                    showAlert('Error', "❌ Error guardando: " + error.message);
                 } finally {
                     setIsSubmitting(false);
-                    setRetryStatus({ attempt: 0, total: 3, active: false });
                 }
             };
 
             const enviarOrdenFinal = async () => {
                 if (!interno.solicitante || !tomador.nombre) return showAlert('Faltan Datos', "Faltan datos base.");
                 setIsSubmitting(true);
-                setRetryStatus({ attempt: 1, total: 3, active: true });
                 
+                const cortina = document.createElement('div');
+                cortina.id = 'cortina-pdf';
+                cortina.style.position = 'fixed';
+                cortina.style.inset = '0';
+                cortina.style.backgroundColor = 'rgba(18, 51, 79, 0.95)';
+                cortina.style.zIndex = '999999';
+                cortina.style.display = 'flex';
+                cortina.style.flexDirection = 'column';
+                cortina.style.alignItems = 'center';
+                cortina.style.justifyContent = 'center';
+                cortina.style.color = 'white';
+                cortina.innerHTML = `
+                    <svg class="animate-spin h-12 w-12 text-[#58C9E8] mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                    <h3 class="text-xl font-bold">Generando Orden de Servicio...</h3>
+                    <p class="text-sm mt-2 text-gray-300">Liquidando amparos y conectando con Make.</p>`;
+                document.body.appendChild(cortina);
+
                 try {
                     let polizaReferencia = '';
                     let anexoReferencia = '';
@@ -852,9 +984,16 @@
                         aseguradoraReferencia = prorrogaRef.aseguradora || '';
                     }
 
-                    // GUARDADO SIEMPRE PRIMERO EN FIREBASE
+                    // E1: Timestamp intermedio
+                    const timestampTramite = new Date().toISOString();
+
                     if (db) {
-                        const dataToSave = { fechaRegistro: new Date().toISOString(), consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'En Trámite', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef }) };
+                        const dataToSave = { 
+                            fechaTramiteDirector: timestampTramite, // Guardar la fecha exacta
+                            consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, 
+                            estado: 'En Trámite', 
+                            formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef }) 
+                        };
                         await db.collection("solicitudes").doc(consecutivo).set(dataToSave, { merge: true });
                         setEstadoSolicitud('En Trámite');
                     }
@@ -872,32 +1011,34 @@
 
                     if (WEBHOOK_URL) {
                         const payload = {
+                            // E3: Asuntos y etiquetas unificadas
+                            asunto_correo: `${consecutivo} - ${asegurado.nombre}`,
+                            etiqueta_proceso: 'ORDEN FINAL',
                             tipo_flujo: 'ORDEN-SERVICIO',
                             flujo: 'ORDEN-FINAL', 
-                            fechaRegistro: new Date().toLocaleString('es-CO'),
                             fechaTramiteDirector: new Date().toLocaleString('es-CO'), 
                             consecutivo, 
                             solicitanteNombre: interno.solicitante, solicitanteEmail: interno.solicitanteEmail, asunto: interno.asunto,
                             tiposSolicitud: Object.keys(interno.tipos).filter(k => interno.tipos[k]).join(', '),
                             tomadorNombre: tomador.nombre, tomadorNit: tomador.nit, tomadorDireccion: tomador.direccion, tomadorTelefono: tomador.telefono, tomadorEmail: tomador.email,
                             aseguradoNombre: asegurado.nombre, aseguradoNit: asegurado.nit,
-                            contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, contratoValorSinIva: valorSinIva, contratoValorConIva: valorConIva, contratoValorSinIvaFormateado: formatCurrency(valorSinIva), contratoValorConIvaFormateado: formatCurrency(valorConIva), contratoDuracionDias: contrato.duracion || 0,
+                            contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, cierreLicitacion: contrato.cierreLicitacion ? new Date(contrato.cierreLicitacion).toLocaleString('es-CO') : 'No aplica', // E4
+                            contratoValorSinIva: valorSinIva, contratoValorConIva: valorConIva, contratoValorSinIvaFormateado: formatCurrency(valorSinIva), contratoValorConIvaFormateado: formatCurrency(valorConIva), contratoDuracionDias: contrato.duracion || 0,
                             amparosDetalleExcel, primaCumplimiento, gastosCumplimiento: gastosCalculadosCump, ivaCumplimiento: ivaCump, valorTotalCumplimiento: formatCurrency(totalCump), 
                             primaRCE, gastosRCE: gastosCalculadosRCE, ivaRCE: ivaRCE, valorTotalRCE: formatCurrency(totalRCE), granTotal: totalGeneral, valorGranTotal: formatCurrency(totalGeneral), 
                             polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
                             adjuntos: attachments
                         };
-                        
-                        // USO DE LA FUNCIÓN DE REINTENTO
-                        await sendWithRetry(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        if (!res.ok) throw new Error(res.status);
                     }
 
                     showAlert('Éxito', "✅ ¡Orden enviada al cliente con éxito!");
                 } catch (e) { 
-                    showAlert('Aviso de Red', "⚠️ La orden se guardó correctamente, pero el envío de correo al cliente falló por problemas de red. Intente usar el botón de reenviar más tarde."); 
+                    showAlert('Error', "❌ Error: " + e.message); 
                 } finally { 
                     setIsSubmitting(false); 
-                    setRetryStatus({ attempt: 0, total: 3, active: false });
+                    if(document.getElementById('cortina-pdf')) document.body.removeChild(document.getElementById('cortina-pdf'));
                 }
             };
 
@@ -905,13 +1046,18 @@
                 if (!numeroPoliza || !aseguradora || !ramoPoliza) return showAlert('Faltan Datos', "⚠️ Complete # de póliza, aseguradora y ramo antes de enviar.");
                 if (archivosPoliza.length === 0) return showAlert('Atención', "⚠️ Debe adjuntar al menos un documento PDF de la póliza.");
                 setIsSubmitting(true);
-                setRetryStatus({ attempt: 1, total: 3, active: true });
                 
                 try {
-                    // GUARDADO SIEMPRE PRIMERO EN FIREBASE
+                    // E1: Timestamp final
+                    const timestampEntrega = new Date().toISOString();
+
                     if (db) {
                         const formCompleto = JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef });
-                        const dataToSave = { estado: 'Emitida-Entregada', numeroPoliza, aseguradora, ramoPoliza, formularioCompleto: formCompleto };
+                        const dataToSave = { 
+                            estado: 'Emitida-Entregada', 
+                            fechaEntregaPoliza: timestampEntrega, // Cierra el ciclo de ANS
+                            numeroPoliza, aseguradora, ramoPoliza, formularioCompleto: formCompleto 
+                        };
                         await db.collection("solicitudes").doc(consecutivo).set(dataToSave, { merge: true });
                         setEstadoSolicitud('Emitida-Entregada');
                     }
@@ -919,6 +1065,9 @@
                     if (WEBHOOK_URL) {
                         const attachments = await Promise.all(archivosPoliza.map(getBase64));
                         const payload = {
+                            // E3: Asuntos y etiquetas unificadas
+                            asunto_correo: `${consecutivo} - ${asegurado.nombre}`,
+                            etiqueta_proceso: 'EMISIÓN PÓLIZA',
                             tipo_flujo: 'EMISION-FINAL',
                             flujo: 'ENTREGA-POLIZA', 
                             consecutivo, 
@@ -932,17 +1081,15 @@
                             ramoPoliza,
                             adjuntos: attachments
                         };
-                        
-                        // USO DE LA FUNCIÓN DE REINTENTO
-                        await sendWithRetry(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        if (!res.ok) throw new Error(res.status);
                     }
 
                     showAlert('Éxito', "✅ ¡Póliza enviada al cliente con éxito!");
                 } catch (e) { 
-                    showAlert('Aviso de Red', "⚠️ Póliza guardada, pero el envío del correo falló por inestabilidad de red. Puede reenviar usando el botón correspondiente."); 
+                    showAlert('Error', "❌ Error enviando póliza: " + e.message); 
                 } finally { 
                     setIsSubmitting(false); 
-                    setRetryStatus({ attempt: 0, total: 3, active: false });
                 }
             };
 
@@ -953,12 +1100,7 @@
                     const text = evt.target.result; const rows = text.split('\n').filter(r => r.trim());
                     if(rows.length < 2) return showAlert('Error de Archivo', "El archivo está vacío o sin formato.");
                     const sep = text.includes(';') ? ';' : ',';
-                    if (type === 'produccion') {
-                        setProduccionData(rows.slice(1).map(row => {
-                            const cols = row.split(sep);
-                            return { cliente: cols[0]?.trim() || '-', id: cols[1]?.trim() || '-', aseguradora: cols[2]?.trim() || '-', asegurado: cols[3]?.trim() || '-', ramo: cols[4]?.trim() || '-', ansHoras: parseFloat(cols[5]) || 0, estado: cols[6]?.trim() || '-', valor: parseFloat(cols[7]) || 0 };
-                        }));
-                    } else {
+                    if (type === 'cartera') {
                         setCarteraData(rows.slice(1).map(row => {
                             const cols = row.split(sep);
                             return { tomador: cols[0]?.trim() || '-', beneficiario: cols[1]?.trim() || '-', ramo: cols[2]?.trim() || '-', poliza: cols[3]?.trim() || '-', dias: parseInt(cols[4]) || 0, total: parseFloat(cols[5]) || 0 };
@@ -977,31 +1119,6 @@
             return (
                 <div className="fixed inset-0 flex bg-[#f4f7f9] overflow-hidden w-full h-full">
                     
-                    {/* MODAL GLOBAL DE CARGA Y REINTENTOS DE RED (Añadido v2.14.2) */}
-                    {retryStatus.active && (
-                        <div className="fixed inset-0 bg-[#12334F]/95 z-[999999] flex flex-col items-center justify-center text-white backdrop-blur-sm transition-opacity">
-                            <div className="relative mb-6">
-                                <svg className={`animate-spin h-24 w-24 ${retryStatus.attempt > 1 ? 'text-orange-400' : 'text-[#58C9E8]'}`} viewBox="0 0 24 24">
-                                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                {retryStatus.attempt > 1 && (
-                                    <span className="absolute inset-0 flex items-center justify-center font-bold text-2xl text-orange-400">
-                                        {retryStatus.attempt}
-                                    </span>
-                                )}
-                            </div>
-                            <h3 className="text-2xl font-bold uppercase tracking-widest text-center px-4">
-                                {retryStatus.attempt > 1 ? 'Reintentando Conexión...' : 'Sincronizando con AEGIS...'}
-                            </h3>
-                            <p className={`mt-3 text-center text-sm max-w-md px-4 transition-colors ${retryStatus.attempt > 1 ? 'text-orange-300 font-bold' : 'text-gray-400'}`}>
-                                {retryStatus.attempt > 1 
-                                    ? `Se detectó inestabilidad en la red. Intento ${retryStatus.attempt} de ${retryStatus.total}. Por favor, no cierre esta ventana.` 
-                                    : 'Procesando documentos y enviando datos de forma segura.'}
-                            </p>
-                        </div>
-                    )}
-
                     {/* MODAL PARA SOLICITAR PIN DE ACCESO */}
                     {pinDialog.isOpen && (
                         <div className="fixed inset-0 bg-[#12334F]/80 z-[9999] flex items-center justify-center p-4 backdrop-blur-sm">
@@ -1184,7 +1301,7 @@
                                                     { key: 'cumplimientoEstatales', label: 'Cumplimiento Estatales' },
                                                     { key: 'cumplimientoParticulares', label: 'Cumplimiento Particulares' },
                                                     { key: 'disposicionLegal', label: 'Disposición Legal' },
-                                                    { key: 'prorroga', label: 'Prórroga' },
+                                                    { key: 'prorroga', label: 'Prórroga / Modificación' }, // E5: Cambio de etiqueta
                                                     { key: 'responsabilidadCivil', label: 'Responsabilidad Civil' },
                                                     { key: 'seriedadOferta', label: 'Seriedad de la Oferta' },
                                                     { key: 'otros', label: 'Otros' }
@@ -1230,7 +1347,6 @@
 
                                     {/* Bloque 2: Contrato y Prórroga */}
                                     <div className={sectionCls}>
-                                        {isDirector && <div className="absolute top-0 right-0 p-3"><Lock size={20} className="text-gray-300" /></div>}
                                         <h3 className="flex items-center gap-2 font-bold text-[#163f73] mb-4 border-b border-[#dce4ec] pb-2"><FileText size={20} className="text-[#58C9E8]" /> 2. Datos del Contrato</h3>
                                         
                                         {/* NUEVO BLOQUE DE BÚSQUEDA DE PRÓRROGA */}
@@ -1290,8 +1406,19 @@
                                         )}
 
                                         <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                                            <div className="md:col-span-6"><label className={labelCls}>Objeto del Contrato *</label><textarea maxLength="2000" className={`${inputCls} h-20`} disabled={isDirector} value={contrato.objeto} onChange={e => setContrato({...contrato, objeto: e.target.value})}></textarea></div>
-                                            <div className="md:col-span-2"><label className={labelCls}>Número</label><input type="text" className={inputCls} disabled={isDirector} value={contrato.numero} onChange={e => setContrato({...contrato, numero: e.target.value})} /></div>
+                                            {/* E2: Objeto siempre editable (Director puede complementar) y capacidad de 5000 chars */}
+                                            <div className="md:col-span-6">
+                                                <label className={labelCls}>Objeto del Contrato *</label>
+                                                <textarea maxLength="5000" className={`${inputCls} h-24`} value={contrato.objeto} onChange={e => setContrato({...contrato, objeto: e.target.value})}></textarea>
+                                            </div>
+                                            <div className="md:col-span-3"><label className={labelCls}>Número de Contrato</label><input type="text" className={inputCls} disabled={isDirector} value={contrato.numero} onChange={e => setContrato({...contrato, numero: e.target.value})} /></div>
+                                            
+                                            {/* E4: Fecha y hora de Cierre Licitación (Obligatorio) */}
+                                            <div className="md:col-span-3">
+                                                <label className={labelCls}>Cierre Licitación *</label>
+                                                <input type="datetime-local" className={inputCls} disabled={isDirector} value={contrato.cierreLicitacion} onChange={e => setContrato({...contrato, cierreLicitacion: e.target.value})} />
+                                            </div>
+
                                             <div className="md:col-span-2">
                                                 <label className={labelCls}>Valor CON IVA *</label>
                                                 <div className="relative">
@@ -1306,6 +1433,8 @@
                                                     <input type="text" className={`${inputCls} bg-[#e4ebf1] font-semibold pl-8 cursor-not-allowed`} disabled value={valorSinIva ? valorSinIva.toLocaleString('es-CO', {maximumFractionDigits: 0}) : '0'} />
                                                 </div>
                                             </div>
+                                            <div className="md:col-span-2"></div>
+
                                             <div className="md:col-span-2"><label className={labelCls}>Desde</label><input type="date" className={inputCls} disabled={isDirector} value={contrato.desde} onChange={e => {
                                                 const newDesde = e.target.value; let newDuracion = contrato.duracion;
                                                 if (newDesde && contrato.hasta) { newDuracion = Math.ceil((new Date(contrato.hasta) - new Date(newDesde)) / (1000 * 60 * 60 * 24)) > 0 ? Math.ceil((new Date(contrato.hasta) - new Date(newDesde)) / (1000 * 60 * 60 * 24)) : 0; }
@@ -1536,26 +1665,26 @@
                                         {isDirector ? (
                                             ['En Trámite', 'Emitida'].includes(estadoSolicitud) ? (
                                                 <div className="flex flex-wrap justify-center gap-2">
-                                                    <button onClick={enviarOrdenFinal} disabled={isSubmitting || retryStatus.active} className="px-4 py-3 bg-[#163f73] text-white hover:bg-[#0e273d] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-[#58C9E8]/30" title="Reenviar Orden Final a Make">
+                                                    <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-4 py-3 bg-[#163f73] text-white hover:bg-[#0e273d] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-[#58C9E8]/30" title="Reenviar Orden Final a Make">
                                                         <RefreshCw size={18}/>
                                                     </button>
-                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting || retryStatus.active} className="px-6 md:px-8 py-3 bg-green-500 text-white hover:bg-green-600 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-500 text-white hover:bg-green-600 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
                                                         {isSubmitting ? "ENVIANDO PÓLIZA..." : <><Send size={18}/> ENVIAR PÓLIZA A CLIENTE</>}
                                                     </button>
                                                 </div>
                                             ) : ['Finalizada', 'Emitida-Entregada'].includes(estadoSolicitud) ? (
                                                 <div className="flex flex-wrap justify-center gap-2">
-                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting || retryStatus.active} className="px-6 md:px-8 py-3 bg-green-600 text-white hover:bg-green-700 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-green-400">
+                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-600 text-white hover:bg-green-700 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-green-400">
                                                         {isSubmitting ? "REENVIANDO PÓLIZA..." : <><RefreshCw size={18}/> REENVIAR PÓLIZA (CORRECCIÓN)</>}
                                                     </button>
                                                 </div>
                                             ) : (
-                                                <button onClick={enviarOrdenFinal} disabled={isSubmitting || retryStatus.active} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                                <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
                                                     {isSubmitting ? "PROCESANDO..." : <><Send size={18}/> GENERAR ORDEN FINAL</>}
                                                 </button>
                                             )
                                         ) : (
-                                            <button onClick={confirmarGuardarPreOrden} disabled={isSubmitting || isLoadingNube || retryStatus.active} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
+                                            <button onClick={confirmarGuardarPreOrden} disabled={isSubmitting || isLoadingNube} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
                                                 {isSubmitting ? "GUARDANDO..." : <><Cloud size={18}/> GUARDAR PRE-ORDEN</>}
                                             </button>
                                         )}
@@ -1665,8 +1794,8 @@
                                                                     {sol.fechaRegistro ? new Date(sol.fechaRegistro).toLocaleTimeString('es-CO', {hour: '2-digit', minute:'2-digit'}) : ''}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-4 py-4 text-[#12334F] font-medium truncate max-w-[200px]" title={sol.tomadorNombre}>
-                                                                {sol.tomadorNombre || 'N/A'}
+                                                            <td className="px-4 py-4 text-[#12334F] font-medium truncate max-w-[200px]" title={unificarNombreEmpresa(sol.tomadorNombre)}>
+                                                                {unificarNombreEmpresa(sol.tomadorNombre)}
                                                             </td>
                                                             <td className="px-4 py-4 text-gray-600 truncate max-w-[180px]" title={sol.solicitanteNombre}>
                                                                 {sol.solicitanteNombre || 'N/A'}
@@ -1700,66 +1829,62 @@
                             </div>
 
                             {/* ========================================================= */}
-                            {/* VISTA 2: REPORTE PRODUCCIÓN                               */}
+                            {/* VISTA 2: REPORTE PRODUCCIÓN (E1: DATOS EN VIVO)           */}
                             {/* ========================================================= */}
                             <div className={activeMenu === 'produccion' ? 'block p-4 md:p-8 pb-20' : 'hidden'}>
-                                <div className="bg-[#163f73] text-white py-6 px-8 shadow-sm mb-6 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4">
-                                    <div className="flex items-center gap-3">
+                                <div className="bg-[#163f73] text-white py-6 px-8 shadow-sm mb-6 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4 relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#58C9E8] opacity-10 rounded-full -translate-y-1/2 translate-x-1/4"></div>
+                                    <div className="flex items-center gap-3 z-10">
                                         <div className="p-2 bg-white/10 rounded-lg"><TrendingUp size={32} className="text-[#58C9E8]" strokeWidth={2} /></div>
-                                        <div><h1 className="text-2xl font-bold tracking-wide">Reporte de Producción y ANS</h1><p className="text-[#58C9E8] text-sm font-medium">MÉTRICAS OPERATIVAS</p></div>
+                                        <div><h1 className="text-2xl font-bold tracking-wide">Reporte de Producción y ANS</h1><p className="text-[#58C9E8] text-sm font-medium">MÉTRICAS EN TIEMPO REAL</p></div>
+                                    </div>
+                                    <div className="z-10 bg-white/10 px-4 py-2 rounded-lg border border-white/20">
+                                        <p className="text-xs text-[#58C9E8] uppercase tracking-wider font-bold">Datos sincronizados con Firestore</p>
                                     </div>
                                 </div>
 
                                 <div className="w-full max-w-[1600px] mx-auto space-y-8">
-                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-                                        <div>
-                                            <h3 className="text-lg font-bold text-[#163f73] flex items-center gap-2"><UploadCloud size={20} className="text-[#58C9E8]"/> Actualizar Datos del Reporte</h3>
-                                            <p className="text-sm text-gray-500">Carga un archivo CSV para actualizar las gráficas en tiempo real.</p>
-                                        </div>
-                                        <div className="flex flex-wrap gap-3">
-                                            <button onClick={() => downloadTemplate('produccion')} className="px-4 py-2.5 text-sm font-medium text-[#163f73] bg-[#e8f7fb] rounded-lg border border-[#58C9E8]/30 hover:bg-[#d0f0fa] flex items-center gap-2"><Download size={16} /> Plantilla CSV</button>
-                                            <label className="cursor-pointer px-4 py-2.5 text-sm font-medium text-white bg-[#163f73] rounded-lg hover:bg-[#12334F] flex items-center gap-2"><FileText size={16} /> Cargar Archivo<input type="file" accept=".csv" className="hidden" onChange={(e) => handleCsvUpload(e, 'produccion')} /></label>
-                                        </div>
-                                    </div>
-
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-[#58C9E8]/30 flex items-start gap-4 transition-all hover:shadow-md">
                                             <div className="p-3 bg-blue-50 rounded-lg text-[#163f73]"><FileText size={28} /></div>
-                                            <div><p className="text-sm text-gray-500 font-medium">Total Solicitudes</p><h4 className="text-3xl font-bold text-[#12334F] mt-1">{prodTotal}</h4></div>
+                                            <div><p className="text-sm text-gray-500 font-medium">Total Solicitudes Base</p><h4 className="text-3xl font-bold text-[#12334F] mt-1">{prodTotal}</h4></div>
                                         </div>
-                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-[#58C9E8]/30 flex items-start gap-4 transition-all hover:shadow-md">
                                             <div className="p-3 bg-[#e8f7fb] rounded-lg text-[#58C9E8]"><CheckCircle size={28} /></div>
-                                            <div><p className="text-sm text-gray-500 font-medium">Entregas &lt; 24 Horas</p><h4 className="text-3xl font-bold text-[#163f73] mt-1">{prodMenorUnDia} <span className="text-lg text-gray-500 font-normal">({prodPorcentaje}%)</span></h4></div>
+                                            <div><p className="text-sm text-gray-500 font-medium">Gestión &lt; 24 Horas</p><h4 className="text-3xl font-bold text-[#163f73] mt-1">{prodMenorUnDia} <span className="text-lg text-gray-500 font-normal">({prodPorcentaje}%)</span></h4></div>
                                         </div>
-                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-[#58C9E8]/30 flex items-start gap-4 transition-all hover:shadow-md">
                                             <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600"><ClockIcon size={28} /></div>
                                             <div><p className="text-sm text-gray-500 font-medium">Mediana ANS</p><h4 className="text-3xl font-bold text-[#12334F] mt-1">{prodMediana} <span className="text-lg text-gray-500 font-normal">hrs</span></h4></div>
                                         </div>
                                     </div>
 
-                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-8">
-                                        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                                            <h4 className="text-lg font-bold text-[#163f73]">Resumen Consolidado por Cliente</h4>
-                                            <span className="text-xs font-medium px-2 py-1 bg-[#163f73] text-white rounded-md shadow-sm">Totales Globales</span>
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-8">
+                                        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
+                                            <h4 className="text-lg font-bold text-[#163f73] flex items-center gap-2"><PieChart size={18} className="text-[#58C9E8]"/> Resumen Consolidado por Tomador</h4>
                                         </div>
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-left border-collapse">
-                                            <thead className="bg-gray-50 shadow-sm border-b border-gray-200">
+                                            <thead className="bg-gray-50 border-b border-gray-200">
                                                 <tr className="text-gray-500 text-xs uppercase tracking-wider">
-                                                <th className="px-6 py-4 font-semibold">Cliente / Tomador</th>
-                                                <th className="px-6 py-4 font-semibold text-center">Total Pólizas</th>
-                                                <th className="px-6 py-4 font-semibold text-right">Prima Total Emitida</th>
+                                                <th className="px-6 py-4 font-semibold">Tomador (Cliente)</th>
+                                                <th className="px-6 py-4 font-semibold text-center">Total Órdenes</th>
+                                                <th className="px-6 py-4 font-semibold text-right">Valor Total Asegurado</th>
+                                                <th className="px-6 py-4 font-semibold text-right">Prima Total</th> {/* E1: Columna prima */}
                                                 <th className="px-6 py-4 font-semibold text-center">% de Participación</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100 text-sm">
-                                                {prodSummaryArray.map((item, idx) => {
+                                                {prodSummaryArray.length === 0 ? (
+                                                    <tr><td colSpan="5" className="text-center py-8 text-gray-400">No hay datos registrados en Firestore.</td></tr>
+                                                ) : prodSummaryArray.map((item, idx) => {
                                                     const porcentaje = prodTotalValor > 0 ? ((item.totalValor / prodTotalValor) * 100).toFixed(1) : 0;
                                                     return (
-                                                        <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                                        <tr key={idx} className="hover:bg-blue-50/20 transition-colors">
                                                             <td className="px-6 py-4"><div className="font-bold text-[#12334F]">{item.cliente}</div></td>
                                                             <td className="px-6 py-4 text-center"><span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#e8f7fb] text-[#163f73] font-bold">{item.count}</span></td>
                                                             <td className="px-6 py-4 text-right"><span className="font-bold text-[#12334F] text-base">{formatCurrency(item.totalValor)}</span></td>
+                                                            <td className="px-6 py-4 text-right"><span className="font-bold text-green-700 text-sm">{formatCurrency(item.totalPrima)}</span></td>
                                                             <td className="px-6 py-4 text-center">
                                                                 <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
                                                                     <div className="bg-[#58C9E8] h-2 rounded-full" style={{ width: `${porcentaje}%` }}></div>
@@ -1770,38 +1895,104 @@
                                                     );
                                                 })}
                                             </tbody>
-                                            <tfoot className="bg-gray-100 font-bold border-t-2 border-gray-200 text-[#12334F]">
-                                                <tr>
-                                                    <td className="px-6 py-4 text-right uppercase">Total General:</td>
-                                                    <td className="px-6 py-4 text-center text-lg">{prodTotal}</td>
-                                                    <td className="px-6 py-4 text-right text-lg">{formatCurrency(prodTotalValor)}</td>
-                                                    <td className="px-6 py-4 text-center text-lg">100%</td>
-                                                </tr>
-                                            </tfoot>
+                                            {prodTotal > 0 && (
+                                                <tfoot className="bg-gray-100 font-bold border-t-2 border-[#58C9E8]/30 text-[#12334F]">
+                                                    <tr>
+                                                        <td className="px-6 py-4 text-right uppercase">Total General:</td>
+                                                        <td className="px-6 py-4 text-center text-lg">{prodTotal}</td>
+                                                        <td className="px-6 py-4 text-right text-lg">{formatCurrency(prodTotalValor)}</td>
+                                                        <td className="px-6 py-4 text-right text-lg text-green-700">{formatCurrency(prodTotalPrima)}</td>
+                                                        <td className="px-6 py-4 text-center text-lg">100%</td>
+                                                    </tr>
+                                                </tfoot>
+                                            )}
                                             </table>
                                         </div>
                                     </div>
 
-                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                        <div className="px-6 py-5 border-b bg-gray-50/50 font-bold text-[#163f73]">Registro Detallado</div>
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
+                                        <div className="px-6 py-5 border-b bg-gray-50 font-bold text-[#163f73] flex items-center gap-2">
+                                            <ClockIcon size={18} className="text-[#58C9E8]"/> Registro Detallado de Tiempos (SLA)
+                                        </div>
                                         <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-                                            <table className="w-full text-left border-collapse min-w-[900px]">
-                                                <thead className="sticky top-0 bg-gray-50 z-10 shadow-sm text-gray-500 text-xs uppercase tracking-wider">
-                                                    <tr><th className="px-6 py-4 font-semibold">Cliente</th><th className="px-6 py-4 font-semibold">Asegurado / Póliza</th><th className="px-6 py-4 font-semibold">Aseguradora / Ramo</th><th className="px-6 py-4 font-semibold text-center">Tiempo ANS</th><th className="px-6 py-4 font-semibold">Estado</th></tr>
+                                            <table className="w-full text-left border-collapse min-w-[1100px]">
+                                                <thead className="sticky top-0 bg-white z-10 shadow-sm border-b border-gray-200 text-gray-500 text-xs uppercase tracking-wider">
+                                                    <tr>
+                                                        <th className="px-6 py-4 font-semibold w-64">
+                                                            <div className="flex flex-col gap-2">
+                                                                <span>Tomador / Asegurado</span>
+                                                                <div className="relative">
+                                                                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/>
+                                                                    <input type="text" placeholder="Buscar empresa..." className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosProduccion.cliente} onChange={(e) => setFiltrosProduccion({...filtrosProduccion, cliente: e.target.value})} />
+                                                                </div>
+                                                            </div>
+                                                        </th>
+                                                        <th className="px-6 py-4 font-semibold w-48">
+                                                            <div className="flex flex-col gap-2">
+                                                                <span>Póliza / Anexo (ID)</span>
+                                                                <div className="relative">
+                                                                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/>
+                                                                    <input type="text" placeholder="Buscar ID o póliza..." className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosProduccion.poliza} onChange={(e) => setFiltrosProduccion({...filtrosProduccion, poliza: e.target.value})} />
+                                                                </div>
+                                                            </div>
+                                                        </th>
+                                                        <th className="px-6 py-4 font-semibold w-48">
+                                                            <div className="flex flex-col gap-2">
+                                                                <span>Aseguradora / Ramo</span>
+                                                                <div className="relative">
+                                                                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/>
+                                                                    <input type="text" placeholder="Buscar aseguradora..." className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosProduccion.aseguradora} onChange={(e) => setFiltrosProduccion({...filtrosProduccion, aseguradora: e.target.value})} />
+                                                                </div>
+                                                            </div>
+                                                        </th>
+                                                        <th className="px-6 py-4 font-semibold text-center w-32 align-top pt-5">Tiempo ANS</th>
+                                                        <th className="px-6 py-4 font-semibold w-40">
+                                                            <div className="flex flex-col gap-2">
+                                                                <span>Estado Actual</span>
+                                                                <select className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700 bg-white" value={filtrosProduccion.estado} onChange={(e) => setFiltrosProduccion({...filtrosProduccion, estado: e.target.value})}>
+                                                                    <option value="">Todos</option>
+                                                                    <option value="Pre-Orden">Pre-Orden</option>
+                                                                    <option value="En Trámite">En Trámite</option>
+                                                                    <option value="Emitida-Entregada">Emitida-Entregada</option>
+                                                                </select>
+                                                            </div>
+                                                        </th>
+                                                    </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-100 text-sm">
-                                                    {produccionData.map((policy, idx) => {
-                                                        const isMenorUnDia = policy.ansHoras <= 24; const isAnulada = policy.estado === "Anulada" || policy.estado === "Cancelada";
+                                                    {produccionLiveFiltrada.map((policy, idx) => {
+                                                        const isMenorUnDia = policy.ansHoras <= 24; 
+                                                        const isAnulada = policy.estado === "Anulada" || policy.estado === "Cancelada";
                                                         return (
-                                                            <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                                                                <td className="px-6 py-4"><div className="font-bold text-[#12334F]">{policy.cliente}</div></td>
-                                                                <td className="px-6 py-4"><div className="font-medium text-gray-700">{policy.asegurado}</div><div className="text-xs text-gray-400 mt-1">Doc: {policy.id}</div></td>
-                                                                <td className="px-6 py-4"><div className="text-gray-600 mb-1">{policy.aseguradora}</div><span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-gray-100 text-gray-700 uppercase">{policy.ramo}</span></td>
-                                                                <td className="px-6 py-4 text-center"><div className={`inline-flex flex-col items-center p-2 rounded-lg ${isMenorUnDia ? 'bg-[#e8f7fb]' : 'bg-orange-50'}`}><span className={`font-bold ${isMenorUnDia ? 'text-[#163f73]' : 'text-orange-700'}`}>{policy.ansHoras.toFixed(1)} h</span></div></td>
-                                                                <td className="px-6 py-4"><span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border ${isAnulada ? 'bg-red-50 text-red-700 border-red-200' : isMenorUnDia ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>{policy.estado}</span></td>
+                                                            <tr key={idx} className="hover:bg-blue-50/20 transition-colors">
+                                                                <td className="px-6 py-4">
+                                                                    <div className="font-bold text-[#12334F] truncate max-w-[250px]" title={policy.cliente}>{policy.cliente}</div>
+                                                                    <div className="text-xs text-gray-500 mt-1 truncate max-w-[250px]" title={policy.asegurado}>{policy.asegurado}</div>
+                                                                </td>
+                                                                <td className="px-6 py-4">
+                                                                    <span className="font-mono text-sm font-semibold text-[#5c7792] block">{policy.poliza}</span>
+                                                                    <span className="text-[10px] text-gray-400 mt-0.5 block tracking-wider uppercase">{policy.id}</span>
+                                                                </td>
+                                                                <td className="px-6 py-4">
+                                                                    <div className="text-gray-600 mb-1 truncate max-w-[150px]" title={policy.aseguradora}>{policy.aseguradora}</div>
+                                                                    <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-gray-100 text-gray-700 uppercase">{policy.ramo}</span>
+                                                                </td>
+                                                                <td className="px-6 py-4 text-center">
+                                                                    <div className={`inline-flex flex-col items-center p-2 rounded-lg ${isMenorUnDia ? 'bg-[#e8f7fb]' : 'bg-orange-50'}`}>
+                                                                        <span className={`font-bold ${isMenorUnDia ? 'text-[#163f73]' : 'text-orange-700'}`}>{policy.ansHoras.toFixed(1)} h</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-6 py-4">
+                                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10px] font-bold border ${isAnulada ? 'bg-red-50 text-red-700 border-red-200' : (policy.estado === 'Finalizada' || policy.estado === 'Emitida-Entregada') ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
+                                                                        {policy.estado}
+                                                                    </span>
+                                                                </td>
                                                             </tr>
                                                         )
                                                     })}
+                                                    {produccionLiveFiltrada.length === 0 && (
+                                                        <tr><td colSpan="5" className="text-center py-8 text-gray-400">Aún no hay solicitudes registradas para medir.</td></tr>
+                                                    )}
                                                 </tbody>
                                             </table>
                                         </div>
@@ -1827,7 +2018,7 @@
                                             <p className="text-sm text-gray-500">Actualiza las deudas y edades subiendo un archivo CSV.</p>
                                         </div>
                                         <div className="flex flex-wrap gap-3">
-                                            <button onClick={() => downloadTemplate('cartera')} className="px-4 py-2.5 text-sm font-medium text-[#163f73] bg-[#e8f7fb] rounded-lg border border-[#58C9E8]/30 hover:bg-[#d0f0fa] flex items-center gap-2"><Download size={16} /> Plantilla CSV</button>
+                                            <button className="px-4 py-2.5 text-sm font-medium text-[#163f73] bg-[#e8f7fb] rounded-lg border border-[#58C9E8]/30 hover:bg-[#d0f0fa] flex items-center gap-2"><Download size={16} /> Plantilla CSV</button>
                                             <label className="cursor-pointer px-4 py-2.5 text-sm font-medium text-white bg-[#163f73] rounded-lg hover:bg-[#12334F] flex items-center gap-2"><DollarSign size={16} /> Cargar Archivo<input type="file" accept=".csv" className="hidden" onChange={(e) => handleCsvUpload(e, 'cartera')} /></label>
                                         </div>
                                     </div>
