@@ -1,10 +1,10 @@
-<!-- AEGIS v2.15.1 - 12/05/2026 - Evolutivos E1 a E5 (Dashboard Live, Objeto 5k, Asuntos unificados, Filtros SLA, Horas Hábiles) -->
+<!-- AEGIS v2.15.2 - 13/05/2026 - Corrección Renderizado PDF Webhook Orden Final (DOM Rendering) -->
 <!DOCTYPE html> 
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Servicios 2.15.1 - AEGIS Insurance</title>
+    <title>Portal de Servicios 2.15.2 - AEGIS Insurance</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -100,6 +100,12 @@
             { id: 9, nombre: 'Responsabilidad Civil Extracontractual', tasaDefault: 0.20 }
         ];
 
+        const defaultProduccionData = [
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "101133204", aseguradora: "SEGUROS DEL ESTADO", asegurado: "MEDICARTE S.A.S", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.0, estado: "Completado", valor: 150000 },
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "4452077", aseguradora: "SURAMERICANA", asegurado: "DROGUERIAS Y FARMACIAS CRUZ VERDE S.A.S", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.0, estado: "Completado", valor: 150000 },
+            { cliente: "ELITE FACILITY MANAGEMENT SAS", id: "100029109", aseguradora: "MUNDIAL DE SEGUROS", asegurado: "INST. UNIV. COLEGIO MAYOR DE ANTIOQUIA", ramo: "SERIEDAD DE OFERTA", ansHoras: 2.6, estado: "Completado", valor: 150000 }
+        ];
+
         const defaultCarteraData = [
             { tomador: "SARUPETROL SAS", beneficiario: "INST. UNIV. COLEGIO MAYOR DE ANTIOQUIA", ramo: "CUMPLIMIENTO", poliza: "100029109", dias: 26, total: 92582 },
             { tomador: "ELITE FACILITY MANAGEMENT SAS", beneficiario: "UNIVERSIDAD NACIONAL SEDE ORINOQUIA", ramo: "CUMPLIMIENTO", poliza: "100110019", dias: 23, total: 59500 }
@@ -118,57 +124,6 @@
             const sorted = arr.slice().sort((a, b) => a - b);
             const mid = Math.floor(sorted.length / 2);
             return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
-        }
-
-        // E1: Función para calcular ANS estrictamente en horas hábiles (Lun-Vie, 08:00 - 17:00)
-        function calcularHorasHabiles(startDate, endDate) {
-            if (!startDate || !endDate || startDate >= endDate) return 0;
-            let ms = 0;
-            let current = new Date(startDate);
-            
-            while (current < endDate) {
-                let dayOfWeek = current.getDay();
-                let isSameDay = current.toDateString() === endDate.toDateString();
-                
-                // Procesar solo si es de lunes (1) a viernes (5)
-                if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-                    let startOfDay = new Date(current); startOfDay.setHours(8, 0, 0, 0);
-                    let endOfDay = new Date(current); endOfDay.setHours(17, 0, 0, 0);
-                    
-                    let start = current > startOfDay ? current : startOfDay;
-                    let end = isSameDay ? (endDate < endOfDay ? endDate : endOfDay) : endOfDay;
-                    
-                    if (start < end) {
-                        ms += (end - start);
-                    }
-                }
-                
-                if (isSameDay) break;
-                
-                // Avanzar al día siguiente a las 00:00:00
-                current.setDate(current.getDate() + 1);
-                current.setHours(0, 0, 0, 0);
-            }
-            
-            return ms / (1000 * 60 * 60);
-        }
-
-        // E1 Fix: Función inteligente para estandarizar y unificar nombres de empresas (Tomadores)
-        function unificarNombreEmpresa(nombre) {
-            if (!nombre) return 'Sin Cliente';
-            let norm = String(nombre).toUpperCase().trim();
-            
-            // 1. Reglas específicas de negocio para agrupar (Casos recurrentes)
-            if (norm.includes('ELITE FACILITY')) return 'ELITE FACILITY MANAGEMENT S.A.S.';
-            if (norm.includes('SARUPETROL')) return 'SARUPETROL S.A.S.';
-            if (norm.includes('SANDOR')) return 'GRUPO SANDOR S.A.S.';
-            
-            // 2. Regla general para el resto: quitar puntuación y estandarizar sufijos
-            return norm.replace(/\./g, '')
-                       .replace(/\bS A S\b/g, 'SAS')
-                       .replace(/\bS A\b/g, 'SA')
-                       .replace(/\s+/g, ' ') // Limpia espacios dobles
-                       .trim();
         }
 
         // ==========================================
@@ -198,7 +153,7 @@
             const [interno, setInterno] = React.useState({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { cumplimientoEstatales: false, cumplimientoParticulares: false, disposicionLegal: false, prorroga: false, responsabilidadCivil: false, seriedadOferta: false, otros: false }, archivos: [] });
             const [tomador, setTomador] = React.useState({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
             const [asegurado, setAsegurado] = React.useState({ nombre: '', nit: '' });
-            const [contrato, setContrato] = React.useState({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '', cierreLicitacion: '' }); // E4: Agregado cierreLicitacion
+            const [contrato, setContrato] = React.useState({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '' });
             const [costos, setCostos] = React.useState({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
             const [amparos, setAmparos] = React.useState(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault ? a.tasaDefault.toFixed(2) : '0.18', prima: 0 })));
 
@@ -211,15 +166,15 @@
             const [prorrogaRef, setProrrogaRef] = React.useState(null); 
 
             // Reportes y Filtros
+            const [produccionData, setProduccionData] = React.useState(defaultProduccionData);
             const [carteraData, setCarteraData] = React.useState(defaultCarteraData);
             const [filtrosSolicitudes, setFiltrosSolicitudes] = React.useState({ consecutivo: '', fecha: '', tomador: '', solicitante: '', valor: '', estado: '' });
-            const [filtrosProduccion, setFiltrosProduccion] = React.useState({ cliente: '', poliza: '', aseguradora: '', estado: '' }); // E1: Nuevo estado para filtros en Producción
 
-            // --- 2. GESTIÓN DE DATOS EN VIVO (E1) ---
+            // --- 2. GESTIÓN DE FILTROS SEGUROS (MEMOIZADOS) ---
             const solicitudesFiltradas = React.useMemo(() => {
                 return solicitudesDb.filter(sol => {
                     const solConsecutivo = sol.consecutivo || '';
-                    const solTomador = unificarNombreEmpresa(sol.tomadorNombre); // E1 Fix: Búsqueda sobre nombre unificado
+                    const solTomador = sol.tomadorNombre || '';
                     const solSolicitante = sol.solicitanteNombre || '';
                     const solEstado = sol.estado || '';
 
@@ -252,79 +207,12 @@
                 });
             }, [solicitudesDb, filtrosSolicitudes]);
 
-            // Transformar solicitudesDb a produccionData para alimentar gráficas en vivo (E1)
-            const produccionLive = React.useMemo(() => {
-                return solicitudesDb.map(sol => {
-                    let ansHoras = 0;
-                    if (sol.fechaRegistro) {
-                        const inicio = new Date(sol.fechaRegistro);
-                        // Usar fecha de entrega si existe (cierre ciclo), sino fecha tramite si existe, sino ahora
-                        let fin;
-                        if (sol.fechaEntregaPoliza) {
-                            fin = new Date(sol.fechaEntregaPoliza);
-                        } else if (sol.fechaTramiteDirector) {
-                            fin = new Date(sol.fechaTramiteDirector);
-                        } else {
-                            fin = new Date();
-                        }
-                        
-                        // Utilizar nueva función de horas hábiles
-                        ansHoras = calcularHorasHabiles(inicio, fin);
-                    }
-
-                    // Extraer prima para el consolidado si existe
-                    let primaTotal = 0;
-                    let aseguradoNombre = ''; // E1 Fix: Variable para extraer Asegurado real
-                    try {
-                        if (sol.formularioCompleto) {
-                            const form = JSON.parse(sol.formularioCompleto);
-                            // Extraer el nombre del asegurado directamente del formulario anidado
-                            if (form.asegurado && form.asegurado.nombre) {
-                                aseguradoNombre = form.asegurado.nombre;
-                            }
-                            if (form.amparos) {
-                                primaTotal = form.amparos.reduce((acc, a) => acc + (a.activo ? (a.prima || 0) : 0), 0);
-                            }
-                        }
-                    } catch(e) {}
-
-                    return {
-                        cliente: unificarNombreEmpresa(sol.tomadorNombre), // E1 Fix: Unifica el dashboard
-                        id: sol.consecutivo || '-',
-                        aseguradora: sol.aseguradora || 'Por asignar',
-                        asegurado: aseguradoNombre || 'Sin Asegurado Registrado', // E1 Fix: Nombre real extraído sin prefijo
-                        poliza: sol.numeroPoliza || 'Pendiente', // E1: Captura de Póliza/Anexo
-                        ramo: sol.ramoPoliza || 'CUMPLIMIENTO',
-                        ansHoras: ansHoras,
-                        estado: sol.estado || 'Pre-Orden',
-                        valor: sol.valorConIva || 0,
-                        primaTotal: primaTotal
-                    };
-                });
-            }, [solicitudesDb]);
-
-            // E1: Filtrar la tabla SLA (Producción en detalle)
-            const produccionLiveFiltrada = React.useMemo(() => {
-                return produccionLive.filter(policy => {
-                    const matchCliente = policy.cliente.toLowerCase().includes((filtrosProduccion.cliente || '').toLowerCase()) ||
-                                         (policy.asegurado || '').toLowerCase().includes((filtrosProduccion.cliente || '').toLowerCase());
-                    const matchPoliza = policy.id.toLowerCase().includes((filtrosProduccion.poliza || '').toLowerCase()) ||
-                                        policy.poliza.toLowerCase().includes((filtrosProduccion.poliza || '').toLowerCase());
-                    const matchAseguradora = policy.aseguradora.toLowerCase().includes((filtrosProduccion.aseguradora || '').toLowerCase()) ||
-                                             policy.ramo.toLowerCase().includes((filtrosProduccion.aseguradora || '').toLowerCase());
-                    const matchEstado = filtrosProduccion.estado === '' || policy.estado.toLowerCase() === filtrosProduccion.estado.toLowerCase();
-
-                    return matchCliente && matchPoliza && matchAseguradora && matchEstado;
-                });
-            }, [produccionLive, filtrosProduccion]);
-
             const polizasDisponiblesProrroga = React.useMemo(() => {
                 if (!interno.tipos.prorroga) return [];
                 const cleanNitT = (tomador.nit || '').replace(/\D/g, '');
                 const cleanNitA = (asegurado.nit || '').replace(/\D/g, '');
                 if (!cleanNitT || !cleanNitA) return [];
 
-                // E5: Asegurar que busca en TODA la base de datos solicitudesDb (ya lo hace por auth anónimo global)
                 return solicitudesDb.filter(sol => {
                     if (!['Emitida-Entregada', 'Finalizada'].includes(sol.estado)) return false;
                     try {
@@ -341,11 +229,14 @@
 
             // --- 3. CONSTANTES Y CÁLCULOS ESTÁTICOS ---
             const listaAseguradoras = [
-                "ALLIANZ SEGUROS S.A.", "ASEGURADORA SOLIDARIA DE COLOMBIA ENTIDAD COOPERATIVA", "AXA COLPATRIA SEGUROS S.A", 
-                "BERKLEY INTERNATIONAL SEGUROS S.A", "CHUBB SEGUROS COLOMBIA S.A.", "COLMENA SEGUROS GENERALES S.A.", 
-                "COMPAÑÍA MUNDIAL DE SEGUROS S.A.", "HDI SEGUROS COLOMBIA S.A.", "LA EQUIDAD SEGUROS GENERALES ORGANISMO COOPERATIVO", 
-                "LA PREVISORA S.A.", "MAPFRE SEGUROS GENERALES DE COLOMBIA S.A.", "SBS SEGUROS COLOMBIA S.A", 
-                "SEGUROS COMERCIALES BOLÍVAR S.A.", "SEGUROS DEL ESTADO S.A.", "SEGUROS GENERALES SURAMERICANA S.A", "OTRA"
+                "ALLIANZ SEGUROS S.A.", "ASEGURADORA SOLIDARIA DE COLOMBIA ENTIDAD COOPERATIVA", 
+                "AXA COLPATRIA SEGUROS S.A", "BERKLEY INTERNATIONAL SEGUROS S.A", 
+                "CHUBB SEGUROS COLOMBIA S.A.", "COLMENA SEGUROS GENERALES S.A.", 
+                "COMPAÑÍA MUNDIAL DE SEGUROS S.A.", "HDI SEGUROS COLOMBIA S.A.", 
+                "LA EQUIDAD SEGUROS GENERALES ORGANISMO COOPERATIVO", "LA PREVISORA S.A.", 
+                "MAPFRE SEGUROS GENERALES DE COLOMBIA S.A.", "SBS SEGUROS COLOMBIA S.A", 
+                "SEGUROS COMERCIALES BOLÍVAR S.A.", "SEGUROS DEL ESTADO S.A.", 
+                "SEGUROS GENERALES SURAMERICANA S.A", "OTRA"
             ];
             const menuItems = [
                 { id: 'inicio', icon: Home, label: 'Inicio' },
@@ -375,29 +266,16 @@
             const totalRCE = subtotalRCE + ivaRCE;
             const totalGeneral = totalCump + totalRCE;
 
-            // Variables de Producción Live
-            const prodTotal = produccionLive.length;
-            const prodMenorUnDia = produccionLive.filter(p => p.ansHoras <= 24).length;
+            const prodTotal = produccionData.length;
+            const prodMenorUnDia = produccionData.filter(p => p.ansHoras <= 24).length;
             const prodPorcentaje = prodTotal > 0 ? Math.round((prodMenorUnDia / prodTotal) * 100) : 0;
-            const prodMediana = getMedian(produccionLive.map(p => p.ansHoras)).toFixed(1);
-            const prodTotalValor = produccionLive.reduce((acc, curr) => acc + curr.valor, 0);
-            const prodTotalPrima = produccionLive.reduce((acc, curr) => acc + curr.primaTotal, 0); // E1: Suma primas
-            const prodSummaryArray = Object.keys(produccionLive.reduce((acc, curr) => {
-                if (!acc[curr.cliente]) acc[curr.cliente] = { count: 0, totalValor: 0, totalPrima: 0 };
-                acc[curr.cliente].count += 1; 
-                acc[curr.cliente].totalValor += curr.valor;
-                acc[curr.cliente].totalPrima += curr.primaTotal;
+            const prodMediana = getMedian(produccionData.map(p => p.ansHoras)).toFixed(1);
+            const prodTotalValor = produccionData.reduce((acc, curr) => acc + curr.valor, 0);
+            const prodSummaryArray = Object.keys(produccionData.reduce((acc, curr) => {
+                if (!acc[curr.cliente]) acc[curr.cliente] = { count: 0, totalValor: 0 };
+                acc[curr.cliente].count += 1; acc[curr.cliente].totalValor += curr.valor;
                 return acc;
-            }, {})).map(k => ({ 
-                cliente: k, 
-                ...produccionLive.reduce((acc, curr) => { 
-                    if (!acc[curr.cliente]) acc[curr.cliente] = { count: 0, totalValor: 0, totalPrima: 0 }; 
-                    acc[curr.cliente].count += 1; 
-                    acc[curr.cliente].totalValor += curr.valor; 
-                    acc[curr.cliente].totalPrima += curr.primaTotal;
-                    return acc; 
-                }, {})[k] 
-            })).sort((a, b) => b.totalValor - a.totalValor);
+            }, {})).map(k => ({ cliente: k, ...produccionData.reduce((acc, curr) => { if (!acc[curr.cliente]) acc[curr.cliente] = { count: 0, totalValor: 0 }; acc[curr.cliente].count += 1; acc[curr.cliente].totalValor += curr.valor; return acc; }, {})[k] })).sort((a, b) => b.totalValor - a.totalValor);
 
             const cartTotal = carteraData.length;
             const cartSumaTotal = carteraData.reduce((acc, curr) => acc + curr.total, 0);
@@ -509,7 +387,7 @@
                 setInterno({ ...internoSaved, tipos: loadedTipos });
                 setTomador(datosGuardados.tomador);
                 setAsegurado(datosGuardados.asegurado);
-                setContrato({ ...datosGuardados.contrato, cierreLicitacion: datosGuardados.contrato.cierreLicitacion || '' }); // E4
+                setContrato(datosGuardados.contrato);
                 if (datosGuardados.amparos) setAmparos(datosGuardados.amparos);
                 if (datosGuardados.costos) setCostos(datosGuardados.costos);
                 if (datosGuardados.consecutivo) setConsecutivo(datosGuardados.consecutivo);
@@ -562,7 +440,7 @@
                     setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { cumplimientoEstatales: false, cumplimientoParticulares: false, disposicionLegal: false, prorroga: false, responsabilidadCivil: false, seriedadOferta: false, otros: false }, archivos: [] });
                     setTomador({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
                     setAsegurado({ nombre: '', nit: '' });
-                    setContrato({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '', cierreLicitacion: '' });
+                    setContrato({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '' });
                     setCostos({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
                     setAmparos(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault ? a.tasaDefault.toFixed(2) : '0.18', prima: 0 })));
                     setConsecutivo(generarConsecutivoLocal());
@@ -694,8 +572,6 @@
                 resumen += `🛡️ *Asegurado:* ${asegurado.nombre} (NIT: ${asegurado.nit})\n\n`;
                 resumen += `📄 *DATOS DEL CONTRATO*\n`;
                 resumen += `   - Objeto: ${contrato.objeto}\n`;
-                resumen += `   - Número: ${contrato.numero || '-'}\n`;
-                if(contrato.cierreLicitacion) resumen += `   - Cierre Licitación: ${new Date(contrato.cierreLicitacion).toLocaleString('es-CO')}\n`; // E4
                 resumen += `   - Valor (Con IVA): ${formatCurrency(contrato.valorConIva)}\n\n`;
                 resumen += `⚖️ *AMPAROS LIQUIDADOS*\n`;
                 resumen += amparosTexto ? amparosTexto + `\n\n` : `   - Ningún amparo seleccionado.\n\n`;
@@ -721,141 +597,108 @@
             const getOrdenServicioHTML = () => {
                 const amparosHtml = amparos.filter(a => a.activo).map(a => `
                     <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 12px; word-wrap: break-word;">${a.nombre}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 12px;">${a.desde || '-'} al ${a.hasta || '-'}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center; font-size: 12px;">${a.dias}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center; font-size: 12px;">${a.porcentaje || '0'}%</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: right; font-size: 12px;">${formatCurrency(a.valorAsegurado)}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center; font-size: 12px;">${a.tasa}%</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: right; font-size: 12px; font-weight: bold; color:#0f172a;">${formatCurrency(a.prima)}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">${a.nombre}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">${a.desde || '-'} al ${a.hasta || '-'}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.dias}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.porcentaje || '0'}%</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-size: 13px;">${formatCurrency(a.valorAsegurado)}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.tasa}%</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-size: 13px; font-weight: bold; color:#163f73;">${formatCurrency(a.prima)}</td>
                     </tr>
                 `).join('');
 
                 return `
-                    <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; padding: 40px; background: white; width: 1060px; max-width: 1060px; box-sizing: border-box; margin: 0 auto;">
-                        <!-- Header -->
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 2px solid #e2e8f0; margin-bottom: 30px;">
-                            <div style="display: flex; align-items: center; gap: 15px;">
-                                <div style="background-color: #0f172a; padding: 15px; border-radius: 12px;">
-                                    <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                                </div>
-                                <div>
-                                    <h1 style="margin: 0; color: #0f172a; font-size: 26px; font-weight: 800; letter-spacing: 1px;">AEGIS <span style="color: #38bdf8; font-weight: 400;">INSURANCE</span></h1>
-                                    <p style="margin: 2px 0 0 0; color: #64748b; font-size: 12px; letter-spacing: 2px; text-transform: uppercase;">Portal de Servicios</p>
-                                </div>
+                    <div id="pdf-content" style="font-family: 'Arial', sans-serif; color: #12334F; padding: 20px; background: white;">
+                        <style>
+                            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+                            td, th { padding: 6px 0; vertical-align: top; font-size: 14px; }
+                            .label { font-weight: bold; width: 35%; color: #555; }
+                            .val { width: 65%; }
+                            .amparos-table th { background-color: #f4f7f9; padding: 12px 10px; text-align: left; font-size: 12px; color: #163f73; text-transform: uppercase; }
+                            .totals-container { width: 100%; margin-top: 20px; page-break-inside: avoid; }
+                            .totals-grid { display: flex; gap: 20px; width: 100%; }
+                            .totals-box { flex: 1; background-color: #f4f7f9; border-left: 4px solid #163f73; padding: 15px; }
+                            .totals-box h4 { margin: 0 0 10px 0; color: #163f73; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
+                            .totals-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; color: #333; }
+                            .totals-subtotal { display: flex; justify-content: space-between; font-weight: bold; color: #163f73; font-size: 14px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ccc; }
+                            .grand-total-box { width: 100%; box-sizing: border-box; background-color: #12334F; border-left: 5px solid #58C9E8; padding: 15px; color: white; margin-top: 15px; }
+                            .grand-total-box .totals-row { color: white; font-size: 18px; font-weight: bold; margin: 0; }
+                            .section-title { color: #163f73; font-size: 16px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; margin-top: 30px; margin-bottom: 15px; text-transform: uppercase; }
+                        </style>
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #58C9E8; padding-bottom: 20px; margin-bottom: 30px;">
+                            <div>
+                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#58C9E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 5px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                <h1 style="margin: 0; color: #163f73; font-size: 28px; text-transform: uppercase; letter-spacing: 1px;">AEGIS</h1>
+                                <p style="margin: 2px 0 0 0; color: #58C9E8; font-weight: bold; letter-spacing: 3px; font-size: 11px; text-transform: uppercase;">INSURANCE</p>
                             </div>
                             <div style="text-align: right;">
-                                <h2 style="margin:0; color: #0f172a; font-size: 22px; font-weight: 700;">ORDEN DE SERVICIO</h2>
-                                <p style="margin:5px 0 0 0; color: #475569; font-size:15px;">No. <strong style="color: #0f172a;">${consecutivo}</strong></p>
-                                <div style="display: inline-block; background-color: #f1f5f9; padding: 5px 12px; border-radius: 20px; margin-top: 8px; font-size: 12px; color: #475569; font-weight: 600;">
-                                    Generada: ${new Date().toLocaleDateString('es-CO')}
+                                <h2 style="margin:0; color: #163f73; font-size: 20px;">ORDEN DE SERVICIO</h2>
+                                <p style="margin:5px 0 0 0; color: #555; font-size:14px; font-weight: normal;">No. <b>${consecutivo}</b></p>
+                                <p style="margin:5px 0 0 0; color: #555; font-size:12px; font-weight: normal;">Fecha: ${new Date().toLocaleDateString('es-CO')}</p>
+                            </div>
+                        </div>
+
+                        <div style="display: flex; gap: 40px;">
+                            <div style="flex: 1;">
+                                <h3 class="section-title">Datos del Tomador</h3>
+                                <table>
+                                    <tr><td class="label">Razón Social:</td><td class="val">${tomador.nombre}</td></tr>
+                                    <tr><td class="label">NIT:</td><td class="val">${tomador.nit}</td></tr>
+                                    <tr><td class="label">Dirección:</td><td class="val">${tomador.direccion || '-'}</td></tr>
+                                    <tr><td class="label">Email / Tel:</td><td class="val">${tomador.email || '-'} / ${tomador.telefono || tomador.celular || '-'}</td></tr>
+                                </table>
+                            </div>
+                            <div style="flex: 1;">
+                                <h3 class="section-title">Datos del Asegurado</h3>
+                                <table>
+                                    <tr><td class="label">Razón Social:</td><td class="val">${asegurado.nombre}</td></tr>
+                                    <tr><td class="label">NIT:</td><td class="val">${asegurado.nit}</td></tr>
+                                    <tr><td class="label">Solicitante:</td><td class="val">${interno.solicitante}</td></tr>
+                                    <tr><td class="label">Asunto:</td><td class="val">${interno.asunto || '-'}</td></tr>
+                                </table>
+                            </div>
+                        </div>
+
+                        <h3 class="section-title">Datos del Contrato</h3>
+                        <table>
+                            <tr><td class="label" style="width:20%;">Objeto:</td><td class="val" style="width:80%; text-align: justify;">${contrato.objeto}</td></tr>
+                            <tr><td class="label" style="width:20%;">No. Contrato:</td><td class="val" style="width:80%;">${contrato.numero || '-'}</td></tr>
+                            <tr><td class="label" style="width:20%;">Vigencia:</td><td class="val" style="width:80%;">${contrato.desde || '-'} al ${contrato.hasta || '-'} (${contrato.duracion || '-'} días)</td></tr>
+                            <tr><td class="label" style="width:20%;">Valor SIN IVA:</td><td class="val" style="width:80%;">${formatCurrency(valorSinIva)}</td></tr>
+                            <tr><td class="label" style="width:20%;">Valor CON IVA:</td><td class="val" style="width:80%;">${formatCurrency(valorConIva)}</td></tr>
+                        </table>
+
+                        <h3 class="section-title">Amparos Solicitados</h3>
+                        <table class="amparos-table">
+                            <thead><tr><th>Amparo</th><th>Vigencia</th><th style="text-align: center;">Días</th><th style="text-align: center;">% Vr. Aseg.</th><th style="text-align: right;">V. Asegurado</th><th style="text-align: center;">Tasa</th><th style="text-align: right;">Prima</th></tr></thead>
+                            <tbody>${amparosHtml || '<tr><td colspan="7" style="text-align:center; padding: 20px;">No se seleccionaron amparos.</td></tr>'}</tbody>
+                        </table>
+
+                        <div class="totals-container" style="page-break-inside: avoid;">
+                            <div class="totals-grid">
+                                <div class="totals-box">
+                                    <h4>Póliza de Cumplimiento</h4>
+                                    <div class="totals-row"><span>Prima:</span><span>${formatCurrency(primaCumplimiento)}</span></div>
+                                    <div class="totals-row"><span>Gastos de Expedición:</span><span>${formatCurrency(gastosCalculadosCump)}</span></div>
+                                    <div class="totals-row"><span>IVA (${costos.tasaIva}%):</span><span>${formatCurrency(ivaCump)}</span></div>
+                                    <div class="totals-subtotal"><span>Total Cumplimiento:</span><span>${formatCurrency(totalCump)}</span></div>
+                                </div>
+                                <div class="totals-box">
+                                    <h4>Póliza de Responsabilidad Civil (RCE)</h4>
+                                    <div class="totals-row"><span>Prima:</span><span>${formatCurrency(primaRCE)}</span></div>
+                                    <div class="totals-row"><span>Gastos de Expedición:</span><span>${formatCurrency(gastosCalculadosRCE)}</span></div>
+                                    <div class="totals-row"><span>IVA (${costos.tasaIva}%):</span><span>${formatCurrency(ivaRCE)}</span></div>
+                                    <div class="totals-subtotal"><span>Total RCE:</span><span>${formatCurrency(totalRCE)}</span></div>
                                 </div>
                             </div>
-                        </div>
-
-                        <!-- Columnas Tomador y Asegurado -->
-                        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
-                            <div style="flex: 1; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
-                                <h3 style="margin: 0 0 15px 0; color: #0f172a; font-size: 15px; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-                                    1. Datos del Tomador
-                                </h3>
-                                <div style="margin-bottom: 8px;"><strong style="color: #64748b; display: inline-block; width: 110px;">Razón Social:</strong> <span style="color: #0f172a; font-weight: 600;">${tomador.nombre}</span></div>
-                                <div style="margin-bottom: 8px;"><strong style="color: #64748b; display: inline-block; width: 110px;">NIT:</strong> <span style="color: #0f172a;">${tomador.nit}</span></div>
-                                <div style="margin-bottom: 8px;"><strong style="color: #64748b; display: inline-block; width: 110px;">Dirección:</strong> <span style="color: #0f172a;">${tomador.direccion || '-'}</span></div>
-                                <div style="margin-bottom: 8px;"><strong style="color: #64748b; display: inline-block; width: 110px;">Contacto:</strong> <span style="color: #0f172a;">${tomador.email || '-'}</span></div>
-                            </div>
-                            <div style="flex: 1; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
-                                <h3 style="margin: 0 0 15px 0; color: #0f172a; font-size: 15px; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
-                                    2. Datos del Asegurado
-                                </h3>
-                                <div style="margin-bottom: 8px;"><strong style="color: #64748b; display: inline-block; width: 110px;">Razón Social:</strong> <span style="color: #0f172a; font-weight: 600;">${asegurado.nombre}</span></div>
-                                <div style="margin-bottom: 8px;"><strong style="color: #64748b; display: inline-block; width: 110px;">NIT:</strong> <span style="color: #0f172a;">${asegurado.nit}</span></div>
-                                <div style="margin-bottom: 8px;"><strong style="color: #64748b; display: inline-block; width: 110px;">Solicitante:</strong> <span style="color: #0f172a;">${interno.solicitante}</span></div>
-                                <div style="margin-bottom: 8px;"><strong style="color: #64748b; display: inline-block; width: 110px;">Asunto:</strong> <span style="color: #0f172a;">${interno.asunto || '-'}</span></div>
+                            <div class="grand-total-box">
+                                <div class="totals-row"><span>GRAN TOTAL A PAGAR:</span><span>${formatCurrency(totalGeneral)}</span></div>
                             </div>
                         </div>
-
-                        <!-- Datos del Contrato -->
-                        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
-                            <h3 style="margin: 0 0 15px 0; color: #0f172a; font-size: 15px; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
-                                3. Detalles del Contrato / Licitación
-                            </h3>
-                            <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
-                                <tr>
-                                    <td style="width: 15%; padding: 8px 0; vertical-align: top;"><strong style="color: #64748b;">Objeto:</strong></td>
-                                    <td style="width: 85%; padding: 8px 0; color: #0f172a; word-wrap: break-word; text-align: justify; line-height: 1.5;">${contrato.objeto}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0;"><strong style="color: #64748b;">No. Contrato:</strong></td>
-                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0; color: #0f172a;">${contrato.numero || '-'}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0;"><strong style="color: #ef4444;">Cierre Licitación:</strong></td>
-                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0; color: #ef4444; font-weight: bold;">${contrato.cierreLicitacion ? contrato.cierreLicitacion.replace('T', ', ') : '-'}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0;"><strong style="color: #64748b;">Vigencia:</strong></td>
-                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0; color: #0f172a;">${contrato.desde || '-'} al ${contrato.hasta || '-'} (${contrato.duracion || '-'} días)</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0;"><strong style="color: #64748b;">Valor SIN IVA:</strong></td>
-                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0; color: #0f172a;">${formatCurrency(valorSinIva)}</td>
-                                </tr>
-                                <tr>
-                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0;"><strong style="color: #64748b;">Valor CON IVA:</strong></td>
-                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0; color: #0f172a; font-weight: 600;">${formatCurrency(valorConIva)}</td>
-                                </tr>
-                            </table>
-                        </div>
-
-                        <!-- Amparos -->
-                        <div style="margin-bottom: 20px;">
-                            <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 15px; text-transform: uppercase;">4. Amparos y Coberturas Solicitadas</h3>
-                            <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; table-layout: fixed;">
-                                <thead>
-                                    <tr>
-                                        <th style="background-color: #0f172a; color: white; padding: 12px 10px; text-align: left; font-size: 12px; font-weight: 600; width: 25%;">Amparo</th>
-                                        <th style="background-color: #0f172a; color: white; padding: 12px 10px; text-align: left; font-size: 12px; font-weight: 600; width: 20%;">Vigencia</th>
-                                        <th style="background-color: #0f172a; color: white; padding: 12px 10px; text-align: center; font-size: 12px; font-weight: 600; width: 8%;">Días</th>
-                                        <th style="background-color: #0f172a; color: white; padding: 12px 10px; text-align: center; font-size: 12px; font-weight: 600; width: 10%;">% Vr. Aseg.</th>
-                                        <th style="background-color: #0f172a; color: white; padding: 12px 10px; text-align: right; font-size: 12px; font-weight: 600; width: 15%;">V. Asegurado</th>
-                                        <th style="background-color: #0f172a; color: white; padding: 12px 10px; text-align: center; font-size: 12px; font-weight: 600; width: 7%;">Tasa</th>
-                                        <th style="background-color: #0f172a; color: white; padding: 12px 10px; text-align: right; font-size: 12px; font-weight: 600; width: 15%;">Prima</th>
-                                    </tr>
-                                </thead>
-                                <tbody>${amparosHtml || '<tr><td colspan="7" style="text-align:center; padding: 20px; border-bottom: 1px solid #e2e8f0;">No se seleccionaron amparos.</td></tr>'}</tbody>
-                            </table>
-                        </div>
-
-                        <!-- Resumen Financiero -->
-                        <div style="display: flex; gap: 20px; page-break-inside: avoid;">
-                            <div style="flex: 1; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
-                                <h4 style="margin: 0 0 15px 0; color: #0f172a; font-size: 14px; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">Liquidación Cumplimiento</h4>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;"><span style="color: #64748b;">Prima:</span> <span style="color: #0f172a; font-weight: 600;">${formatCurrency(primaCumplimiento)}</span></div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;"><span style="color: #64748b;">Gastos de Expedición:</span> <span style="color: #0f172a; font-weight: 600;">${formatCurrency(gastosCalculadosCump)}</span></div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 13px;"><span style="color: #64748b;">IVA (${costos.tasaIva}%):</span> <span style="color: #0f172a; font-weight: 600;">${formatCurrency(ivaCump)}</span></div>
-                                <div style="display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 10px; font-size: 14px; font-weight: bold;"><span style="color: #0f172a;">Total Cumplimiento:</span> <span style="color: #0f172a;">${formatCurrency(totalCump)}</span></div>
-                            </div>
-                            <div style="flex: 1; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
-                                <h4 style="margin: 0 0 15px 0; color: #0f172a; font-size: 14px; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">Liquidación RCE</h4>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;"><span style="color: #64748b;">Prima:</span> <span style="color: #0f172a; font-weight: 600;">${formatCurrency(primaRCE)}</span></div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;"><span style="color: #64748b;">Gastos de Expedición:</span> <span style="color: #0f172a; font-weight: 600;">${formatCurrency(gastosCalculadosRCE)}</span></div>
-                                <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 13px;"><span style="color: #64748b;">IVA (${costos.tasaIva}%):</span> <span style="color: #0f172a; font-weight: 600;">${formatCurrency(ivaRCE)}</span></div>
-                                <div style="display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 10px; font-size: 14px; font-weight: bold;"><span style="color: #0f172a;">Total RCE:</span> <span style="color: #0f172a;">${formatCurrency(totalRCE)}</span></div>
-                            </div>
-                            <div style="flex: 1; background-color: #0f172a; border-radius: 12px; padding: 20px; color: white; display: flex; flex-direction: column; justify-content: center;">
-                                <h4 style="margin: 0 0 10px 0; color: #94a3b8; font-size: 13px; text-transform: uppercase; font-weight: 600;">Gran Total Cotizado</h4>
-                                <div style="font-size: 26px; font-weight: 800; color: #38bdf8;">${formatCurrency(totalGeneral)}</div>
-                                <p style="margin: 10px 0 0 0; font-size: 11px; color: #cbd5e1; opacity: 0.8;">Liquidación oficial sujeta a políticas de expedición.</p>
-                            </div>
-                        </div>
-
-                        <!-- Pie de página agregado -->
-                        <div style="margin-top: 40px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 20px;">
-                            <strong style="color: #0f172a; font-size: 12px;">AEGIS INSURANCE - PROTECCIÓN & RESPALDO</strong><br>
+                        <div style="margin-top: 50px; text-align: center; font-size: 11px; color: #888; border-top: 1px solid #eee; padding-top: 20px;">
+                            <strong>AEGIS INSURANCE - PROTECCIÓN & RESPALDO</strong><br>
                             Documento generado automáticamente a través del Portal de Servicios. Operación exclusiva para Grupo Elite / Sandor.<br>
                         </div>
-
                     </div>
                 `;
             };
@@ -889,9 +732,7 @@
 
             // --- ACCIONES PRINCIPALES (WEBHOOK) ---
             const confirmarGuardarPreOrden = () => {
-                if (!interno.solicitante || !interno.solicitanteEmail || !tomador.nombre || !contrato.cierreLicitacion) {
-                    return showAlert('Faltan Datos', "⚠️ Revise los campos obligatorios: Nombre del Solicitante, Correo, Razón Social del Tomador y Fecha de Cierre Licitación.");
-                }
+                if (!interno.solicitante || !interno.solicitanteEmail || !tomador.nombre) return showAlert('Faltan Datos', "⚠️ Llene Nombre del Solicitante, Correo Electrónico y Razón Social del Tomador.");
                 
                 if (interno.tipos.prorroga && (!prorrogaRef || !prorrogaRef.consecutivo)) {
                     return showAlert('Falta Póliza Matriz', "⚠️ Ha marcado 'Prórroga'. Por favor busque y seleccione la póliza original en el Bloque 2.");
@@ -921,11 +762,8 @@
                         aseguradoraReferencia = prorrogaRef.aseguradora || '';
                     }
 
-                    // E1: Guardar timestamp de Registro exacto
-                    const timestampRegistro = new Date().toISOString();
-
                     if (db) {
-                        const dataToSave = { fechaRegistro: timestampRegistro, consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'Pre-Orden', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef }) };
+                        const dataToSave = { fechaRegistro: new Date().toISOString(), consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'Pre-Orden', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef }) };
                         await db.collection("solicitudes").doc(consecutivo).set(dataToSave, { merge: true });
                     }
 
@@ -934,9 +772,6 @@
                         const amparosDetalleExcel = armarAmparosExcel(); 
                         
                         const payload = {
-                            // E3: Asuntos y etiquetas unificadas
-                            asunto_correo: `${consecutivo} - ${asegurado.nombre}`,
-                            etiqueta_proceso: 'PRE-ORDEN',
                             tipo_flujo: 'PRE-ORDEN',
                             flujo: 'PRE-ORDEN',
                             fechaRegistro: new Date().toLocaleString('es-CO'), consecutivo, 
@@ -944,8 +779,7 @@
                             tiposSolicitud: Object.keys(interno.tipos).filter(k => interno.tipos[k]).join(', '),
                             tomadorNombre: tomador.nombre, tomadorNit: tomador.nit, tomadorDireccion: tomador.direccion, tomadorTelefono: tomador.telefono, tomadorEmail: tomador.email,
                             aseguradoNombre: asegurado.nombre, aseguradoNit: asegurado.nit,
-                            contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, cierreLicitacion: contrato.cierreLicitacion ? new Date(contrato.cierreLicitacion).toLocaleString('es-CO') : 'No aplica', // E4
-                            contratoValorSinIva: valorSinIva, contratoValorConIva: valorConIva, 
+                            contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, contratoValorSinIva: valorSinIva, contratoValorConIva: valorConIva, 
                             contratoValorSinIvaFormateado: formatCurrency(valorSinIva), contratoValorConIvaFormateado: formatCurrency(valorConIva), contratoDuracionDias: contrato.duracion || 0,
                             amparosDetalleExcel, primaCumplimiento: 0, gastosCumplimiento: 0, ivaCumplimiento: 0, valorTotalCumplimiento: "$ 0", 
                             primaRCE: 0, gastosRCE: 0, ivaRCE: 0, valorTotalRCE: "$ 0", granTotal: 0, valorGranTotal: "$ 0",
@@ -961,7 +795,7 @@
                     setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { cumplimientoEstatales: false, cumplimientoParticulares: false, disposicionLegal: false, prorroga: false, responsabilidadCivil: false, seriedadOferta: false, otros: false }, archivos: [] });
                     setTomador({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
                     setAsegurado({ nombre: '', nit: '' });
-                    setContrato({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '', cierreLicitacion: '' });
+                    setContrato({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '' });
                     setCostos({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
                     setAmparos(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault ? a.tasaDefault.toFixed(2) : '0.18', prima: 0 })));
                     setConsecutivo(generarConsecutivoLocal());
@@ -1014,16 +848,8 @@
                         aseguradoraReferencia = prorrogaRef.aseguradora || '';
                     }
 
-                    // E1: Timestamp intermedio
-                    const timestampTramite = new Date().toISOString();
-
                     if (db) {
-                        const dataToSave = { 
-                            fechaTramiteDirector: timestampTramite, // Guardar la fecha exacta
-                            consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, 
-                            estado: 'En Trámite', 
-                            formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef }) 
-                        };
+                        const dataToSave = { fechaRegistro: new Date().toISOString(), consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'En Trámite', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef }) };
                         await db.collection("solicitudes").doc(consecutivo).set(dataToSave, { merge: true });
                         setEstadoSolicitud('En Trámite');
                     }
@@ -1031,29 +857,43 @@
                     const attachments = []; 
                     try {
                         const htmlString = getOrdenServicioHTML();
-                        const opt = { margin: 10, filename: `${consecutivo}_Orden_Servicio.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, logging: false, useCORS: true, letterRendering: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } };
-                        const pdfDataUri = await html2pdf().set(opt).from(htmlString).outputPdf('datauristring');
+                        // Se unifican opciones con las de descargarPDF para garantizar misma calidad
+                        const opt = { margin: 10, filename: `${consecutivo}_Orden_Servicio.pdf`, image: { type: 'jpeg', quality: 0.98 }, html2canvas: { scale: 2, logging: false, useCORS: true }, jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' } };
+                        
+                        // FIX V2.15.2: Renderizado en el DOM Forzado
+                        // Crear un contenedor temporal en el body para que el motor del navegador
+                        // calcule flexbox, tablas y anchos correctamente antes de que html2canvas tome la foto.
+                        const tempDiv = document.createElement('div');
+                        tempDiv.innerHTML = htmlString;
+                        tempDiv.style.position = 'absolute';
+                        tempDiv.style.left = '-9999px';
+                        tempDiv.style.top = '-9999px';
+                        tempDiv.style.width = '1200px'; // Forzar ancho landscape (A4)
+                        document.body.appendChild(tempDiv);
+
+                        const pdfDataUri = await html2pdf().set(opt).from(tempDiv).outputPdf('datauristring');
                         const pdfBase64 = pdfDataUri.split(',')[1];
                         if (pdfBase64) attachments.push({ name: `${consecutivo} - Orden de Servicio.pdf`, contentBytes: pdfBase64 });
-                    } catch (pdfError) { console.error("Error PDF:", pdfError); }
+                        
+                        document.body.removeChild(tempDiv);
+                    } catch (pdfError) { 
+                        console.error("Error PDF:", pdfError); 
+                    }
 
                     const amparosDetalleExcel = armarAmparosExcel();
 
                     if (WEBHOOK_URL) {
                         const payload = {
-                            // E3: Asuntos y etiquetas unificadas
-                            asunto_correo: `${consecutivo} - ${asegurado.nombre}`,
-                            etiqueta_proceso: 'ORDEN FINAL',
                             tipo_flujo: 'ORDEN-SERVICIO',
                             flujo: 'ORDEN-FINAL', 
+                            fechaRegistro: new Date().toLocaleString('es-CO'),
                             fechaTramiteDirector: new Date().toLocaleString('es-CO'), 
                             consecutivo, 
                             solicitanteNombre: interno.solicitante, solicitanteEmail: interno.solicitanteEmail, asunto: interno.asunto,
                             tiposSolicitud: Object.keys(interno.tipos).filter(k => interno.tipos[k]).join(', '),
                             tomadorNombre: tomador.nombre, tomadorNit: tomador.nit, tomadorDireccion: tomador.direccion, tomadorTelefono: tomador.telefono, tomadorEmail: tomador.email,
                             aseguradoNombre: asegurado.nombre, aseguradoNit: asegurado.nit,
-                            contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, cierreLicitacion: contrato.cierreLicitacion ? new Date(contrato.cierreLicitacion).toLocaleString('es-CO') : 'No aplica', // E4
-                            contratoValorSinIva: valorSinIva, contratoValorConIva: valorConIva, contratoValorSinIvaFormateado: formatCurrency(valorSinIva), contratoValorConIvaFormateado: formatCurrency(valorConIva), contratoDuracionDias: contrato.duracion || 0,
+                            contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, contratoValorSinIva: valorSinIva, contratoValorConIva: valorConIva, contratoValorSinIvaFormateado: formatCurrency(valorSinIva), contratoValorConIvaFormateado: formatCurrency(valorConIva), contratoDuracionDias: contrato.duracion || 0,
                             amparosDetalleExcel, primaCumplimiento, gastosCumplimiento: gastosCalculadosCump, ivaCumplimiento: ivaCump, valorTotalCumplimiento: formatCurrency(totalCump), 
                             primaRCE, gastosRCE: gastosCalculadosRCE, ivaRCE: ivaRCE, valorTotalRCE: formatCurrency(totalRCE), granTotal: totalGeneral, valorGranTotal: formatCurrency(totalGeneral), 
                             polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
@@ -1078,16 +918,9 @@
                 setIsSubmitting(true);
                 
                 try {
-                    // E1: Timestamp final
-                    const timestampEntrega = new Date().toISOString();
-
                     if (db) {
                         const formCompleto = JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef });
-                        const dataToSave = { 
-                            estado: 'Emitida-Entregada', 
-                            fechaEntregaPoliza: timestampEntrega, // Cierra el ciclo de ANS
-                            numeroPoliza, aseguradora, ramoPoliza, formularioCompleto: formCompleto 
-                        };
+                        const dataToSave = { estado: 'Emitida-Entregada', numeroPoliza, aseguradora, ramoPoliza, formularioCompleto: formCompleto };
                         await db.collection("solicitudes").doc(consecutivo).set(dataToSave, { merge: true });
                         setEstadoSolicitud('Emitida-Entregada');
                     }
@@ -1095,9 +928,6 @@
                     if (WEBHOOK_URL) {
                         const attachments = await Promise.all(archivosPoliza.map(getBase64));
                         const payload = {
-                            // E3: Asuntos y etiquetas unificadas
-                            asunto_correo: `${consecutivo} - ${asegurado.nombre}`,
-                            etiqueta_proceso: 'EMISIÓN PÓLIZA',
                             tipo_flujo: 'EMISION-FINAL',
                             flujo: 'ENTREGA-POLIZA', 
                             consecutivo, 
@@ -1130,7 +960,12 @@
                     const text = evt.target.result; const rows = text.split('\n').filter(r => r.trim());
                     if(rows.length < 2) return showAlert('Error de Archivo', "El archivo está vacío o sin formato.");
                     const sep = text.includes(';') ? ';' : ',';
-                    if (type === 'cartera') {
+                    if (type === 'produccion') {
+                        setProduccionData(rows.slice(1).map(row => {
+                            const cols = row.split(sep);
+                            return { cliente: cols[0]?.trim() || '-', id: cols[1]?.trim() || '-', aseguradora: cols[2]?.trim() || '-', asegurado: cols[3]?.trim() || '-', ramo: cols[4]?.trim() || '-', ansHoras: parseFloat(cols[5]) || 0, estado: cols[6]?.trim() || '-', valor: parseFloat(cols[7]) || 0 };
+                        }));
+                    } else {
                         setCarteraData(rows.slice(1).map(row => {
                             const cols = row.split(sep);
                             return { tomador: cols[0]?.trim() || '-', beneficiario: cols[1]?.trim() || '-', ramo: cols[2]?.trim() || '-', poliza: cols[3]?.trim() || '-', dias: parseInt(cols[4]) || 0, total: parseFloat(cols[5]) || 0 };
@@ -1331,7 +1166,7 @@
                                                     { key: 'cumplimientoEstatales', label: 'Cumplimiento Estatales' },
                                                     { key: 'cumplimientoParticulares', label: 'Cumplimiento Particulares' },
                                                     { key: 'disposicionLegal', label: 'Disposición Legal' },
-                                                    { key: 'prorroga', label: 'Prórroga / Modificación' }, // E5: Cambio de etiqueta
+                                                    { key: 'prorroga', label: 'Prórroga' },
                                                     { key: 'responsabilidadCivil', label: 'Responsabilidad Civil' },
                                                     { key: 'seriedadOferta', label: 'Seriedad de la Oferta' },
                                                     { key: 'otros', label: 'Otros' }
@@ -1377,6 +1212,7 @@
 
                                     {/* Bloque 2: Contrato y Prórroga */}
                                     <div className={sectionCls}>
+                                        {isDirector && <div className="absolute top-0 right-0 p-3"><Lock size={20} className="text-gray-300" /></div>}
                                         <h3 className="flex items-center gap-2 font-bold text-[#163f73] mb-4 border-b border-[#dce4ec] pb-2"><FileText size={20} className="text-[#58C9E8]" /> 2. Datos del Contrato</h3>
                                         
                                         {/* NUEVO BLOQUE DE BÚSQUEDA DE PRÓRROGA */}
@@ -1436,19 +1272,8 @@
                                         )}
 
                                         <div className="grid grid-cols-1 md:grid-cols-6 gap-4">
-                                            {/* E2: Objeto siempre editable (Director puede complementar) y capacidad de 5000 chars */}
-                                            <div className="md:col-span-6">
-                                                <label className={labelCls}>Objeto del Contrato *</label>
-                                                <textarea maxLength="5000" className={`${inputCls} h-24`} value={contrato.objeto} onChange={e => setContrato({...contrato, objeto: e.target.value})}></textarea>
-                                            </div>
-                                            <div className="md:col-span-3"><label className={labelCls}>Número de Contrato</label><input type="text" className={inputCls} disabled={isDirector} value={contrato.numero} onChange={e => setContrato({...contrato, numero: e.target.value})} /></div>
-                                            
-                                            {/* E4: Fecha y hora de Cierre Licitación (Obligatorio) */}
-                                            <div className="md:col-span-3">
-                                                <label className={labelCls}>Cierre Licitación *</label>
-                                                <input type="datetime-local" className={inputCls} disabled={isDirector} value={contrato.cierreLicitacion} onChange={e => setContrato({...contrato, cierreLicitacion: e.target.value})} />
-                                            </div>
-
+                                            <div className="md:col-span-6"><label className={labelCls}>Objeto del Contrato *</label><textarea maxLength="2000" className={`${inputCls} h-20`} disabled={isDirector} value={contrato.objeto} onChange={e => setContrato({...contrato, objeto: e.target.value})}></textarea></div>
+                                            <div className="md:col-span-2"><label className={labelCls}>Número</label><input type="text" className={inputCls} disabled={isDirector} value={contrato.numero} onChange={e => setContrato({...contrato, numero: e.target.value})} /></div>
                                             <div className="md:col-span-2">
                                                 <label className={labelCls}>Valor CON IVA *</label>
                                                 <div className="relative">
@@ -1463,8 +1288,6 @@
                                                     <input type="text" className={`${inputCls} bg-[#e4ebf1] font-semibold pl-8 cursor-not-allowed`} disabled value={valorSinIva ? valorSinIva.toLocaleString('es-CO', {maximumFractionDigits: 0}) : '0'} />
                                                 </div>
                                             </div>
-                                            <div className="md:col-span-2"></div>
-
                                             <div className="md:col-span-2"><label className={labelCls}>Desde</label><input type="date" className={inputCls} disabled={isDirector} value={contrato.desde} onChange={e => {
                                                 const newDesde = e.target.value; let newDuracion = contrato.duracion;
                                                 if (newDesde && contrato.hasta) { newDuracion = Math.ceil((new Date(contrato.hasta) - new Date(newDesde)) / (1000 * 60 * 60 * 24)) > 0 ? Math.ceil((new Date(contrato.hasta) - new Date(newDesde)) / (1000 * 60 * 60 * 24)) : 0; }
@@ -1824,8 +1647,8 @@
                                                                     {sol.fechaRegistro ? new Date(sol.fechaRegistro).toLocaleTimeString('es-CO', {hour: '2-digit', minute:'2-digit'}) : ''}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-4 py-4 text-[#12334F] font-medium truncate max-w-[200px]" title={unificarNombreEmpresa(sol.tomadorNombre)}>
-                                                                {unificarNombreEmpresa(sol.tomadorNombre)}
+                                                            <td className="px-4 py-4 text-[#12334F] font-medium truncate max-w-[200px]" title={sol.tomadorNombre}>
+                                                                {sol.tomadorNombre || 'N/A'}
                                                             </td>
                                                             <td className="px-4 py-4 text-gray-600 truncate max-w-[180px]" title={sol.solicitanteNombre}>
                                                                 {sol.solicitanteNombre || 'N/A'}
@@ -1859,62 +1682,66 @@
                             </div>
 
                             {/* ========================================================= */}
-                            {/* VISTA 2: REPORTE PRODUCCIÓN (E1: DATOS EN VIVO)           */}
+                            {/* VISTA 2: REPORTE PRODUCCIÓN                               */}
                             {/* ========================================================= */}
                             <div className={activeMenu === 'produccion' ? 'block p-4 md:p-8 pb-20' : 'hidden'}>
-                                <div className="bg-[#163f73] text-white py-6 px-8 shadow-sm mb-6 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4 relative overflow-hidden">
-                                    <div className="absolute top-0 right-0 w-32 h-32 bg-[#58C9E8] opacity-10 rounded-full -translate-y-1/2 translate-x-1/4"></div>
-                                    <div className="flex items-center gap-3 z-10">
+                                <div className="bg-[#163f73] text-white py-6 px-8 shadow-sm mb-6 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4">
+                                    <div className="flex items-center gap-3">
                                         <div className="p-2 bg-white/10 rounded-lg"><TrendingUp size={32} className="text-[#58C9E8]" strokeWidth={2} /></div>
-                                        <div><h1 className="text-2xl font-bold tracking-wide">Reporte de Producción y ANS</h1><p className="text-[#58C9E8] text-sm font-medium">MÉTRICAS EN TIEMPO REAL</p></div>
-                                    </div>
-                                    <div className="z-10 bg-white/10 px-4 py-2 rounded-lg border border-white/20">
-                                        <p className="text-xs text-[#58C9E8] uppercase tracking-wider font-bold">Datos sincronizados con Firestore</p>
+                                        <div><h1 className="text-2xl font-bold tracking-wide">Reporte de Producción y ANS</h1><p className="text-[#58C9E8] text-sm font-medium">MÉTRICAS OPERATIVAS</p></div>
                                     </div>
                                 </div>
 
                                 <div className="w-full max-w-[1600px] mx-auto space-y-8">
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col md:flex-row items-center justify-between gap-4">
+                                        <div>
+                                            <h3 className="text-lg font-bold text-[#163f73] flex items-center gap-2"><UploadCloud size={20} className="text-[#58C9E8]"/> Actualizar Datos del Reporte</h3>
+                                            <p className="text-sm text-gray-500">Carga un archivo CSV para actualizar las gráficas en tiempo real.</p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-3">
+                                            <button onClick={() => downloadTemplate('produccion')} className="px-4 py-2.5 text-sm font-medium text-[#163f73] bg-[#e8f7fb] rounded-lg border border-[#58C9E8]/30 hover:bg-[#d0f0fa] flex items-center gap-2"><Download size={16} /> Plantilla CSV</button>
+                                            <label className="cursor-pointer px-4 py-2.5 text-sm font-medium text-white bg-[#163f73] rounded-lg hover:bg-[#12334F] flex items-center gap-2"><FileText size={16} /> Cargar Archivo<input type="file" accept=".csv" className="hidden" onChange={(e) => handleCsvUpload(e, 'produccion')} /></label>
+                                        </div>
+                                    </div>
+
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-[#58C9E8]/30 flex items-start gap-4 transition-all hover:shadow-md">
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
                                             <div className="p-3 bg-blue-50 rounded-lg text-[#163f73]"><FileText size={28} /></div>
-                                            <div><p className="text-sm text-gray-500 font-medium">Total Solicitudes Base</p><h4 className="text-3xl font-bold text-[#12334F] mt-1">{prodTotal}</h4></div>
+                                            <div><p className="text-sm text-gray-500 font-medium">Total Solicitudes</p><h4 className="text-3xl font-bold text-[#12334F] mt-1">{prodTotal}</h4></div>
                                         </div>
-                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-[#58C9E8]/30 flex items-start gap-4 transition-all hover:shadow-md">
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
                                             <div className="p-3 bg-[#e8f7fb] rounded-lg text-[#58C9E8]"><CheckCircle size={28} /></div>
-                                            <div><p className="text-sm text-gray-500 font-medium">Gestión &lt; 24 Horas</p><h4 className="text-3xl font-bold text-[#163f73] mt-1">{prodMenorUnDia} <span className="text-lg text-gray-500 font-normal">({prodPorcentaje}%)</span></h4></div>
+                                            <div><p className="text-sm text-gray-500 font-medium">Entregas &lt; 24 Horas</p><h4 className="text-3xl font-bold text-[#163f73] mt-1">{prodMenorUnDia} <span className="text-lg text-gray-500 font-normal">({prodPorcentaje}%)</span></h4></div>
                                         </div>
-                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-[#58C9E8]/30 flex items-start gap-4 transition-all hover:shadow-md">
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
                                             <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600"><ClockIcon size={28} /></div>
                                             <div><p className="text-sm text-gray-500 font-medium">Mediana ANS</p><h4 className="text-3xl font-bold text-[#12334F] mt-1">{prodMediana} <span className="text-lg text-gray-500 font-normal">hrs</span></h4></div>
                                         </div>
                                     </div>
 
-                                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-8">
-                                        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                                            <h4 className="text-lg font-bold text-[#163f73] flex items-center gap-2"><PieChart size={18} className="text-[#58C9E8]"/> Resumen Consolidado por Tomador</h4>
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-8">
+                                        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
+                                            <h4 className="text-lg font-bold text-[#163f73]">Resumen Consolidado por Cliente</h4>
+                                            <span className="text-xs font-medium px-2 py-1 bg-[#163f73] text-white rounded-md shadow-sm">Totales Globales</span>
                                         </div>
                                         <div className="overflow-x-auto">
                                             <table className="w-full text-left border-collapse">
-                                            <thead className="bg-gray-50 border-b border-gray-200">
+                                            <thead className="bg-gray-50 shadow-sm border-b border-gray-200">
                                                 <tr className="text-gray-500 text-xs uppercase tracking-wider">
-                                                <th className="px-6 py-4 font-semibold">Tomador (Cliente)</th>
-                                                <th className="px-6 py-4 font-semibold text-center">Total Órdenes</th>
-                                                <th className="px-6 py-4 font-semibold text-right">Valor Total Asegurado</th>
-                                                <th className="px-6 py-4 font-semibold text-right">Prima Total</th> {/* E1: Columna prima */}
+                                                <th className="px-6 py-4 font-semibold">Cliente / Tomador</th>
+                                                <th className="px-6 py-4 font-semibold text-center">Total Pólizas</th>
+                                                <th className="px-6 py-4 font-semibold text-right">Prima Total Emitida</th>
                                                 <th className="px-6 py-4 font-semibold text-center">% de Participación</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100 text-sm">
-                                                {prodSummaryArray.length === 0 ? (
-                                                    <tr><td colSpan="5" className="text-center py-8 text-gray-400">No hay datos registrados en Firestore.</td></tr>
-                                                ) : prodSummaryArray.map((item, idx) => {
+                                                {prodSummaryArray.map((item, idx) => {
                                                     const porcentaje = prodTotalValor > 0 ? ((item.totalValor / prodTotalValor) * 100).toFixed(1) : 0;
                                                     return (
-                                                        <tr key={idx} className="hover:bg-blue-50/20 transition-colors">
+                                                        <tr key={idx} className="hover:bg-gray-50 transition-colors">
                                                             <td className="px-6 py-4"><div className="font-bold text-[#12334F]">{item.cliente}</div></td>
                                                             <td className="px-6 py-4 text-center"><span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#e8f7fb] text-[#163f73] font-bold">{item.count}</span></td>
                                                             <td className="px-6 py-4 text-right"><span className="font-bold text-[#12334F] text-base">{formatCurrency(item.totalValor)}</span></td>
-                                                            <td className="px-6 py-4 text-right"><span className="font-bold text-green-700 text-sm">{formatCurrency(item.totalPrima)}</span></td>
                                                             <td className="px-6 py-4 text-center">
                                                                 <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
                                                                     <div className="bg-[#58C9E8] h-2 rounded-full" style={{ width: `${porcentaje}%` }}></div>
@@ -1925,104 +1752,38 @@
                                                     );
                                                 })}
                                             </tbody>
-                                            {prodTotal > 0 && (
-                                                <tfoot className="bg-gray-100 font-bold border-t-2 border-[#58C9E8]/30 text-[#12334F]">
-                                                    <tr>
-                                                        <td className="px-6 py-4 text-right uppercase">Total General:</td>
-                                                        <td className="px-6 py-4 text-center text-lg">{prodTotal}</td>
-                                                        <td className="px-6 py-4 text-right text-lg">{formatCurrency(prodTotalValor)}</td>
-                                                        <td className="px-6 py-4 text-right text-lg text-green-700">{formatCurrency(prodTotalPrima)}</td>
-                                                        <td className="px-6 py-4 text-center text-lg">100%</td>
-                                                    </tr>
-                                                </tfoot>
-                                            )}
+                                            <tfoot className="bg-gray-100 font-bold border-t-2 border-gray-200 text-[#12334F]">
+                                                <tr>
+                                                    <td className="px-6 py-4 text-right uppercase">Total General:</td>
+                                                    <td className="px-6 py-4 text-center text-lg">{prodTotal}</td>
+                                                    <td className="px-6 py-4 text-right text-lg">{formatCurrency(prodTotalValor)}</td>
+                                                    <td className="px-6 py-4 text-center text-lg">100%</td>
+                                                </tr>
+                                            </tfoot>
                                             </table>
                                         </div>
                                     </div>
 
-                                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                                        <div className="px-6 py-5 border-b bg-gray-50 font-bold text-[#163f73] flex items-center gap-2">
-                                            <ClockIcon size={18} className="text-[#58C9E8]"/> Registro Detallado de Tiempos (SLA)
-                                        </div>
+                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                                        <div className="px-6 py-5 border-b bg-gray-50/50 font-bold text-[#163f73]">Registro Detallado</div>
                                         <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-                                            <table className="w-full text-left border-collapse min-w-[1100px]">
-                                                <thead className="sticky top-0 bg-white z-10 shadow-sm border-b border-gray-200 text-gray-500 text-xs uppercase tracking-wider">
-                                                    <tr>
-                                                        <th className="px-6 py-4 font-semibold w-64">
-                                                            <div className="flex flex-col gap-2">
-                                                                <span>Tomador / Asegurado</span>
-                                                                <div className="relative">
-                                                                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/>
-                                                                    <input type="text" placeholder="Buscar empresa..." className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosProduccion.cliente} onChange={(e) => setFiltrosProduccion({...filtrosProduccion, cliente: e.target.value})} />
-                                                                </div>
-                                                            </div>
-                                                        </th>
-                                                        <th className="px-6 py-4 font-semibold w-48">
-                                                            <div className="flex flex-col gap-2">
-                                                                <span>Póliza / Anexo (ID)</span>
-                                                                <div className="relative">
-                                                                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/>
-                                                                    <input type="text" placeholder="Buscar ID o póliza..." className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosProduccion.poliza} onChange={(e) => setFiltrosProduccion({...filtrosProduccion, poliza: e.target.value})} />
-                                                                </div>
-                                                            </div>
-                                                        </th>
-                                                        <th className="px-6 py-4 font-semibold w-48">
-                                                            <div className="flex flex-col gap-2">
-                                                                <span>Aseguradora / Ramo</span>
-                                                                <div className="relative">
-                                                                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/>
-                                                                    <input type="text" placeholder="Buscar aseguradora..." className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosProduccion.aseguradora} onChange={(e) => setFiltrosProduccion({...filtrosProduccion, aseguradora: e.target.value})} />
-                                                                </div>
-                                                            </div>
-                                                        </th>
-                                                        <th className="px-6 py-4 font-semibold text-center w-32 align-top pt-5">Tiempo ANS</th>
-                                                        <th className="px-6 py-4 font-semibold w-40">
-                                                            <div className="flex flex-col gap-2">
-                                                                <span>Estado Actual</span>
-                                                                <select className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700 bg-white" value={filtrosProduccion.estado} onChange={(e) => setFiltrosProduccion({...filtrosProduccion, estado: e.target.value})}>
-                                                                    <option value="">Todos</option>
-                                                                    <option value="Pre-Orden">Pre-Orden</option>
-                                                                    <option value="En Trámite">En Trámite</option>
-                                                                    <option value="Emitida-Entregada">Emitida-Entregada</option>
-                                                                </select>
-                                                            </div>
-                                                        </th>
-                                                    </tr>
+                                            <table className="w-full text-left border-collapse min-w-[900px]">
+                                                <thead className="sticky top-0 bg-gray-50 z-10 shadow-sm text-gray-500 text-xs uppercase tracking-wider">
+                                                    <tr><th className="px-6 py-4 font-semibold">Cliente</th><th className="px-6 py-4 font-semibold">Asegurado / Póliza</th><th className="px-6 py-4 font-semibold">Aseguradora / Ramo</th><th className="px-6 py-4 font-semibold text-center">Tiempo ANS</th><th className="px-6 py-4 font-semibold">Estado</th></tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-100 text-sm">
-                                                    {produccionLiveFiltrada.map((policy, idx) => {
-                                                        const isMenorUnDia = policy.ansHoras <= 24; 
-                                                        const isAnulada = policy.estado === "Anulada" || policy.estado === "Cancelada";
+                                                    {produccionData.map((policy, idx) => {
+                                                        const isMenorUnDia = policy.ansHoras <= 24; const isAnulada = policy.estado === "Anulada" || policy.estado === "Cancelada";
                                                         return (
-                                                            <tr key={idx} className="hover:bg-blue-50/20 transition-colors">
-                                                                <td className="px-6 py-4">
-                                                                    <div className="font-bold text-[#12334F] truncate max-w-[250px]" title={policy.cliente}>{policy.cliente}</div>
-                                                                    <div className="text-xs text-gray-500 mt-1 truncate max-w-[250px]" title={policy.asegurado}>{policy.asegurado}</div>
-                                                                </td>
-                                                                <td className="px-6 py-4">
-                                                                    <span className="font-mono text-sm font-semibold text-[#5c7792] block">{policy.poliza}</span>
-                                                                    <span className="text-[10px] text-gray-400 mt-0.5 block tracking-wider uppercase">{policy.id}</span>
-                                                                </td>
-                                                                <td className="px-6 py-4">
-                                                                    <div className="text-gray-600 mb-1 truncate max-w-[150px]" title={policy.aseguradora}>{policy.aseguradora}</div>
-                                                                    <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-gray-100 text-gray-700 uppercase">{policy.ramo}</span>
-                                                                </td>
-                                                                <td className="px-6 py-4 text-center">
-                                                                    <div className={`inline-flex flex-col items-center p-2 rounded-lg ${isMenorUnDia ? 'bg-[#e8f7fb]' : 'bg-orange-50'}`}>
-                                                                        <span className={`font-bold ${isMenorUnDia ? 'text-[#163f73]' : 'text-orange-700'}`}>{policy.ansHoras.toFixed(1)} h</span>
-                                                                    </div>
-                                                                </td>
-                                                                <td className="px-6 py-4">
-                                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10px] font-bold border ${isAnulada ? 'bg-red-50 text-red-700 border-red-200' : (policy.estado === 'Finalizada' || policy.estado === 'Emitida-Entregada') ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
-                                                                        {policy.estado}
-                                                                    </span>
-                                                                </td>
+                                                            <tr key={idx} className="hover:bg-gray-50 transition-colors">
+                                                                <td className="px-6 py-4"><div className="font-bold text-[#12334F]">{policy.cliente}</div></td>
+                                                                <td className="px-6 py-4"><div className="font-medium text-gray-700">{policy.asegurado}</div><div className="text-xs text-gray-400 mt-1">Doc: {policy.id}</div></td>
+                                                                <td className="px-6 py-4"><div className="text-gray-600 mb-1">{policy.aseguradora}</div><span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-gray-100 text-gray-700 uppercase">{policy.ramo}</span></td>
+                                                                <td className="px-6 py-4 text-center"><div className={`inline-flex flex-col items-center p-2 rounded-lg ${isMenorUnDia ? 'bg-[#e8f7fb]' : 'bg-orange-50'}`}><span className={`font-bold ${isMenorUnDia ? 'text-[#163f73]' : 'text-orange-700'}`}>{policy.ansHoras.toFixed(1)} h</span></div></td>
+                                                                <td className="px-6 py-4"><span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium border ${isAnulada ? 'bg-red-50 text-red-700 border-red-200' : isMenorUnDia ? 'bg-green-50 text-green-700 border-green-200' : 'bg-orange-50 text-orange-700 border-orange-200'}`}>{policy.estado}</span></td>
                                                             </tr>
                                                         )
                                                     })}
-                                                    {produccionLiveFiltrada.length === 0 && (
-                                                        <tr><td colSpan="5" className="text-center py-8 text-gray-400">Aún no hay solicitudes registradas para medir.</td></tr>
-                                                    )}
                                                 </tbody>
                                             </table>
                                         </div>
@@ -2048,7 +1809,7 @@
                                             <p className="text-sm text-gray-500">Actualiza las deudas y edades subiendo un archivo CSV.</p>
                                         </div>
                                         <div className="flex flex-wrap gap-3">
-                                            <button className="px-4 py-2.5 text-sm font-medium text-[#163f73] bg-[#e8f7fb] rounded-lg border border-[#58C9E8]/30 hover:bg-[#d0f0fa] flex items-center gap-2"><Download size={16} /> Plantilla CSV</button>
+                                            <button onClick={() => downloadTemplate('cartera')} className="px-4 py-2.5 text-sm font-medium text-[#163f73] bg-[#e8f7fb] rounded-lg border border-[#58C9E8]/30 hover:bg-[#d0f0fa] flex items-center gap-2"><Download size={16} /> Plantilla CSV</button>
                                             <label className="cursor-pointer px-4 py-2.5 text-sm font-medium text-white bg-[#163f73] rounded-lg hover:bg-[#12334F] flex items-center gap-2"><DollarSign size={16} /> Cargar Archivo<input type="file" accept=".csv" className="hidden" onChange={(e) => handleCsvUpload(e, 'cartera')} /></label>
                                         </div>
                                     </div>
