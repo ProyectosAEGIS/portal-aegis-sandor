@@ -721,7 +721,7 @@
             const getOrdenServicioHTML = () => {
                 const amparosHtml = amparos.filter(a => a.activo).map(a => `
                     <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">${a.nombre}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; word-wrap: break-word;">${a.nombre}</td>
                         <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">${a.desde || '-'} al ${a.hasta || '-'}</td>
                         <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.dias}</td>
                         <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.porcentaje || '0'}%</td>
@@ -731,19 +731,18 @@
                     </tr>
                 `).join('');
 
-                const cierreHTML = contrato.cierreLicitacion ? `<tr><td class="label" style="width:20%;">Cierre Licitación:</td><td class="val" style="width:80%; font-weight:bold; color:#e11d48;">${new Date(contrato.cierreLicitacion).toLocaleString('es-CO')}</td></tr>` : '';
-
                 return `
-                    <div id="pdf-content" style="font-family: 'Arial', sans-serif; color: #12334F; padding: 20px; background: white;">
+                    <div id="pdf-content" style="font-family: 'Arial', sans-serif; color: #12334F; padding: 20px; background: white; width: 1060px; max-width: 1060px; box-sizing: border-box; margin: 0 auto;">
                         <style>
-                            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-                            td, th { padding: 6px 0; vertical-align: top; font-size: 14px; }
-                            .label { font-weight: bold; width: 35%; color: #555; }
-                            .val { width: 65%; }
+                            /* BLINDAJE PARA EVITAR QUE SE CORTEN LOS MÁRGENES */
+                            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }
+                            td, th { padding: 6px 10px; vertical-align: top; font-size: 14px; word-wrap: break-word; overflow-wrap: break-word; }
+                            .label { font-weight: bold; color: #555; }
+                            .val { word-break: break-word; white-space: pre-wrap; text-align: justify; }
                             .amparos-table th { background-color: #f4f7f9; padding: 12px 10px; text-align: left; font-size: 12px; color: #163f73; text-transform: uppercase; }
                             .totals-container { width: 100%; margin-top: 20px; page-break-inside: avoid; }
                             .totals-grid { display: flex; gap: 20px; width: 100%; }
-                            .totals-box { flex: 1; background-color: #f4f7f9; border-left: 4px solid #163f73; padding: 15px; }
+                            .totals-box { flex: 1; background-color: #f4f7f9; border-left: 4px solid #163f73; padding: 15px; box-sizing: border-box; }
                             .totals-box h4 { margin: 0 0 10px 0; color: #163f73; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
                             .totals-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; color: #333; }
                             .totals-subtotal { display: flex; justify-content: space-between; font-weight: bold; color: #163f73; font-size: 14px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ccc; }
@@ -768,28 +767,28 @@
                             <div style="flex: 1;">
                                 <h3 class="section-title">Datos del Tomador</h3>
                                 <table>
-                                    <tr><td class="label">Razón Social:</td><td class="val">${tomador.nombre}</td></tr>
-                                    <tr><td class="label">NIT:</td><td class="val">${tomador.nit}</td></tr>
-                                    <tr><td class="label">Dirección:</td><td class="val">${tomador.direccion || '-'}</td></tr>
-                                    <tr><td class="label">Email / Tel:</td><td class="val">${tomador.email || '-'} / ${tomador.telefono || tomador.celular || '-'}</td></tr>
+                                    <tr><td class="label" style="width:30%;">Razón Social:</td><td class="val" style="width:70%;">${tomador.nombre}</td></tr>
+                                    <tr><td class="label" style="width:30%;">NIT:</td><td class="val" style="width:70%;">${tomador.nit}</td></tr>
+                                    <tr><td class="label" style="width:30%;">Dirección:</td><td class="val" style="width:70%;">${tomador.direccion || '-'}</td></tr>
+                                    <tr><td class="label" style="width:30%;">Email / Tel:</td><td class="val" style="width:70%;">${tomador.email || '-'} / ${tomador.telefono || tomador.celular || '-'}</td></tr>
                                 </table>
                             </div>
                             <div style="flex: 1;">
                                 <h3 class="section-title">Datos del Asegurado</h3>
                                 <table>
-                                    <tr><td class="label">Razón Social:</td><td class="val">${asegurado.nombre}</td></tr>
-                                    <tr><td class="label">NIT:</td><td class="val">${asegurado.nit}</td></tr>
-                                    <tr><td class="label">Solicitante:</td><td class="val">${interno.solicitante}</td></tr>
-                                    <tr><td class="label">Asunto:</td><td class="val">${interno.asunto || '-'}</td></tr>
+                                    <tr><td class="label" style="width:30%;">Razón Social:</td><td class="val" style="width:70%;">${asegurado.nombre}</td></tr>
+                                    <tr><td class="label" style="width:30%;">NIT:</td><td class="val" style="width:70%;">${asegurado.nit}</td></tr>
+                                    <tr><td class="label" style="width:30%;">Solicitante:</td><td class="val" style="width:70%;">${interno.solicitante}</td></tr>
+                                    <tr><td class="label" style="width:30%;">Asunto:</td><td class="val" style="width:70%;">${interno.asunto || '-'}</td></tr>
                                 </table>
                             </div>
                         </div>
 
                         <h3 class="section-title">Datos del Contrato</h3>
                         <table>
-                            <tr><td class="label" style="width:20%;">Objeto:</td><td class="val" style="width:80%; text-align: justify;">${contrato.objeto}</td></tr>
+                            <tr><td class="label" style="width:20%;">Objeto:</td><td class="val" style="width:80%;">${contrato.objeto}</td></tr>
                             <tr><td class="label" style="width:20%;">No. Contrato:</td><td class="val" style="width:80%;">${contrato.numero || '-'}</td></tr>
-                            ${cierreHTML}
+                            <tr><td class="label" style="width:20%; color: #e11d48;">Cierre Licitación:</td><td class="val" style="width:80%; color: #e11d48; font-weight: bold;">${contrato.cierreLicitacion ? contrato.cierreLicitacion.replace('T', ', ') : '-'}</td></tr>
                             <tr><td class="label" style="width:20%;">Vigencia:</td><td class="val" style="width:80%;">${contrato.desde || '-'} al ${contrato.hasta || '-'} (${contrato.duracion || '-'} días)</td></tr>
                             <tr><td class="label" style="width:20%;">Valor SIN IVA:</td><td class="val" style="width:80%;">${formatCurrency(valorSinIva)}</td></tr>
                             <tr><td class="label" style="width:20%;">Valor CON IVA:</td><td class="val" style="width:80%;">${formatCurrency(valorConIva)}</td></tr>
@@ -797,7 +796,17 @@
 
                         <h3 class="section-title">Amparos Solicitados</h3>
                         <table class="amparos-table">
-                            <thead><tr><th>Amparo</th><th>Vigencia</th><th style="text-align: center;">Días</th><th style="text-align: center;">% Vr. Aseg.</th><th style="text-align: right;">V. Asegurado</th><th style="text-align: center;">Tasa</th><th style="text-align: right;">Prima</th></tr></thead>
+                            <thead>
+                                <tr>
+                                    <th style="width: 25%;">Amparo</th>
+                                    <th style="width: 20%;">Vigencia</th>
+                                    <th style="width: 8%; text-align: center;">Días</th>
+                                    <th style="width: 10%; text-align: center;">% Vr. Aseg.</th>
+                                    <th style="width: 15%; text-align: right;">V. Asegurado</th>
+                                    <th style="width: 7%; text-align: center;">Tasa</th>
+                                    <th style="width: 15%; text-align: right;">Prima</th>
+                                </tr>
+                            </thead>
                             <tbody>${amparosHtml || '<tr><td colspan="7" style="text-align:center; padding: 20px;">No se seleccionaron amparos.</td></tr>'}</tbody>
                         </table>
 
