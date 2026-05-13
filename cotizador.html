@@ -721,120 +721,141 @@
             const getOrdenServicioHTML = () => {
                 const amparosHtml = amparos.filter(a => a.activo).map(a => `
                     <tr>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px; word-wrap: break-word;">${a.nombre}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee; font-size: 13px;">${a.desde || '-'} al ${a.hasta || '-'}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.dias}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.porcentaje || '0'}%</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-size: 13px;">${formatCurrency(a.valorAsegurado)}</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: center; font-size: 13px;">${a.tasa}%</td>
-                        <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right; font-size: 13px; font-weight: bold; color:#163f73;">${formatCurrency(a.prima)}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 12px; word-wrap: break-word;">${a.nombre}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; font-size: 12px;">${a.desde || '-'} al ${a.hasta || '-'}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center; font-size: 12px;">${a.dias}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center; font-size: 12px;">${a.porcentaje || '0'}%</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: right; font-size: 12px;">${formatCurrency(a.valorAsegurado)}</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: center; font-size: 12px;">${a.tasa}%</td>
+                        <td style="padding: 10px; border-bottom: 1px solid #e2e8f0; text-align: right; font-size: 12px; font-weight: bold; color:#0f172a;">${formatCurrency(a.prima)}</td>
                     </tr>
                 `).join('');
 
                 return `
-                    <div id="pdf-content" style="font-family: 'Arial', sans-serif; color: #12334F; padding: 20px; background: white; width: 1060px; max-width: 1060px; box-sizing: border-box; margin: 0 auto;">
-                        <style>
-                            /* BLINDAJE PARA EVITAR QUE SE CORTEN LOS MÁRGENES */
-                            table { width: 100%; border-collapse: collapse; margin-bottom: 20px; table-layout: fixed; }
-                            td, th { padding: 6px 10px; vertical-align: top; font-size: 14px; word-wrap: break-word; overflow-wrap: break-word; }
-                            .label { font-weight: bold; color: #555; }
-                            .val { word-break: break-word; white-space: pre-wrap; text-align: justify; }
-                            .amparos-table th { background-color: #f4f7f9; padding: 12px 10px; text-align: left; font-size: 12px; color: #163f73; text-transform: uppercase; }
-                            .totals-container { width: 100%; margin-top: 20px; page-break-inside: avoid; }
-                            .totals-grid { display: flex; gap: 20px; width: 100%; }
-                            .totals-box { flex: 1; background-color: #f4f7f9; border-left: 4px solid #163f73; padding: 15px; box-sizing: border-box; }
-                            .totals-box h4 { margin: 0 0 10px 0; color: #163f73; font-size: 13px; text-transform: uppercase; border-bottom: 1px solid #ccc; padding-bottom: 5px; }
-                            .totals-row { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 13px; color: #333; }
-                            .totals-subtotal { display: flex; justify-content: space-between; font-weight: bold; color: #163f73; font-size: 14px; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #ccc; }
-                            .grand-total-box { width: 100%; box-sizing: border-box; background-color: #12334F; border-left: 5px solid #58C9E8; padding: 15px; color: white; margin-top: 15px; }
-                            .grand-total-box .totals-row { color: white; font-size: 18px; font-weight: bold; margin: 0; }
-                            .section-title { color: #163f73; font-size: 16px; border-bottom: 1px solid #e0e0e0; padding-bottom: 5px; margin-top: 30px; margin-bottom: 15px; text-transform: uppercase; }
-                        </style>
-                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 3px solid #58C9E8; padding-bottom: 20px; margin-bottom: 30px;">
-                            <div>
-                                <svg xmlns="http://www.w3.org/2000/svg" width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#58C9E8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 5px;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                                <h1 style="margin: 0; color: #163f73; font-size: 28px; text-transform: uppercase; letter-spacing: 1px;">AEGIS</h1>
-                                <p style="margin: 2px 0 0 0; color: #58C9E8; font-weight: bold; letter-spacing: 3px; font-size: 11px; text-transform: uppercase;">INSURANCE</p>
+                    <div style="font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; color: #1e293b; padding: 40px; background: white; width: 1060px; max-width: 1060px; box-sizing: border-box; margin: 0 auto;">
+                        <!-- Header -->
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; border-bottom: 2px solid #e2e8f0; margin-bottom: 30px;">
+                            <div style="display: flex; align-items: center; gap: 15px;">
+                                <div style="background-color: #0f172a; padding: 15px; border-radius: 12px;">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="35" height="35" viewBox="0 0 24 24" fill="none" stroke="#38bdf8" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                                </div>
+                                <div>
+                                    <h1 style="margin: 0; color: #0f172a; font-size: 26px; font-weight: 800; letter-spacing: 1px;">AEGIS <span style="color: #38bdf8; font-weight: 400;">INSURANCE</span></h1>
+                                    <p style="margin: 2px 0 0 0; color: #64748b; font-size: 12px; letter-spacing: 2px; text-transform: uppercase;">Portal de Servicios</p>
+                                </div>
                             </div>
                             <div style="text-align: right;">
-                                <h2 style="margin:0; color: #163f73; font-size: 20px;">ORDEN DE SERVICIO</h2>
-                                <p style="margin:5px 0 0 0; color: #555; font-size:14px; font-weight: normal;">No. <b>${consecutivo}</b></p>
-                                <p style="margin:5px 0 0 0; color: #555; font-size:12px; font-weight: normal;">Fecha: ${new Date().toLocaleDateString('es-CO')}</p>
+                                <h2 style="margin:0; color: #0f172a; font-size: 22px; font-weight: 700;">ORDEN DE SERVICIO</h2>
+                                <p style="margin:5px 0 0 0; color: #475569; font-size:15px;">No. <strong style="color: #0f172a;">${consecutivo}</strong></p>
+                                <div style="display: inline-block; background-color: #f1f5f9; padding: 5px 12px; border-radius: 20px; margin-top: 8px; font-size: 12px; color: #475569; font-weight: 600;">
+                                    Generada: ${new Date().toLocaleDateString('es-CO')}
+                                </div>
                             </div>
                         </div>
 
-                        <div style="display: flex; gap: 40px;">
-                            <div style="flex: 1;">
-                                <h3 class="section-title">Datos del Tomador</h3>
-                                <table>
-                                    <tr><td class="label" style="width:30%;">Razón Social:</td><td class="val" style="width:70%;">${tomador.nombre}</td></tr>
-                                    <tr><td class="label" style="width:30%;">NIT:</td><td class="val" style="width:70%;">${tomador.nit}</td></tr>
-                                    <tr><td class="label" style="width:30%;">Dirección:</td><td class="val" style="width:70%;">${tomador.direccion || '-'}</td></tr>
-                                    <tr><td class="label" style="width:30%;">Email / Tel:</td><td class="val" style="width:70%;">${tomador.email || '-'} / ${tomador.telefono || tomador.celular || '-'}</td></tr>
-                                </table>
+                        <!-- Columnas Tomador y Asegurado -->
+                        <div style="display: flex; gap: 20px; margin-bottom: 20px;">
+                            <div style="flex: 1; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+                                <h3 style="margin: 0 0 15px 0; color: #0f172a; font-size: 15px; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                                    1. Datos del Tomador
+                                </h3>
+                                <div style="margin-bottom: 8px;"><strong style="color: #64748b; display: inline-block; width: 110px;">Razón Social:</strong> <span style="color: #0f172a; font-weight: 600;">${tomador.nombre}</span></div>
+                                <div style="margin-bottom: 8px;"><strong style="color: #64748b; display: inline-block; width: 110px;">NIT:</strong> <span style="color: #0f172a;">${tomador.nit}</span></div>
+                                <div style="margin-bottom: 8px;"><strong style="color: #64748b; display: inline-block; width: 110px;">Dirección:</strong> <span style="color: #0f172a;">${tomador.direccion || '-'}</span></div>
+                                <div style="margin-bottom: 8px;"><strong style="color: #64748b; display: inline-block; width: 110px;">Contacto:</strong> <span style="color: #0f172a;">${tomador.email || '-'}</span></div>
                             </div>
-                            <div style="flex: 1;">
-                                <h3 class="section-title">Datos del Asegurado</h3>
-                                <table>
-                                    <tr><td class="label" style="width:30%;">Razón Social:</td><td class="val" style="width:70%;">${asegurado.nombre}</td></tr>
-                                    <tr><td class="label" style="width:30%;">NIT:</td><td class="val" style="width:70%;">${asegurado.nit}</td></tr>
-                                    <tr><td class="label" style="width:30%;">Solicitante:</td><td class="val" style="width:70%;">${interno.solicitante}</td></tr>
-                                    <tr><td class="label" style="width:30%;">Asunto:</td><td class="val" style="width:70%;">${interno.asunto || '-'}</td></tr>
-                                </table>
+                            <div style="flex: 1; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+                                <h3 style="margin: 0 0 15px 0; color: #0f172a; font-size: 15px; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; display: flex; align-items: center; gap: 8px;">
+                                    2. Datos del Asegurado
+                                </h3>
+                                <div style="margin-bottom: 8px;"><strong style="color: #64748b; display: inline-block; width: 110px;">Razón Social:</strong> <span style="color: #0f172a; font-weight: 600;">${asegurado.nombre}</span></div>
+                                <div style="margin-bottom: 8px;"><strong style="color: #64748b; display: inline-block; width: 110px;">NIT:</strong> <span style="color: #0f172a;">${asegurado.nit}</span></div>
+                                <div style="margin-bottom: 8px;"><strong style="color: #64748b; display: inline-block; width: 110px;">Solicitante:</strong> <span style="color: #0f172a;">${interno.solicitante}</span></div>
+                                <div style="margin-bottom: 8px;"><strong style="color: #64748b; display: inline-block; width: 110px;">Asunto:</strong> <span style="color: #0f172a;">${interno.asunto || '-'}</span></div>
                             </div>
                         </div>
 
-                        <h3 class="section-title">Datos del Contrato</h3>
-                        <table>
-                            <tr><td class="label" style="width:20%;">Objeto:</td><td class="val" style="width:80%;">${contrato.objeto}</td></tr>
-                            <tr><td class="label" style="width:20%;">No. Contrato:</td><td class="val" style="width:80%;">${contrato.numero || '-'}</td></tr>
-                            <tr><td class="label" style="width:20%; color: #e11d48;">Cierre Licitación:</td><td class="val" style="width:80%; color: #e11d48; font-weight: bold;">${contrato.cierreLicitacion ? contrato.cierreLicitacion.replace('T', ', ') : '-'}</td></tr>
-                            <tr><td class="label" style="width:20%;">Vigencia:</td><td class="val" style="width:80%;">${contrato.desde || '-'} al ${contrato.hasta || '-'} (${contrato.duracion || '-'} días)</td></tr>
-                            <tr><td class="label" style="width:20%;">Valor SIN IVA:</td><td class="val" style="width:80%;">${formatCurrency(valorSinIva)}</td></tr>
-                            <tr><td class="label" style="width:20%;">Valor CON IVA:</td><td class="val" style="width:80%;">${formatCurrency(valorConIva)}</td></tr>
-                        </table>
-
-                        <h3 class="section-title">Amparos Solicitados</h3>
-                        <table class="amparos-table">
-                            <thead>
+                        <!-- Datos del Contrato -->
+                        <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 20px;">
+                            <h3 style="margin: 0 0 15px 0; color: #0f172a; font-size: 15px; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">
+                                3. Detalles del Contrato / Licitación
+                            </h3>
+                            <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
                                 <tr>
-                                    <th style="width: 25%;">Amparo</th>
-                                    <th style="width: 20%;">Vigencia</th>
-                                    <th style="width: 8%; text-align: center;">Días</th>
-                                    <th style="width: 10%; text-align: center;">% Vr. Aseg.</th>
-                                    <th style="width: 15%; text-align: right;">V. Asegurado</th>
-                                    <th style="width: 7%; text-align: center;">Tasa</th>
-                                    <th style="width: 15%; text-align: right;">Prima</th>
+                                    <td style="width: 15%; padding: 8px 0; vertical-align: top;"><strong style="color: #64748b;">Objeto:</strong></td>
+                                    <td style="width: 85%; padding: 8px 0; color: #0f172a; word-wrap: break-word; text-align: justify; line-height: 1.5;">${contrato.objeto}</td>
                                 </tr>
-                            </thead>
-                            <tbody>${amparosHtml || '<tr><td colspan="7" style="text-align:center; padding: 20px;">No se seleccionaron amparos.</td></tr>'}</tbody>
-                        </table>
+                                <tr>
+                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0;"><strong style="color: #64748b;">No. Contrato:</strong></td>
+                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0; color: #0f172a;">${contrato.numero || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0;"><strong style="color: #ef4444;">Cierre Licitación:</strong></td>
+                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0; color: #ef4444; font-weight: bold;">${contrato.cierreLicitacion ? contrato.cierreLicitacion.replace('T', ', ') : '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0;"><strong style="color: #64748b;">Vigencia:</strong></td>
+                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0; color: #0f172a;">${contrato.desde || '-'} al ${contrato.hasta || '-'} (${contrato.duracion || '-'} días)</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0;"><strong style="color: #64748b;">Valor SIN IVA:</strong></td>
+                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0; color: #0f172a;">${formatCurrency(valorSinIva)}</td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0;"><strong style="color: #64748b;">Valor CON IVA:</strong></td>
+                                    <td style="padding: 8px 0; border-top: 1px solid #e2e8f0; color: #0f172a; font-weight: 600;">${formatCurrency(valorConIva)}</td>
+                                </tr>
+                            </table>
+                        </div>
 
-                        <div class="totals-container" style="page-break-inside: avoid;">
-                            <div class="totals-grid">
-                                <div class="totals-box">
-                                    <h4>Póliza de Cumplimiento</h4>
-                                    <div class="totals-row"><span>Prima:</span><span>${formatCurrency(primaCumplimiento)}</span></div>
-                                    <div class="totals-row"><span>Gastos de Expedición:</span><span>${formatCurrency(gastosCalculadosCump)}</span></div>
-                                    <div class="totals-row"><span>IVA (${costos.tasaIva}%):</span><span>${formatCurrency(ivaCump)}</span></div>
-                                    <div class="totals-subtotal"><span>Total Cumplimiento:</span><span>${formatCurrency(totalCump)}</span></div>
-                                </div>
-                                <div class="totals-box">
-                                    <h4>Póliza de Responsabilidad Civil (RCE)</h4>
-                                    <div class="totals-row"><span>Prima:</span><span>${formatCurrency(primaRCE)}</span></div>
-                                    <div class="totals-row"><span>Gastos de Expedición:</span><span>${formatCurrency(gastosCalculadosRCE)}</span></div>
-                                    <div class="totals-row"><span>IVA (${costos.tasaIva}%):</span><span>${formatCurrency(ivaRCE)}</span></div>
-                                    <div class="totals-subtotal"><span>Total RCE:</span><span>${formatCurrency(totalRCE)}</span></div>
-                                </div>
+                        <!-- Amparos -->
+                        <div style="margin-bottom: 20px;">
+                            <h3 style="margin: 0 0 10px 0; color: #0f172a; font-size: 15px; text-transform: uppercase;">4. Amparos y Coberturas Solicitadas</h3>
+                            <table style="width: 100%; border-collapse: separate; border-spacing: 0; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; table-layout: fixed;">
+                                <thead>
+                                    <tr>
+                                        <th style="background-color: #0f172a; color: white; padding: 12px 10px; text-align: left; font-size: 12px; font-weight: 600; width: 25%;">Amparo</th>
+                                        <th style="background-color: #0f172a; color: white; padding: 12px 10px; text-align: left; font-size: 12px; font-weight: 600; width: 20%;">Vigencia</th>
+                                        <th style="background-color: #0f172a; color: white; padding: 12px 10px; text-align: center; font-size: 12px; font-weight: 600; width: 8%;">Días</th>
+                                        <th style="background-color: #0f172a; color: white; padding: 12px 10px; text-align: center; font-size: 12px; font-weight: 600; width: 10%;">% Vr. Aseg.</th>
+                                        <th style="background-color: #0f172a; color: white; padding: 12px 10px; text-align: right; font-size: 12px; font-weight: 600; width: 15%;">V. Asegurado</th>
+                                        <th style="background-color: #0f172a; color: white; padding: 12px 10px; text-align: center; font-size: 12px; font-weight: 600; width: 7%;">Tasa</th>
+                                        <th style="background-color: #0f172a; color: white; padding: 12px 10px; text-align: right; font-size: 12px; font-weight: 600; width: 15%;">Prima</th>
+                                    </tr>
+                                </thead>
+                                <tbody>${amparosHtml || '<tr><td colspan="7" style="text-align:center; padding: 20px; border-bottom: 1px solid #e2e8f0;">No se seleccionaron amparos.</td></tr>'}</tbody>
+                            </table>
+                        </div>
+
+                        <!-- Resumen Financiero -->
+                        <div style="display: flex; gap: 20px; page-break-inside: avoid;">
+                            <div style="flex: 1; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+                                <h4 style="margin: 0 0 15px 0; color: #0f172a; font-size: 14px; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">Liquidación Cumplimiento</h4>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;"><span style="color: #64748b;">Prima:</span> <span style="color: #0f172a; font-weight: 600;">${formatCurrency(primaCumplimiento)}</span></div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;"><span style="color: #64748b;">Gastos de Expedición:</span> <span style="color: #0f172a; font-weight: 600;">${formatCurrency(gastosCalculadosCump)}</span></div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 13px;"><span style="color: #64748b;">IVA (${costos.tasaIva}%):</span> <span style="color: #0f172a; font-weight: 600;">${formatCurrency(ivaCump)}</span></div>
+                                <div style="display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 10px; font-size: 14px; font-weight: bold;"><span style="color: #0f172a;">Total Cumplimiento:</span> <span style="color: #0f172a;">${formatCurrency(totalCump)}</span></div>
                             </div>
-                            <div class="grand-total-box">
-                                <div class="totals-row"><span>GRAN TOTAL A PAGAR:</span><span>${formatCurrency(totalGeneral)}</span></div>
+                            <div style="flex: 1; background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px;">
+                                <h4 style="margin: 0 0 15px 0; color: #0f172a; font-size: 14px; text-transform: uppercase; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px;">Liquidación RCE</h4>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;"><span style="color: #64748b;">Prima:</span> <span style="color: #0f172a; font-weight: 600;">${formatCurrency(primaRCE)}</span></div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px;"><span style="color: #64748b;">Gastos de Expedición:</span> <span style="color: #0f172a; font-weight: 600;">${formatCurrency(gastosCalculadosRCE)}</span></div>
+                                <div style="display: flex; justify-content: space-between; margin-bottom: 15px; font-size: 13px;"><span style="color: #64748b;">IVA (${costos.tasaIva}%):</span> <span style="color: #0f172a; font-weight: 600;">${formatCurrency(ivaRCE)}</span></div>
+                                <div style="display: flex; justify-content: space-between; border-top: 1px dashed #cbd5e1; padding-top: 10px; font-size: 14px; font-weight: bold;"><span style="color: #0f172a;">Total RCE:</span> <span style="color: #0f172a;">${formatCurrency(totalRCE)}</span></div>
+                            </div>
+                            <div style="flex: 1; background-color: #0f172a; border-radius: 12px; padding: 20px; color: white; display: flex; flex-direction: column; justify-content: center;">
+                                <h4 style="margin: 0 0 10px 0; color: #94a3b8; font-size: 13px; text-transform: uppercase; font-weight: 600;">Gran Total Cotizado</h4>
+                                <div style="font-size: 26px; font-weight: 800; color: #38bdf8;">${formatCurrency(totalGeneral)}</div>
+                                <p style="margin: 10px 0 0 0; font-size: 11px; color: #cbd5e1; opacity: 0.8;">Liquidación oficial sujeta a políticas de expedición.</p>
                             </div>
                         </div>
-                        <div style="margin-top: 50px; text-align: center; font-size: 11px; color: #888; border-top: 1px solid #eee; padding-top: 20px;">
-                            <strong>AEGIS INSURANCE - PROTECCIÓN & RESPALDO</strong><br>
+
+                        <!-- Pie de página agregado -->
+                        <div style="margin-top: 40px; text-align: center; font-size: 11px; color: #64748b; border-top: 1px solid #e2e8f0; padding-top: 20px;">
+                            <strong style="color: #0f172a; font-size: 12px;">AEGIS INSURANCE - PROTECCIÓN & RESPALDO</strong><br>
                             Documento generado automáticamente a través del Portal de Servicios. Operación exclusiva para Grupo Elite / Sandor.<br>
                         </div>
+
                     </div>
                 `;
             };
