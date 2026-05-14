@@ -1031,33 +1031,44 @@
                     const attachments = []; 
                     try {
                         const htmlString = getOrdenServicioHTML();
-                        
-                        // Generamos el PDF directamente desde el string de HTML (Sin hack invisible)
+                        const tempContainer = document.createElement('div');
+                        tempContainer.style.position = 'absolute';
+                        tempContainer.style.left = '-9999px';
+                        tempContainer.style.top = '0';
+                        tempContainer.style.width = '1200px';
+                        tempContainer.style.backgroundColor = '#ffffff';
+                        tempContainer.innerHTML = htmlString;
+                        document.body.appendChild(tempContainer);
+
                         const opt = {
-                            margin: [10, 10, 10, 10], // Márgenes adecuados
+                            margin: [0.5, 0.5, 0.5, 0.5],
                             filename: 'Orden_Final.pdf',
                             image: { type: 'jpeg', quality: 0.98 },
                             html2canvas: {
                                 scale: 2,
                                 useCORS: true,
-                                logging: false
+                                logging: false,
+                                windowWidth: 1200
                             },
-                            jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' }
+                            jsPDF: { unit: 'in', format: 'a4', orientation: 'landscape' }
                         };
 
                         let pdfBase64Final = '';
                         try {
-                            // html2pdf soporta renderizar directamente un HTML String 
-                            const dataUri = await html2pdf().set(opt).from(htmlString).outputPdf('datauristring');
+                            const dataUri = await html2pdf().set(opt).from(tempContainer).outputPdf('datauristring');
                             pdfBase64Final = dataUri.split(',')[1];
                         } catch (error) {
-                            console.error('Error en renderizado directo de PDF para Webhook:', error);
-                            alert('Hubo un error al generar el archivo PDF adjunto.');
+                            console.error('Error en renderizado de PDF para Webhook:', error);
+                            alert('Hubo un error al procesar el PDF adjunto.');
                             return;
+                        } finally {
+                            if (document.body.contains(tempContainer)) {
+                                document.body.removeChild(tempContainer);
+                            }
                         }
 
                         if (pdfBase64Final) attachments.push({ name: `${consecutivo} - Orden de Servicio.pdf`, contentBytes: pdfBase64Final });
-                    } catch (pdfError) { console.error("Error PDF general:", pdfError); }
+                    } catch (pdfError) { console.error("Error PDF:", pdfError); }
 
                     const amparosDetalleExcel = armarAmparosExcel();
 
@@ -1126,8 +1137,6 @@
                             solicitanteNombre: interno.solicitante, 
                             solicitanteEmail: interno.solicitanteEmail,
                             tomadorNombre: tomador.nombre,
-                            aseguradoNombre: asegurado.nombre, // ¡CORRECCIÓN APLICADA AQUÍ!
-                            cierreLicitacion: contrato.cierreLicitacion ? new Date(contrato.cierreLicitacion).toLocaleString('es-CO') : 'No aplica', // ¡CORRECCIÓN APLICADA AQUÍ!
                             observaciones: observacionesPoliza || "Sin observaciones.",
                             fechaEntregaPoliza: new Date().toLocaleString('es-CO'),
                             numeroPoliza,
