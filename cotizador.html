@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Servicios 2.16.0 - AEGIS Insurance</title>
+    <title>Portal de Servicios 2.16.3 - [Lógica Espejo + Cloud HTML Flow] - AEGIS Insurance</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -1245,7 +1245,7 @@ new Date(contrato.cierreLicitacion).toLocaleString('es-CO') : 'No aplica',
             const isDirector = rolActivo === 'director';
     React.useEffect(() => {
         if (pdfTask && consecutivo === pdfTask.targetId) {
-            descargarPDF();
+            imprimirCotizacion(); // Lógica Espejo: Usa el motor nativo del navegador
             setPdfTask(null);
         }
     }, [pdfTask, consecutivo]);
