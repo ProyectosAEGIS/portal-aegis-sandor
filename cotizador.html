@@ -1,4 +1,4 @@
-<!-- AEGIS v2.15.6 - 14/05/2026 - Fix PDF: Restauración Liquidación Cumplimiento + RCE + Cierre Licitación en rojo + Motor Unificado -->
+<!-- AEGIS v2.15.8 - 14/05/2026 - Restablecimiento Flujo B PDF Browser con render reforzado sin cambios a Make -->
 <!DOCTYPE html> 
 <html lang="es">
 <head>
@@ -882,7 +882,7 @@
                 return cortina;
             };
 
-            const generarPDFUnificado = async (nombreArchivo, retornarBase64 = false) => {
+                        const generarPDFUnificado = async (nombreArchivo, retornarBase64 = false) => {
                 return new Promise(async (resolve, reject) => {
                     const htmlString = getOrdenServicioHTML();
                     const tempContainer = document.createElement('div');
@@ -893,20 +893,36 @@
                     tempContainer.style.width = '1000px';
                     tempContainer.style.backgroundColor = '#ffffff';
                     tempContainer.style.zIndex = '9999990';
+                    tempContainer.style.overflow = 'visible';
+                    tempContainer.style.height = 'auto';
 
                     const scrollOriginal = window.scrollY;
+                    const bodyOverflowOriginal = document.body.style.overflow;
+                    const htmlOverflowOriginal = document.documentElement.style.overflow;
                     window.scrollTo(0, 0);
+                    document.body.style.overflow = 'visible';
+                    document.documentElement.style.overflow = 'visible';
 
                     tempContainer.innerHTML = htmlString;
                     document.body.appendChild(tempContainer);
 
-                    await new Promise(r => setTimeout(r, 1500));
+                    await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+                    await new Promise(r => setTimeout(r, 1200));
 
                     const opt = {
-                        margin: [0.5, 0.5, 0.5, 0.5],
+                        margin: [0.35, 0.35, 0.45, 0.35],
                         filename: nombreArchivo,
                         image: { type: 'jpeg', quality: 0.98 },
-                        html2canvas: { scale: 2, useCORS: true, logging: false },
+                        html2canvas: {
+                            scale: 1,
+                            useCORS: true,
+                            allowTaint: false,
+                            logging: false,
+                            scrollY: 0,
+                            windowWidth: 1000,
+                            windowHeight: tempContainer.scrollHeight,
+                            backgroundColor: '#ffffff'
+                        },
                         jsPDF: { unit: 'in', format: 'a4', orientation: 'portrait' }
                     };
 
@@ -922,11 +938,13 @@
                     } catch (e) {
                         reject(e);
                     } finally {
-                        if(document.body.contains(tempContainer)) document.body.removeChild(tempContainer);
+                        if (document.body.contains(tempContainer)) document.body.removeChild(tempContainer);
+                        document.body.style.overflow = bodyOverflowOriginal;
+                        document.documentElement.style.overflow = htmlOverflowOriginal;
                         window.scrollTo(0, scrollOriginal);
                     }
                 });
-            };
+            };;
 
             const descargarPDF = async () => {
                 const cortina = mostrarCortina("Descargando Documento...");
@@ -1041,11 +1059,11 @@
                 }
             };
 
-                        const enviarOrdenFinal = async () => {
+                                    const enviarOrdenFinal = async () => {
                 if (!interno.solicitante || !tomador.nombre) return showAlert('Faltan Datos', "Faltan datos base.");
                 setIsSubmitting(true);
 
-                const cortina = mostrarCortina("Generando Orden de Servicio Definitiva y enviando a Make...");
+                const cortina = mostrarCortina("Enviando Orden de Servicio a Make...");
 
                 try {
                     let polizaReferencia = '';
@@ -1074,15 +1092,11 @@
                         setEstadoSolicitud('En Trámite');
                     }
 
-                    const attachments = [];
-                    try {
-                        const pdfBase64Final = await generarPDFUnificado(`ORDEN_FINAL_${consecutivo}.pdf`, true);
-                        if (pdfBase64Final) attachments.push({ name: `${consecutivo} - Orden de Servicio.pdf`, contentBytes: pdfBase64Final });
-                    } catch (pdfError) {
-                        console.error("Error PDF:", pdfError);
-                        showAlert('Aviso', 'La orden se envió, pero hubo un problema adjuntando el PDF visual.');
-                    }
-
+                    // ── NUEVO: enviar HTML al webhook para que Make genere el PDF ──────
+                    // Se elimina la generación de PDF en el browser (causa PDF en blanco).
+                    // Make recibe el campo 'ordenHtml' y lo convierte en PDF con su módulo
+                    // HTML→PDF nativo, luego lo sube a SharePoint y lo adjunta al correo.
+                    const ordenHtmlString = getOrdenServicioHTML();
                     const amparosDetalleExcel = typeof armarAmparosExcel === 'function' ? armarAmparosExcel() : '';
 
                     if (WEBHOOK_URL) {
@@ -1093,24 +1107,30 @@
                             flujo: 'ORDEN-FINAL',
                             fechaTramiteDirector: new Date().toLocaleString('es-CO'),
                             consecutivo,
-                            solicitanteNombre: interno.solicitante, solicitanteEmail: interno.solicitanteEmail, asunto: interno.asunto,
+                            solicitanteNombre: interno.solicitante,
+                            solicitanteEmail: interno.solicitanteEmail,
+                            asunto: interno.asunto,
                             tiposSolicitud: Object.keys(interno.tipos).filter(k => interno.tipos[k]).join(', '),
-                            tomadorNombre: tomador.nombre, tomadorNit: tomador.nit, tomadorDireccion: tomador.direccion, tomadorTelefono: tomador.telefono, tomadorEmail: tomador.email,
+                            tomadorNombre: tomador.nombre, tomadorNit: tomador.nit,
+                            tomadorDireccion: tomador.direccion, tomadorTelefono: tomador.telefono, tomadorEmail: tomador.email,
                             aseguradoNombre: asegurado.nombre, aseguradoNit: asegurado.nit,
                             contratoObjeto: contrato.objeto, contratoNumero: contrato.numero,
                             cierreLicitacion: contrato.cierreLicitacion ? new Date(contrato.cierreLicitacion).toLocaleString('es-CO') : 'No aplica',
                             contratoValorSinIva: valorSinIva, contratoValorConIva: valorConIva,
-                            contratoValorSinIvaFormateado: formatCurrency(valorSinIva), contratoValorConIvaFormateado: formatCurrency(valorConIva),
+                            contratoValorSinIvaFormateado: formatCurrency(valorSinIva),
+                            contratoValorConIvaFormateado: formatCurrency(valorConIva),
                             contratoDuracionDias: contrato.duracion || 0,
                             amparosDetalleExcel,
-                            primaCumplimiento: totalCump, gastosCumplimiento: costos.gastosCump,
-                            ivaCumplimiento: (totalCump - primaCumplimiento - costos.gastosCump),
+                            primaCumplimiento, gastosCumplimiento: gastosCalculadosCump,
+                            ivaCumplimiento: ivaCump,
                             valorTotalCumplimiento: formatCurrency(totalCump),
-                            primaRCE: totalRCE, gastosRCE: costos.gastosRCE, ivaRCE: 0,
+                            primaRCE, gastosRCE: gastosCalculadosRCE, ivaRCE,
                             valorTotalRCE: formatCurrency(totalRCE),
                             granTotal: totalGeneral, valorGranTotal: formatCurrency(totalGeneral),
                             polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
-                            adjuntos: attachments
+                            // HTML completo para que Make genere el PDF sin depender del browser
+                            ordenHtml: ordenHtmlString,
+                            nombreArchivoPDF: `${consecutivo} - Orden de Servicio.pdf`
                         };
                         const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                         if (!res.ok) throw new Error(res.status);
@@ -1124,6 +1144,8 @@
                     if(document.body.contains(cortina)) document.body.removeChild(cortina);
                 }
             };
+
+;
 
 ;
 
