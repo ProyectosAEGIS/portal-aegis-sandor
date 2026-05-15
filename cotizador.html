@@ -1937,11 +1937,11 @@ new Date(contrato.cierreLicitacion).toLocaleString('es-CO') : 'No aplica',
                                                                 {sol.valorConIva ? formatCurrency(sol.valorConIva) : '$ 0'}
                                                             </td>
                                                             <td className="px-4 py-4 text-center">
-                                                                <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border ${(sol.estado === 'Finalizada' || sol.estado === 'Emitida-Entregada') ? 'bg-green-50 text-green-700 border-green-200' : (sol.estado === 'Emitida' || sol.estado === 'En Trámite') ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-blue-50 text-blue-700 border-blue-200'}`}>
-                                                                    {(sol.estado === 'Finalizada' || sol.estado === 'Emitida-Entregada') ? <CheckCircle size={12}/> : (sol.estado === 'Emitida' || sol.estado === 'En Trámite') ? <Award size={12}/> : <ClockIcon size={12}/>}
-                                                                    {sol.estado || 'Pre-Orden'}
-                                                                </span>
-                                                            </td>
+    <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border ${(sol.estado === 'Finalizada' || sol.estado === 'Emitida-Entregada') ? 'bg-green-50 text-green-700 border-green-200' : (sol.estado === 'Emitida' || sol.estado === 'En Trámite') ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-yellow-100 text-yellow-800 border-yellow-300'}`}>
+        {(sol.estado === 'Finalizada' || sol.estado === 'Emitida-Entregada') ? <CheckCircle size={12}/> : (sol.estado === 'Emitida' || sol.estado === 'En Trámite') ? <Award size={12}/> : <ClockIcon size={12}/>}
+        {sol.estado || 'Pre-Orden'}
+    </span>
+</td>
                                                             <td className="px-4 py-4 text-center flex justify-center gap-2">
                                                                 <button onClick={() => abrirSolicitud(sol.consecutivo)} className="px-3 py-2 bg-white text-[#163f73] hover:bg-[#163f73] hover:text-white rounded-lg font-bold text-[10px] uppercase tracking-wider transition-colors border border-[#cdd7e0] shadow-sm flex items-center gap-1" title="Abrir para revisar o reenviar datos">
                                                                     Abrir &rarr;
