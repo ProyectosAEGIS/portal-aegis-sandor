@@ -17,6 +17,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-auth-compat.js"></script>
+        <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-storage-compat.js"></script>
     
     <style>
         html, body { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden; background-color: #f4f7f9; }
@@ -1182,34 +1183,33 @@ new Date(contrato.cierreLicitacion).toLocaleString('es-CO') : 'No aplica',
                         setEstadoSolicitud('Emitida-Entregada');
                     }
 
-                    if (WEBHOOK_URL) {
-                        const attachments = await Promise.all(archivosPoliza.map(getBase64));
-                        
-                        // PARCHE 3: Garantía Anti-Crash Fase 3
-                        if(attachments.length === 0) {
-                            attachments.push({ name: "Error_Poliza.txt", contentBytes: btoa(unescape(encodeURIComponent("No se logró procesar el PDF de póliza."))) });
-                        }
+                    // === NUEVA LÓGICA: Firebase Storage en vez de Base64 ===
+            const file = archivosPoliza[0];
 
-                        const payload = {
-                            // E3: Asuntos y etiquetas unificadas
-                            asunto_correo: `${consecutivo} - ${asegurado.nombre}`,
-                            etiqueta_proceso: 'EMISIÓN PÓLIZA',
-                            tipo_flujo: 'EMISION-FINAL',
-                            flujo: 'ENTREGA-POLIZA', 
-                            consecutivo, 
-                            solicitanteNombre: interno.solicitante, 
-                            solicitanteEmail: interno.solicitanteEmail,
-                            tomadorNombre: tomador.nombre,
-                            observaciones: observacionesPoliza || "Sin observaciones.",
-                            fechaEntregaPoliza: new Date().toLocaleString('es-CO'),
-                            numeroPoliza,
-                            aseguradora,
-                            ramoPoliza,
-                            adjuntos: attachments
-                        };
-                        const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                        if (!res.ok) throw new Error(res.status);
-                    }
+            console.log("Iniciando carga a Firebase Storage...");
+            const storageRef = firebase.storage().ref(`polizas_emitidas/${consecutivo}/${file.name}`);
+            const snapshot = await storageRef.put(file);
+            const downloadURL = await snapshot.ref.getDownloadURL();
+            console.log("Archivo subido. URL:", downloadURL);
+
+            const payload = {
+                consecutivo,
+                etiqueta_proceso: 'EMISIÓN PÓLIZA',
+                tipo_flujo: 'EMISION-FINAL',
+                flujo: 'ENTREGA-POLIZA',
+                solicitanteNombre: interno.solicitante,
+                solicitanteEmail: interno.solicitanteEmail,
+                tomadorNombre: tomador.nombre,
+                observaciones: observacionesPoliza || "Sin observaciones.",
+                fechaEntregaPoliza: new Date().toLocaleString('es-CO'),
+                numeroPoliza,
+                aseguradora,
+                ramoPoliza,
+                url_archivo: downloadURL,
+                nombre_archivo: file.name
+            };
+            const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+            if (!res.ok) throw new Error(res.status);
 
                     showAlert('Éxito', "✅ ¡Póliza enviada al cliente con éxito!");
                 } catch (e) { 
