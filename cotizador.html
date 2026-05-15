@@ -1146,6 +1146,8 @@ new Date(contrato.cierreLicitacion).toLocaleString('es-CO') : 'No aplica',
                             valorTotalRCE: formatCurrency(totalRCE),
                             granTotal: totalGeneral, valorGranTotal: formatCurrency(totalGeneral),
                             polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
+                                                    ordenHtml: ordenHtmlString,
+                        nombreArchivoPDF: `${consecutivo}_Orden_Servicio.pdf`,
                         };
                         const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                         if (!res.ok) throw new Error(res.status);
