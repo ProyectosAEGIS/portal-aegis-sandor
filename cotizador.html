@@ -1146,10 +1146,6 @@ new Date(contrato.cierreLicitacion).toLocaleString('es-CO') : 'No aplica',
                             valorTotalRCE: formatCurrency(totalRCE),
                             granTotal: totalGeneral, valorGranTotal: formatCurrency(totalGeneral),
                             polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
-                            // HTML completo para que Make genere el PDF sin depender del browser
-                            ordenHtml: ordenHtmlString,
-                            nombreArchivoPDF: `${consecutivo} - Orden de Servicio.pdf`,
-                            adjuntos: attachments
                         };
                         const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                         if (!res.ok) throw new Error(res.status);
