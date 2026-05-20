@@ -1,10 +1,10 @@
-<!-- AEGIS v2.16.4 - 20/05/2026 - Reversión a base estable y Corrección exclusiva de fórmula liquidación amparos prorrata por días -->
+<!-- AEGIS v2.16.6 - 20/05/2026 - Auto-Sanación Webhooks + Fórmula Seriedad de Oferta -->
 <!DOCTYPE html> 
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Servicios 2.16.4 - AEGIS Insurance</title>
+    <title>Portal de Servicios 2.16.6 - AEGIS Insurance</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -592,8 +592,13 @@
                             newDias = diff > 0 ? diff : 0;
                         }
                         
-                        // CÁLCULO DE LA PRIMA INCORPORANDO PRORRATA POR DÍAS (V2.16.4)
-                        const calculoPrima = isActivating ? (amp.valorAsegurado * ((parseFloat(amp.tasa) || 0) / 100) / 365) * newDias : 0;
+                        // CÁLCULO DE LA PRIMA — Seriedad de la Oferta (id=1): Valor Asegurado x Tasa
+                        // Demás amparos: prorrata por días (V2.16.4)
+                        const calculoPrima = isActivating
+                            ? (id === 1
+                                ? amp.valorAsegurado * ((parseFloat(amp.tasa) || 0) / 100)
+                                : (amp.valorAsegurado * ((parseFloat(amp.tasa) || 0) / 100) / 365) * newDias)
+                            : 0;
 
                         return { ...amp, activo: isActivating, desde: newDesde, hasta: newHasta, dias: newDias, porcentaje: isActivating ? amp.porcentaje : '', valorAsegurado: isActivating ? amp.valorAsegurado : 0, valorAseguradoStr: isActivating ? amp.valorAseguradoStr : '', prima: calculoPrima };
                     }
@@ -611,8 +616,10 @@
                                 const diff = Math.ceil((new Date(updated.hasta) - new Date(updated.desde)) / (1000 * 60 * 60 * 24));
                                 updated.dias = diff > 0 ? diff : 0;
                             }
-                            // Recálculo con días
-                            updated.prima = (updated.valorAsegurado * ((parseFloat(updated.tasa) || 0) / 100) / 365) * (updated.dias || 0);
+                            // Recálculo — Seriedad (id=1): sin días; demás: prorrata por días
+                            updated.prima = (id === 1)
+                                ? updated.valorAsegurado * ((parseFloat(updated.tasa) || 0) / 100)
+                                : (updated.valorAsegurado * ((parseFloat(updated.tasa) || 0) / 100) / 365) * (updated.dias || 0);
                         }
                         else if (field === 'porcentaje') {
                             updated.porcentaje = value;
@@ -621,8 +628,10 @@
                                 let vAseg = valorConIva * (pctNum / 100);
                                 updated.valorAsegurado = vAseg;
                                 updated.valorAseguradoStr = vAseg.toLocaleString('es-CO', {minimumFractionDigits:0, maximumFractionDigits:2});
-                                // Recálculo con días
-                                updated.prima = (vAseg * ((parseFloat(updated.tasa) || 0) / 100) / 365) * (updated.dias || 0);
+                                // Recálculo — Seriedad (id=1): sin días; demás: prorrata por días
+                                updated.prima = (id === 1)
+                                    ? vAseg * ((parseFloat(updated.tasa) || 0) / 100)
+                                    : (vAseg * ((parseFloat(updated.tasa) || 0) / 100) / 365) * (updated.dias || 0);
                             } else {
                                 updated.valorAsegurado = 0; updated.valorAseguradoStr = ''; updated.prima = 0;
                             }
@@ -632,18 +641,105 @@
                             let vAseg = parseFloat(value.replace(/\./g, '').replace(',', '.').replace(/[^0-9.]/g, '')) || 0;
                             updated.valorAsegurado = vAseg;
                             updated.porcentaje = (valorConIva > 0 && vAseg > 0) ? ((vAseg / valorConIva) * 100).toFixed(2).replace('.', ',') : '';
-                            // Recálculo con días
-                            updated.prima = (vAseg * ((parseFloat(updated.tasa) || 0) / 100) / 365) * (updated.dias || 0);
+                            // Recálculo — Seriedad (id=1): sin días; demás: prorrata por días
+                            updated.prima = (id === 1)
+                                ? vAseg * ((parseFloat(updated.tasa) || 0) / 100)
+                                : (vAseg * ((parseFloat(updated.tasa) || 0) / 100) / 365) * (updated.dias || 0);
                         }
                         else if (field === 'tasa') {
                             updated.tasa = value;
-                            // Recálculo con días
-                            updated.prima = (updated.valorAsegurado * ((parseFloat(value.replace(',', '.')) || 0) / 100) / 365) * (updated.dias || 0);
+                            // Recálculo — Seriedad (id=1): sin días; demás: prorrata por días
+                            updated.prima = (id === 1)
+                                ? updated.valorAsegurado * ((parseFloat(value.replace(',', '.')) || 0) / 100)
+                                : (updated.valorAsegurado * ((parseFloat(value.replace(',', '.')) || 0) / 100) / 365) * (updated.dias || 0);
                         }
                         return updated;
                     }
                     return amp;
                 }));
+            };
+
+            
+            // ── EVOLUTIVO V2.16.6: Auto-Sanación y Reproceso de Webhooks (Director) ──
+            const sanearYReprocesar = async (solic) => {
+                if (!isDirectorUnlocked) {
+                    showAlert("Acceso Denegado", "Solo el Director puede ejecutar el reproceso de sanación operativa.");
+                    return;
+                }
+                const docId = solic.iddb;
+                const consecutivoReal = solic.consecutivo || docId;
+                const etapaCruda = solic.estado || 'Pre-Orden';
+                const etiquetaNormalizada = etapaCruda.toUpperCase().trim();
+                showConfirm("Confirmar Reproceso", `¿Desea reparar la solicitud ${consecutivoReal} en base de datos y reenviarla al sistema central?\n\nSe recuperarán los documentos adjuntos guardados automáticamente.`, async () => {
+                    try {
+                        const adjuntosGuardados = solic.adjuntos || [];
+                        const datosReparados = {
+                            flujo: etiquetaNormalizada, etiqueta_proceso: etiquetaNormalizada,
+                            consecutivo: consecutivoReal,
+                            solicitanteNombre: solic.solicitanteNombre || solic.tomadorNombre || 'Cliente Portal',
+                            asunto_correo: `[REPROCESO] ${etiquetaNormalizada} - ${consecutivoReal}`,
+                            adjuntos: adjuntosGuardados, webhookStatus: 'reparado_reprocesado',
+                            fechaReproceso: new Date().toISOString()
+                        };
+                        await db.collection('solicitudes').doc(docId).update(datosReparados);
+                        const payloadMake = { ...solic, ...datosReparados };
+                        const response = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payloadMake) });
+                        if (response.ok) {
+                            showAlert("Proceso Exitoso", `La solicitud ${consecutivoReal} fue reenviada con ${adjuntosGuardados.length} adjuntos con éxito.`);
+                        } else { throw new Error(`Error HTTP ${response.status} en el Webhook`); }
+                    } catch (error) {
+                        console.error('Error durante la sanación:', error);
+                        showAlert("Fallo de Reproceso", `Error de red o permisos: ${error.message}`);
+                    }
+                });
+            };
+
+            // ── EVOLUTIVO V2.16.6: Auto-Reintento de Webhook para Cliente ──
+            const reintentarWebhook = async (solic) => {
+                showConfirm('Reintentar Envío', `¿Desea reintentar el envío de la solicitud ${solic.consecutivo} al sistema central?`, async () => {
+                    setIsLoadingNube(true);
+                    try {
+                        const form = JSON.parse(solic.formularioCompleto);
+                        const docId = solic.iddb || solic.consecutivo;
+                        const amparosArray = form.amparos || [];
+                        const amparosDetalleExcel = amparosArray.filter(a => a.activo).map(a => `${a.nombre} | Vig: ${a.desde||'-'} a ${a.hasta||'-'} (${a.dias} d) | % Asegurado: ${a.porcentaje||'0'}% | V.Aseg: ${formatCurrency(a.valorAsegurado)} | Tasa: ${a.tasa}% | Prima: ${formatCurrency(a.prima)}`).join('\n');
+                        const valorSinIva = form.contrato.valorConIva / (1 + ((form.costos?.tasaIva || 19) / 100));
+                        let polizaReferencia = '', anexoReferencia = '', ramoReferencia = '', aseguradoraReferencia = '';
+                        if (form.interno.tipos.prorroga && form.prorrogaRef) {
+                            const parts = (form.prorrogaRef.numeroPoliza || '').split('-');
+                            polizaReferencia = parts[0] ? parts[0].trim() : '';
+                            anexoReferencia = parts[1] ? parts[1].trim() : '';
+                            ramoReferencia = form.prorrogaRef.ramoPoliza || '';
+                            aseguradoraReferencia = form.prorrogaRef.aseguradora || '';
+                        }
+                        const payload = {
+                            asunto_correo: `${form.consecutivo} - ${form.asegurado.nombre}`,
+                            etiqueta_proceso: 'PRE-ORDEN', tipo_flujo: 'PRE-ORDEN', flujo: 'PRE-ORDEN',
+                            fechaRegistro: solic.fechaRegistro ? new Date(solic.fechaRegistro).toLocaleString('es-CO') : new Date().toLocaleString('es-CO'),
+                            consecutivo: form.consecutivo,
+                            solicitanteNombre: form.interno.solicitante, solicitanteEmail: form.interno.solicitanteEmail, asunto: form.interno.asunto,
+                            tiposSolicitud: Object.keys(form.interno.tipos).filter(k => form.interno.tipos[k]).join(', '),
+                            tomadorNombre: form.tomador.nombre, tomadorNit: form.tomador.nit, tomadorDireccion: form.tomador.direccion, tomadorTelefono: form.tomador.telefono, tomadorEmail: form.tomador.email,
+                            aseguradoNombre: form.asegurado.nombre, aseguradoNit: form.asegurado.nit,
+                            contratoObjeto: form.contrato.objeto, contratoNumero: form.contrato.numero,
+                            cierreLicitacion: form.contrato.cierreLicitacion ? new Date(form.contrato.cierreLicitacion).toLocaleString('es-CO') : 'No aplica',
+                            contratoValorSinIva: valorSinIva, contratoValorConIva: form.contrato.valorConIva,
+                            contratoValorSinIvaFormateado: formatCurrency(valorSinIva), contratoValorConIvaFormateado: formatCurrency(form.contrato.valorConIva),
+                            contratoDuracionDias: form.contrato.duracion || 0, amparosDetalleExcel,
+                            primaCumplimiento: 0, gastosCumplimiento: 0, ivaCumplimiento: 0, valorTotalCumplimiento: "$ 0",
+                            primaRCE: 0, gastosRCE: 0, ivaRCE: 0, valorTotalRCE: "$ 0", granTotal: 0, valorGranTotal: "$ 0",
+                            polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia, adjuntos: []
+                        };
+                        const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                        if (db) await db.collection("solicitudes").doc(docId).update({ webhookStatus: 'enviado' });
+                        showAlert('Éxito', "✅ ¡La solicitud fue reenviada correctamente al sistema central!");
+                    } catch (error) {
+                        showAlert('Error de Envío', "❌ Sigue fallando la conexión. Por favor intente más tarde. Detalle: " + error.message);
+                    } finally {
+                        setIsLoadingNube(false);
+                    }
+                });
             };
 
             const handleCheckboxTipos = (key) => {
@@ -1008,6 +1104,7 @@
                         aseguradoraReferencia = prorrogaRef.aseguradora || '';
                     }
 
+                    // E1: Guardar timestamp de Registro exacto
                     const timestampRegistro = new Date().toISOString();
 
                     if (db) {
@@ -1020,6 +1117,7 @@
                         const amparosDetalleExcel = armarAmparosExcel(); 
                         
                         const payload = {
+                            // E3: Asuntos y etiquetas unificadas
                             asunto_correo: `${consecutivo} - ${asegurado.nombre}`,
                             etiqueta_proceso: 'PRE-ORDEN',
                             tipo_flujo: 'PRE-ORDEN',
@@ -1029,7 +1127,7 @@
                             tiposSolicitud: Object.keys(interno.tipos).filter(k => interno.tipos[k]).join(', '),
                             tomadorNombre: tomador.nombre, tomadorNit: tomador.nit, tomadorDireccion: tomador.direccion, tomadorTelefono: tomador.telefono, tomadorEmail: tomador.email,
                             aseguradoNombre: asegurado.nombre, aseguradoNit: asegurado.nit,
-                            contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, cierreLicitacion: contrato.cierreLicitacion ? new Date(contrato.cierreLicitacion).toLocaleString('es-CO') : 'No aplica', 
+                            contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, cierreLicitacion: contrato.cierreLicitacion ? new Date(contrato.cierreLicitacion).toLocaleString('es-CO') : 'No aplica', // E4
                             contratoValorSinIva: valorSinIva, contratoValorConIva: valorConIva, 
                             contratoValorSinIvaFormateado: formatCurrency(valorSinIva), contratoValorConIvaFormateado: formatCurrency(valorConIva), contratoDuracionDias: contrato.duracion || 0,
                             amparosDetalleExcel, primaCumplimiento: 0, gastosCumplimiento: 0, ivaCumplimiento: 0, valorTotalCumplimiento: "$ 0", 
@@ -1037,11 +1135,15 @@
                             polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
                             adjuntos: attachments
                         };
-                        const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-                        if (!res.ok) throw new Error(res.status);
+                        try {
+                            const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                            if (!res.ok) throw new Error(res.status);
+                            showAlert('Éxito', "✅ ¡Pre-Orden guardada! El equipo ha sido notificado para completarla.");
+                        } catch (webhookError) {
+                            if (db) await db.collection('solicitudes').doc(consecutivo).update({ webhookStatus: 'pendiente_reintento' });
+                            showAlert('Guardado Parcial', "⚠️ Los datos se guardaron, pero hubo un error al notificar al sistema central. Use 'Reintentar' en Mis Solicitudes.");
+                        }
                     }
-
-                    showAlert('Éxito', "✅ ¡Pre-Orden guardada! El equipo ha sido notificado para completarla.");
                     
                     setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { cumplimientoEstatales: false, cumplimientoParticulares: false, disposicionLegal: false, prorroga: false, responsabilidadCivil: false, seriedadOferta: false, otros: false }, archivos: [] });
                     setTomador({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
@@ -1097,6 +1199,7 @@
                         setEstadoSolicitud('En Trámite');
                     }
 
+                    // ── NUEVO: enviar HTML al webhook para que Make genere el PDF ──────
                     const ordenHtmlString = getOrdenServicioHTML();
                     const amparosDetalleExcel = typeof armarAmparosExcel === 'function' ? armarAmparosExcel() : '';
 
@@ -1151,13 +1254,14 @@
                 setIsSubmitting(true);
                 
                 try {
+                    // E1: Timestamp final
                     const timestampEntrega = new Date().toISOString();
 
                     if (db) {
                         const formCompleto = JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef });
                         const dataToSave = { 
                             estado: 'Emitida-Entregada', 
-                            fechaEntregaPoliza: timestampEntrega, 
+                            fechaEntregaPoliza: timestampEntrega, // Cierra el ciclo de ANS
                             numeroPoliza, aseguradora, ramoPoliza, formularioCompleto: formCompleto 
                         };
                         await db.collection("solicitudes").doc(consecutivo).set(dataToSave, { merge: true });
@@ -1167,6 +1271,7 @@
                     if (WEBHOOK_URL) {
                         const attachments = await Promise.all(archivosPoliza.map(getBase64));
                         const payload = {
+                            // E3: Asuntos y etiquetas unificadas
                             asunto_correo: `${consecutivo} - ${asegurado.nombre}`,
                             etiqueta_proceso: 'EMISIÓN PÓLIZA',
                             tipo_flujo: 'EMISION-FINAL',
@@ -1873,6 +1978,9 @@
                                                         <th className="px-4 py-4 font-semibold text-center w-32 align-top">
                                                             <div className="mt-1">Acciones</div>
                                                         </th>
+                                                        {isDirectorUnlocked && (
+                                                            <th className="px-6 py-4 font-bold text-center border-l border-gray-200">Operaciones</th>
+                                                        )}
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-100 text-sm">
@@ -1912,12 +2020,28 @@
                                                                 <button onClick={() => abrirSolicitud(sol.consecutivo)} className="px-3 py-2 bg-white text-[#163f73] hover:bg-[#163f73] hover:text-white rounded-lg font-bold text-[10px] uppercase tracking-wider transition-colors border border-[#cdd7e0] shadow-sm flex items-center gap-1" title="Abrir para revisar o reenviar datos">
                                                                     Abrir &rarr;
                                                                 </button>
+                                                                {sol.webhookStatus === 'pendiente_reintento' && (
+                                                                    <button onClick={() => reintentarWebhook(sol)} className="px-3 py-2 bg-amber-500 text-white hover:bg-amber-600 rounded-lg font-bold text-[10px] uppercase tracking-wider transition-colors shadow-sm flex items-center gap-1" title="Reintentar notificación al sistema central">
+                                                                        <RefreshCw size={12} /> Reintentar
+                                                                    </button>
+                                                                )}
                                                                 {isDirectorUnlocked && (
                                                                     <button onClick={() => eliminarSolicitud(sol.consecutivo)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200" title="Eliminar registro de Firebase">
                                                                         <Trash2 size={16}/>
                                                                     </button>
                                                                 )}
                                                             </td>
+                                                            {isDirectorUnlocked && (
+                                                                <td className="px-6 py-3 text-center border-l border-gray-100">
+                                                                    <button
+                                                                        onClick={() => sanearYReprocesar(solic)}
+                                                                        className="inline-flex items-center gap-1.5 text-xs font-bold bg-[#12334F] text-white px-4 py-2 rounded-md hover:bg-[#1a4a70] transition-colors shadow-sm w-full justify-center"
+                                                                        title="Repara los datos estructurales y reintenta la conexión"
+                                                                    >
+                                                                        <RefreshCw size={14} /> Reenviar
+                                                                    </button>
+                                                                </td>
+                                                            )}
                                                         </tr>
                                                     ))}
                                                 </tbody>
@@ -1969,7 +2093,7 @@
                                                 <th className="px-6 py-4 font-semibold">Tomador (Cliente)</th>
                                                 <th className="px-6 py-4 font-semibold text-center">Total Órdenes</th>
                                                 <th className="px-6 py-4 font-semibold text-right">Valor Total Asegurado</th>
-                                                <th className="px-6 py-4 font-semibold text-right">Prima Total</th>
+                                                <th className="px-6 py-4 font-semibold text-right">Prima Total</th> {/* E1: Columna prima */}
                                                 <th className="px-6 py-4 font-semibold text-center">% de Participación</th>
                                                 </tr>
                                             </thead>
