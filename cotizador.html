@@ -666,51 +666,7 @@
                     return amp;
                 }));
             };
-
-            const sanearYReprocesar = async (solic) => {
-                if (!isDirectorUnlocked) {
-                    showAlert("Acceso Denegado", "Solo el Director puede ejecutar el reproceso de sanación operativa.");
-                    return;
-                }
-                const docId = solic.id_db || solic.consecutivo;
-                const consecutivoReal = solic.consecutivo || docId;
-                const etapaCruda = solic.estado || 'Pre-Orden';
-                const etiquetaNormalizada = etapaCruda.toUpperCase().trim();
-                showConfirm("Confirmar Reproceso", `¿Desea reparar la solicitud ${consecutivoReal} en base de datos y reenviarla al sistema central?\n\nSe recuperarán los documentos adjuntos guardados automáticamente.`, async () => {
-                    try {
-                        const adjuntosGuardados = solic.adjuntos || [];
-                        let urlPolizaReal = '';
-                        if (solic.metadatosPoliza && solic.metadatosPoliza.length > 0) {
-                            urlPolizaReal = solic.metadatosPoliza[0].downloadURL;
-                        } else if (solic.link_poliza) {
-                            urlPolizaReal = solic.link_poliza;
-                        } else {
-                            urlPolizaReal = 'Sin enlace validado en Storage';
-                        }
-
-                        const datosReparados = {
-                            flujo: etiquetaNormalizada, etiqueta_proceso: etiquetaNormalizada,
-                            consecutivo: consecutivoReal,
-                            solicitanteNombre: solic.solicitanteNombre || solic.tomadorNombre || 'Cliente Portal',
-                            asunto_correo: `[REPROCESO] ${etiquetaNormalizada} - ${consecutivoReal}`,
-                            message: `Reproceso de validación para radicado ${consecutivoReal}`,
-                            link_poliza: urlPolizaReal,
-                            adjuntos: adjuntosGuardados, webhookStatus: 'reparado_reprocesado',
-                            fechaReproceso: new Date().toISOString()
-                        };
-                        await db.collection('solicitudes').doc(docId).update(datosReparados);
-                        const payloadMake = { ...solic, ...datosReparados };
-                        const response = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payloadMake) });
-                        if (response.ok) {
-                            showAlert("Proceso Exitoso", `La solicitud ${consecutivoReal} fue reenviada con ${adjuntosGuardados.length} adjuntos con éxito.`);
-                        } else { throw new Error(`Error HTTP ${response.status} en el Webhook`); }
-                    } catch (error) {
-                        console.error('Error durante la sanación:', error);
-                        showAlert("Fallo de Reproceso", `Error de red o permisos: ${error.message}`);
-                    }
-                });
-            };
-
+            
             // ── EVOLUTIVO V2.18.0: Auto-Reintento con Recuperación Segura desde Storage ──
             const reintentarWebhook = async (solic) => {
                 showConfirm('Reintentar Envío', `¿Desea reintentar el envío de la solicitud ${solic.consecutivo} al sistema central?`, async () => {
@@ -1961,8 +1917,7 @@
                                                                 </select>
                                                             </div>
                                                         </th>
-                                                        <th className="px-4 py-4 font-semibold text-center w-32 align-top"><div className="mt-1">Acciones</div></th>
-                                                        {isDirectorUnlocked && <th className="px-6 py-4 font-bold text-center border-l border-gray-200">Operaciones GEMS</th>}
+                                                      <th className="px-4 py-4 font-semibold text-center w-32 align-top"><div className="mt-1">Acciones</div></th>
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-100 text-sm">
@@ -1985,16 +1940,21 @@
                                                                     {sol.estado || 'Pre-Orden'}
                                                                 </span>
                                                             </td>
-                                                            <td className="px-4 py-4 text-center flex justify-center gap-2">
-                                                                <button onClick={() => abrirSolicitud(sol.consecutivo)} className="px-3 py-2 bg-white text-[#163f73] hover:bg-[#163f73] hover:text-white rounded-lg font-bold text-[10px] border border-[#cdd7e0]">Revisar</button>
-                                                                {sol.webhookStatus === 'pendiente_reintento' && (
-                                                                    <button onClick={() => reintentarWebhook(sol)} className="px-3 py-2 bg-amber-500 text-white hover:bg-amber-600 rounded-lg font-bold text-[10px] shadow-sm flex items-center gap-1"><RefreshCw size={12} /> Auto-Sanar</button>
-                                                                )}
-                                                            </td>
-                                                            {isDirectorUnlocked && (
-                                                                <td className="px-6 py-3 text-center border-l border-gray-100">
-                                                                    <button onClick={() => sanearYReprocesar(sol)} className="inline-flex items-center gap-1.5 text-xs font-bold bg-[#12334F] text-white px-4 py-2 rounded-md hover:bg-[#1a4a70] w-full justify-center"><RefreshCw size={14} /> Forzar Reenvío</button>
-                                                                </td>
+                                                           <td className="px-4 py-4 text-center flex justify-center items-center gap-2">
+    <button onClick={() => abrirSolicitud(sol.consecutivo)} className="px-3 py-2 bg-white text-[#163f73] hover:bg-[#163f73] hover:text-white rounded-lg font-bold text-[10px] uppercase tracking-wider transition-colors border border-[#cdd7e0] shadow-sm flex items-center gap-1" title="Abrir para revisar">
+        Revisar
+    </button>
+    {sol.webhookStatus === 'pendiente_reintento' && (
+        <button onClick={() => reintentarWebhook(sol)} className="px-3 py-2 bg-amber-500 text-white hover:bg-amber-600 rounded-lg font-bold text-[10px] uppercase tracking-wider shadow-sm flex items-center gap-1" title="Reintentar notificación al sistema central">
+            <RefreshCw size={12} /> Auto-Sanar
+        </button>
+    )}
+    {isDirectorUnlocked && (
+        <button onClick={() => eliminarSolicitud(sol.consecutivo)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200" title="Eliminar registro de Firebase">
+            <Trash2 size={16}/>
+        </button>
+    )}
+</td>
                                                             )}
                                                         </tr>
                                                     ))}
