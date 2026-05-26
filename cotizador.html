@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Portal de Servicios 2.17.0 - AEGIS Insurance</title>
+    <title>Portal de Servicios 2.18.0 - AEGIS Insurance</title>
     
     <script src="https://cdn.tailwindcss.com"></script>
     
@@ -36,7 +36,7 @@
 
     <script type="text/babel">
         // ==========================================
-        // 1. ÍCONOS SVG (ORIGINALES MANTENIDOS PARA MODALES Y TABLAS)
+        // 1. ÍCONOS SVG CONSTANTES (UI ESTÁTICA)
         // ==========================================
         const Shield = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>;
         const Calculator = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><rect x="4" y="2" width="16" height="20" rx="2" ry="2"/><line x1="8" y1="6" x2="16" y2="6"/><line x1="16" y1="14" x2="16.01" y2="14"/><line x1="16" y1="10" x2="16.01" y2="10"/><line x1="16" y1="18" x2="16.01" y2="18"/><line x1="12" y1="14" x2="12.01" y2="14"/><line x1="12" y1="10" x2="12.01" y2="10"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="8" y1="14" x2="8.01" y2="14"/><line x1="8" y1="10" x2="8.01" y2="10"/><line x1="8" y1="18" x2="8.01" y2="18"/></svg>;
@@ -63,11 +63,13 @@
         const Download = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>;
         const Search = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>;
         const Award = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="8" r="7"/><polyline points="8.21 13.89 7 23 12 20 17 23 15.79 13.88"/></svg>;
+        const LifeBuoy = ({size=24, className=""}) => <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="4.93" y1="4.93" x2="9.17" y2="9.17"/><line x1="14.83" y1="14.83" x2="19.07" y2="19.07"/><line x1="14.83" y1="9.17" x2="19.07" y2="4.93"/><line x1="14.83" y1="9.17" x2="18.36" y2="5.64"/><line x1="4.93" y1="19.07" x2="9.17" y2="14.83"/></svg>;
 
         // ==========================================
         // 2. CONFIGURACIÓN INICIAL
         // ==========================================
-        const WEBHOOK_URL = "https://hook.us2.make.com/6oy0xm0wdgimjdyb39wnxuxlbs2wunlw";
+        const WEBHOOK_URL = "https://hook.us2.make.com/6oy0xm0wdgimjdyb39wnxuxlbs2wunlw"; 
+
         const firebaseConfig = {
             apiKey: "AIzaSyDm8oj2_HsqqxTTWdMeYoV_33PR34L3nMI",
             authDomain: "portal-aegis.firebaseapp.com",
@@ -76,6 +78,7 @@
             messagingSenderId: "823771026895",
             appId: "1:823771026895:web:c33dae191384cb83266eba"
         };
+
         const MASTER_PIN = "2025";
 
         const AMPAROS_BASE = [
@@ -110,7 +113,6 @@
             return sorted.length % 2 !== 0 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
         }
 
-        // E1: Función para calcular ANS estrictamente en horas hábiles (Lun-Vie, 08:00 - 17:00)
         function calcularHorasHabiles(startDate, endDate) {
             if (!startDate || !endDate || startDate >= endDate) return 0;
             let ms = 0;
@@ -120,7 +122,6 @@
                 let dayOfWeek = current.getDay();
                 let isSameDay = current.toDateString() === endDate.toDateString();
                 
-                // Procesar solo si es de lunes (1) a viernes (5)
                 if (dayOfWeek >= 1 && dayOfWeek <= 5) {
                     let startOfDay = new Date(current); startOfDay.setHours(8, 0, 0, 0);
                     let endOfDay = new Date(current); endOfDay.setHours(17, 0, 0, 0);
@@ -132,32 +133,23 @@
                         ms += (end - start);
                     }
                 }
-                
                 if (isSameDay) break;
-                
-                // Avanzar al día siguiente a las 00:00:00
                 current.setDate(current.getDate() + 1);
                 current.setHours(0, 0, 0, 0);
             }
-            
             return ms / (1000 * 60 * 60);
         }
 
-        // E1 Fix: Función inteligente para estandarizar y unificar nombres de empresas (Tomadores)
         function unificarNombreEmpresa(nombre) {
             if (!nombre) return 'Sin Cliente';
             let norm = String(nombre).toUpperCase().trim();
-            
-            // 1. Reglas específicas de negocio para agrupar (Casos recurrentes)
             if (norm.includes('ELITE FACILITY')) return 'ELITE FACILITY MANAGEMENT S.A.S.';
             if (norm.includes('SARUPETROL')) return 'SARUPETROL S.A.S.';
             if (norm.includes('SANDOR')) return 'GRUPO SANDOR S.A.S.';
-            
-            // 2. Regla general para el resto: quitar puntuación y estandarizar sufijos
             return norm.replace(/\./g, '')
                        .replace(/\bS A S\b/g, 'SAS')
                        .replace(/\bS A\b/g, 'SA')
-                       .replace(/\s+/g, ' ') // Limpia espacios dobles
+                       .replace(/\s+/g, ' ')
                        .trim();
         }
 
@@ -166,7 +158,7 @@
         // ==========================================
         function App() {
             // --- 1. ESTADOS PRINCIPALES ---
-            const [activeMenu, setActiveMenu] = React.useState('inicio'); // Cambiado el default para mostrar el Dashboard al inicio
+            const [activeMenu, setActiveMenu] = React.useState('inicio');
             const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
             const [rolActivo, setRolActivo] = React.useState('cliente');
             const [isDirectorUnlocked, setIsDirectorUnlocked] = React.useState(false);
@@ -188,7 +180,7 @@
             const [interno, setInterno] = React.useState({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { cumplimientoEstatales: false, cumplimientoParticulares: false, disposicionLegal: false, prorroga: false, responsabilidadCivil: false, seriedadOferta: false, otros: false }, archivos: [] });
             const [tomador, setTomador] = React.useState({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
             const [asegurado, setAsegurado] = React.useState({ nombre: '', nit: '' });
-            const [contrato, setContrato] = React.useState({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '', cierreLicitacion: '' }); // E4
+            const [contrato, setContrato] = React.useState({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '', cierreLicitacion: '' });
             const [costos, setCostos] = React.useState({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
             const [amparos, setAmparos] = React.useState(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault ? a.tasaDefault.toFixed(2) : '0.18', prima: 0 })));
 
@@ -203,9 +195,9 @@
             // Reportes y Filtros
             const [carteraData, setCarteraData] = React.useState(defaultCarteraData);
             const [filtrosSolicitudes, setFiltrosSolicitudes] = React.useState({ consecutivo: '', fecha: '', tomador: '', solicitante: '', valor: '', estado: '' });
-            const [filtrosProduccion, setFiltrosProduccion] = React.useState({ cliente: '', poliza: '', aseguradora: '', estado: '' }); 
+            const [filtrosProduccion, setFiltrosProduccion] = React.useState({ cliente: '', poliza: '', aseguradora: '', estado: '' });
 
-            // --- 2. GESTIÓN DE DATOS EN VIVO (E1) ---
+            // --- 2. GESTIÓN DE DATOS EN VIVO (Memos) ---
             const solicitudesFiltradas = React.useMemo(() => {
                 return solicitudesDb.filter(sol => {
                     const solConsecutivo = sol.consecutivo || '';
@@ -273,11 +265,11 @@
                     } catch(e) {}
 
                     return {
-                        cliente: unificarNombreEmpresa(sol.tomadorNombre),
+                        cliente: unificarNombreEmpresa(sol.tomadorNombre), 
                         id: sol.consecutivo || '-',
                         aseguradora: sol.aseguradora || 'Por asignar',
-                        asegurado: aseguradoNombre || 'Sin Asegurado Registrado',
-                        poliza: sol.numeroPoliza || 'Pendiente',
+                        asegurado: aseguradoNombre || 'Sin Asegurado Registrado', 
+                        poliza: sol.numeroPoliza || 'Pendiente', 
                         ramo: sol.ramoPoliza || 'CUMPLIMIENTO',
                         ansHoras: ansHoras,
                         estado: sol.estado || 'Pre-Orden',
@@ -321,16 +313,7 @@
                 });
             }, [interno.tipos.prorroga, tomador.nit, asegurado.nit, solicitudesDb]);
 
-            // --- 3. CONSTANTES Y CÁLCULOS ESTÁTICOS ---
-            const listaAseguradoras = [
-                "ALLIANZ SEGUROS S.A.", "ASEGURADORA SOLIDARIA DE COLOMBIA ENTIDAD COOPERATIVA", "AXA COLPATRIA SEGUROS S.A", 
-                "BERKLEY INTERNATIONAL SEGUROS S.A", "CHUBB SEGUROS COLOMBIA S.A.", "COLMENA SEGUROS GENERALES S.A.", 
-                "COMPAÑÍA MUNDIAL DE SEGUROS S.A.", "HDI SEGUROS COLOMBIA S.A.", "LA EQUIDAD SEGUROS GENERALES ORGANISMO COOPERATIVO", 
-                "LA PREVISORA S.A.", "MAPFRE SEGUROS GENERALES DE COLOMBIA S.A.", "SBS SEGUROS COLOMBIA S.A", 
-                "SEGUROS COMERCIALES BOLÍVAR S.A.", "SEGUROS DEL ESTADO S.A.", "SEGUROS GENERALES SURAMERICANA S.A", "OTRA"
-            ];
-            
-            // EVOLUTIVO V2.17.0: Restauración de menuItems con componentes nativos SVG
+            // --- 3. CONFIGURACIÓN COMPONENTES DE MENÚ (V2.17.0 NATIVOS SVG) ---
             const menuItems = [
               { 
                 id: 'inicio', 
@@ -408,13 +391,12 @@
             const totalRCE = subtotalRCE + ivaRCE;
             const totalGeneral = totalCump + totalRCE;
 
-            // Variables de Producción Live
             const prodTotal = produccionLive.length;
             const prodMenorUnDia = produccionLive.filter(p => p.ansHoras <= 24).length;
             const prodPorcentaje = prodTotal > 0 ? Math.round((prodMenorUnDia / prodTotal) * 100) : 0;
             const prodMediana = getMedian(produccionLive.map(p => p.ansHoras)).toFixed(1);
             const prodTotalValor = produccionLive.reduce((acc, curr) => acc + curr.valor, 0);
-            const prodTotalPrima = produccionLive.reduce((acc, curr) => acc + curr.primaTotal, 0); 
+            const prodTotalPrima = produccionLive.reduce((acc, curr) => acc + curr.primaTotal, 0);
             const prodSummaryArray = Object.keys(produccionLive.reduce((acc, curr) => {
                 if (!acc[curr.cliente]) acc[curr.cliente] = { count: 0, totalValor: 0, totalPrima: 0 };
                 acc[curr.cliente].count += 1; 
@@ -444,7 +426,7 @@
                 return acc;
             }, {})).map(k => ({ tomador: k, ...carteraData.reduce((acc, curr) => { if (!acc[curr.tomador]) acc[curr.tomador] = { count: 0, total: 0 }; acc[curr.tomador].count += 1; acc[curr.tomador].total += curr.total; return acc; }, {})[k] })).sort((a, b) => b.total - a.total);
 
-            // --- 4. FUNCIONES DE AYUDA Y LOGICA ---
+            // --- 4. FUNCIONES DE AYUDA Y LÓGICA TRASACCIONAL ---
             const showAlert = (title, message) => setUiDialog({ isOpen: true, type: 'alert', title, message, onConfirm: null });
             const showConfirm = (title, message, onConfirm) => setUiDialog({ isOpen: true, type: 'confirm', title, message, onConfirm });
             const closeDialog = () => setUiDialog({ ...uiDialog, isOpen: false });
@@ -542,7 +524,7 @@
                 setInterno({ ...internoSaved, tipos: loadedTipos });
                 setTomador(datosGuardados.tomador);
                 setAsegurado(datosGuardados.asegurado);
-                setContrato({ ...datosGuardados.contrato, cierreLicitacion: datosGuardados.contrato.cierreLicitacion || '' }); 
+                setContrato({ ...datosGuardados.contrato, cierreLicitacion: datosGuardados.contrato.cierreLicitacion || '' });
                 if (datosGuardados.amparos) setAmparos(datosGuardados.amparos);
                 if (datosGuardados.costos) setCostos(datosGuardados.costos);
                 if (datosGuardados.consecutivo) setConsecutivo(datosGuardados.consecutivo);
@@ -558,7 +540,6 @@
                 
                 setEstadoSolicitud(estadoNormalizado);
                 setActiveMenu('cotizador');
-                
                 setRolActivo(prevRol => prevRol === 'director' ? 'director' : 'cliente');
             };
 
@@ -697,30 +678,26 @@
                 const etiquetaNormalizada = etapaCruda.toUpperCase().trim();
                 showConfirm("Confirmar Reproceso", `¿Desea reparar la solicitud ${consecutivoReal} en base de datos y reenviarla al sistema central?\n\nSe recuperarán los documentos adjuntos guardados automáticamente.`, async () => {
                     try {
-const adjuntosGuardados = solic.adjuntos || [];
+                        const adjuntosGuardados = solic.adjuntos || [];
+                        let urlPolizaReal = '';
+                        if (solic.metadatosPoliza && solic.metadatosPoliza.length > 0) {
+                            urlPolizaReal = solic.metadatosPoliza[0].downloadURL;
+                        } else if (solic.link_poliza) {
+                            urlPolizaReal = solic.link_poliza;
+                        } else {
+                            urlPolizaReal = 'Sin enlace validado en Storage';
+                        }
 
-                            // INYECCIÓN V2.17.0 (HOTFIX): Extracción dinámica de URL de Storage
-                            let urlPolizaReal = '';
-                            if (solic.metadatosPoliza && solic.metadatosPoliza.length > 0) {
-                                urlPolizaReal = solic.metadatosPoliza[0].downloadURL;
-                            } else if (solic.link_poliza) {
-                                urlPolizaReal = solic.link_poliza;
-                            } else {
-                                urlPolizaReal = 'Sin enlace validado en Storage';
-                            }
-
-                            const datosReparados = {
-                                flujo: etiquetaNormalizada,
-                                etiqueta_proceso: etiquetaNormalizada,
-                                consecutivo: consecutivoReal,
-                                solicitanteNombre: solic.solicitanteNombre || solic.tomadorNombre || 'Cliente Portal',
-                                asunto_correo: `[REPROCESO] ${etiquetaNormalizada} - ${consecutivoReal}`,
-                                message: `Reproceso de validación para radicado ${consecutivoReal}`,
-                                link_poliza: urlPolizaReal, // Enlace dinámico verificado
-                                adjuntos: adjuntosGuardados,
-                                webhookStatus: 'reparado_reprocesado',
-                                fechaReproceso: new Date().toISOString()
-                            };
+                        const datosReparados = {
+                            flujo: etiquetaNormalizada, etiqueta_proceso: etiquetaNormalizada,
+                            consecutivo: consecutivoReal,
+                            solicitanteNombre: solic.solicitanteNombre || solic.tomadorNombre || 'Cliente Portal',
+                            asunto_correo: `[REPROCESO] ${etiquetaNormalizada} - ${consecutivoReal}`,
+                            message: `Reproceso de validación para radicado ${consecutivoReal}`,
+                            link_poliza: urlPolizaReal,
+                            adjuntos: adjuntosGuardados, webhookStatus: 'reparado_reprocesado',
+                            fechaReproceso: new Date().toISOString()
+                        };
                         await db.collection('solicitudes').doc(docId).update(datosReparados);
                         const payloadMake = { ...solic, ...datosReparados };
                         const response = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payloadMake) });
@@ -734,6 +711,7 @@ const adjuntosGuardados = solic.adjuntos || [];
                 });
             };
 
+            // ── EVOLUTIVO V2.18.0: Auto-Reintento con Recuperación Segura desde Storage ──
             const reintentarWebhook = async (solic) => {
                 showConfirm('Reintentar Envío', `¿Desea reintentar el envío de la solicitud ${solic.consecutivo} al sistema central?`, async () => {
                     setIsLoadingNube(true);
@@ -751,15 +729,16 @@ const adjuntosGuardados = solic.adjuntos || [];
                             ramoReferencia = form.prorrogaRef.ramoPoliza || '';
                             aseguradoraReferencia = form.prorrogaRef.aseguradora || '';
                         }
-                       const payload = {
-    asunto_correo: `${form.consecutivo} - ${form.asegurado.nombre}`,
-    etiqueta_proceso: 'PRE-ORDEN', tipo_flujo: 'PRE-ORDEN', flujo: 'PRE-ORDEN',
-    
-    // INYECCIÓN V2.17.0 (HOTFIX): Asegurar el contrato obligatorio con Make.com
-    message: `Reintento de envío manual para radicado ${form.consecutivo}`,
-    
-    fechaRegistro: solic.fechaRegistro ? new Date(solic.fechaRegistro).toLocaleString('es-CO') : new Date().toLocaleString('es-CO'),
-    consecutivo: form.consecutivo,
+
+                        // Rescatamos inmutablemente del storage de Firebase en la nube
+                        const adjuntosRescatados = solic.metadatosArchivos || [];
+
+                        const payload = {
+                            asunto_correo: `${form.consecutivo} - ${form.asegurado.nombre}`,
+                            etiqueta_proceso: 'PRE-ORDEN', tipo_flujo: 'PRE-ORDEN', flujo: 'PRE-ORDEN',
+                            message: `Reintento de envío manual para radicado ${form.consecutivo}`,
+                            fechaRegistro: solic.fechaRegistro ? new Date(solic.fechaRegistro).toLocaleString('es-CO') : new Date().toLocaleString('es-CO'),
+                            consecutivo: form.consecutivo,
                             solicitanteNombre: form.interno.solicitante, solicitanteEmail: form.interno.solicitanteEmail, asunto: form.interno.asunto,
                             tiposSolicitud: Object.keys(form.interno.tipos).filter(k => form.interno.tipos[k]).join(', '),
                             tomadorNombre: form.tomador.nombre, tomadorNit: form.tomador.nit, tomadorDireccion: form.tomador.direccion, tomadorTelefono: form.tomador.telefono, tomadorEmail: form.tomador.email,
@@ -771,7 +750,8 @@ const adjuntosGuardados = solic.adjuntos || [];
                             contratoDuracionDias: form.contrato.duracion || 0, amparosDetalleExcel,
                             primaCumplimiento: 0, gastosCumplimiento: 0, ivaCumplimiento: 0, valorTotalCumplimiento: "$ 0",
                             primaRCE: 0, gastosRCE: 0, ivaRCE: 0, valorTotalRCE: "$ 0", granTotal: 0, valorGranTotal: "$ 0",
-                            polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia, adjuntos: []
+                            polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia, 
+                            adjuntos: adjuntosRescatados
                         };
                         const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                         if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -794,7 +774,6 @@ const adjuntosGuardados = solic.adjuntos || [];
                 if (nuevosArchivos.length === 0) return;
 
                 const MAX_SIZE = 50 * 1024 * 1024;
-
                 setInterno(prev => {
                     const existentes = Array.isArray(prev.archivos) ? prev.archivos : [];
                     let currentSize = existentes.reduce((acc, file) => acc + (file.size || 0), 0);
@@ -828,28 +807,27 @@ const adjuntosGuardados = solic.adjuntos || [];
                 reader.onerror = e => reject(e);
             });
 
-            // EVOLUTIVO V2.17.0: Helper de subida a Firebase Storage
-            const uploadToStorage = async (file, consecutivo) => {
-                        try {
-                            if (!window.firebase || !window.firebase.storage) {
-                                throw new Error("SDK de Firebase Storage no inicializado correctamente.");
-                            }
-                            const storageRef = window.firebase.storage()
-                                .ref(`polizas/${consecutivo}/${Date.now()}_${file.name}`);
-                            const snapshot = await storageRef.put(file);
-                            const downloadURL = await snapshot.ref.getDownloadURL();
-                            return {
-                                name: file.name,
-                                size: file.size,
-                                contentType: file.type,
-                                downloadURL,
-                                fullPath: snapshot.ref.fullPath
-                            };
-                        } catch (error) {
-                            console.error("Fallo crítico en subida a Storage:", error);
-                            throw new Error(`No se pudo cargar el archivo ${file.name}. Verifique su conexión.`);
-                        }
+            // ── NÚCLEO MIGRADO: Helper de subida inmutable hacia Firebase Storage ──
+            const uploadToStorage = async (file, idSolicitud) => {
+                try {
+                    if (!window.firebase || !window.firebase.storage) {
+                        throw new Error("SDK de Firebase Storage no inicializado correctamente.");
+                    }
+                    const storageRef = window.firebase.storage().ref(`soportes/${idSolicitud}/${Date.now()}_${file.name}`);
+                    const snapshot = await storageRef.put(file);
+                    const downloadURL = await snapshot.ref.getDownloadURL();
+                    return {
+                        name: file.name,
+                        size: file.size,
+                        contentType: file.type,
+                        downloadURL,
+                        fullPath: snapshot.ref.fullPath
                     };
+                } catch (error) {
+                    console.error("Fallo crítico en subida a Storage:", error);
+                    throw new Error(`No se pudo cargar el archivo ${file.name}. Verifique su conexión.`);
+                }
+            };
 
             const armarAmparosExcel = () => {
                 return amparos.filter(a => a.activo).map(a => `${a.nombre} | Vig: ${a.desde || '-'} a ${a.hasta || '-'} (${a.dias} d) | % Asegurado: ${a.porcentaje||'0'}% | V.Aseg: ${formatCurrency(a.valorAsegurado)} | Tasa: ${a.tasa}% | Prima: ${formatCurrency(a.prima)}`).join('\n');
@@ -869,7 +847,7 @@ const adjuntosGuardados = solic.adjuntos || [];
                 resumen += `📄 *DATOS DEL CONTRATO*\n`;
                 resumen += `   - Objeto: ${contrato.objeto}\n`;
                 resumen += `   - Número: ${contrato.numero || '-'}\n`;
-                if(contrato.cierreLicitacion) resumen += `   - Cierre Licitación: ${new Date(contrato.cierreLicitacion).toLocaleString('es-CO')}\n`; 
+                if(contrato.cierreLicitacion) resumen += `   - Cierre Licitación: ${new Date(contrato.cierreLicitacion).toLocaleString('es-CO')}\n`;
                 resumen += `   - Valor (Con IVA): ${formatCurrency(contrato.valorConIva)}\n\n`;
                 resumen += `⚖️ *AMPAROS LIQUIDADOS*\n`;
                 resumen += amparosTexto ? amparosTexto + `\n\n` : `   - Ningún amparo seleccionado.\n\n`;
@@ -1114,7 +1092,7 @@ const adjuntosGuardados = solic.adjuntos || [];
             const imprimirCotizacion = () => {
                 const printWindow = window.open('', '_blank');
                 const scriptEnd = '<' + '/script>';
-                const htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Orden de Servicio ${consecutivo} - AEGIS</title><style>@media print { @page { margin: 10mm; size: landscape; } body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; zoom: 0.85; } }</style></head><body style="margin:0; padding:0;">${getOrdenServicioHTML()}<script>window.onload = function() { setTimeout(() => { window.print(); }, 500); }${scriptEnd}</body></html>`;
+                const htmlContent = `<!DOCTYPE html><html lang="es"><head><meta charset="UTF-8"><title>Orden de Servicio ${consecutivo} - AEGIS</title><style>@media print { @media print { @page { margin: 10mm; size: landscape; } body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; zoom: 0.85; } }</style></head><body style="margin:0; padding:0;">${getOrdenServicioHTML()}<script>window.onload = function() { setTimeout(() => { window.print(); }, 500); }${scriptEnd}</body></html>`;
                 printWindow.document.write(htmlContent);
                 printWindow.document.close();
             };
@@ -1123,6 +1101,11 @@ const adjuntosGuardados = solic.adjuntos || [];
             const confirmarGuardarPreOrden = () => {
                 if (!interno.solicitante || !interno.solicitanteEmail || !tomador.nombre || !contrato.cierreLicitacion) {
                     return showAlert('Faltan Datos', "⚠️ Revise los campos obligatorios: Nombre del Solicitante, Correo, Razón Social del Tomador y Fecha de Cierre Licitación.");
+                }
+
+                // NUEVO V2.18.0 - HARD-BLOCK: Exigir obligatoriamente al menos 1 documento adjunto
+                if (!interno.archivos || interno.archivos.length === 0) {
+                    return showAlert('Soportes Obligatorios', "⛔ Es estrictamente necesario adjuntar los documentos de soporte (Contrato, RUT, Cámara de Comercio) para radicar la Pre-Orden.");
                 }
                 
                 if (interno.tipos.prorroga && (!prorrogaRef || !prorrogaRef.consecutivo)) {
@@ -1138,13 +1121,8 @@ const adjuntosGuardados = solic.adjuntos || [];
 
             const guardarPreOrden = async () => {
                 setIsSubmitting(true);
-                
                 try {
-                    let polizaReferencia = '';
-                    let anexoReferencia = '';
-                    let ramoReferencia = '';
-                    let aseguradoraReferencia = '';
-
+                    let polizaReferencia = ''; let anexoReferencia = ''; let ramoReferencia = ''; let aseguradoraReferencia = '';
                     if (interno.tipos.prorroga && prorrogaRef) {
                         const parts = (prorrogaRef.numeroPoliza || '').split('-');
                         polizaReferencia = parts[0] ? parts[0].trim() : '';
@@ -1155,21 +1133,34 @@ const adjuntosGuardados = solic.adjuntos || [];
 
                     const timestampRegistro = new Date().toISOString();
 
+                    // NUEVO V2.18.0: Subir archivos a Firebase Storage PRIMERO para evitar pérdida volátil
+                    let metadatosSubidos = [];
+                    if (interno.archivos && interno.archivos.length > 0) {
+                        metadatosSubidos = await Promise.all(
+                            interno.archivos.map(file => uploadToStorage(file, consecutivo))
+                        );
+                    }
+
                     if (db) {
-                        const dataToSave = { fechaRegistro: timestampRegistro, consecutivo, solicitanteNombre: interno.solicitante, tomadorNombre: tomador.nombre, valorConIva, estado: 'Pre-Orden', formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef }) };
+                        const dataToSave = { 
+                            fechaRegistro: timestampRegistro, 
+                            consecutivo, 
+                            solicitanteNombre: interno.solicitante, 
+                            tomadorNombre: tomador.nombre, 
+                            valorConIva, 
+                            estado: 'Pre-Orden', 
+                            formularioCompleto: JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef }),
+                            metadatosArchivos: metadatosSubidos
+                        };
                         await db.collection("solicitudes").doc(consecutivo).set(dataToSave, { merge: true });
                     }
 
                     if (WEBHOOK_URL) {
-// MIGRACIÓN PENDIENTE → Reemplazar getBase64 por uploadToStorage en v2.18.0
-                                        const attachments = await Promise.all(interno.archivos.map(getBase64));
                         const amparosDetalleExcel = armarAmparosExcel(); 
-                        
                         const payload = {
                             asunto_correo: `${consecutivo} - ${asegurado.nombre}`,
-                            etiqueta_proceso: 'PRE-ORDEN',
-                            tipo_flujo: 'PRE-ORDEN',
-                            flujo: 'PRE-ORDEN',
+                            etiqueta_proceso: 'PRE-ORDEN', tipo_flujo: 'PRE-ORDEN', flujo: 'PRE-ORDEN',
+                            message: `Radicación de Pre-orden desde portal unificado con almacenamiento en la nube`,
                             fechaRegistro: new Date().toLocaleString('es-CO'), consecutivo, 
                             solicitanteNombre: interno.solicitante, solicitanteEmail: interno.solicitanteEmail, asunto: interno.asunto,
                             tiposSolicitud: Object.keys(interno.tipos).filter(k => interno.tipos[k]).join(', '),
@@ -1181,7 +1172,7 @@ const adjuntosGuardados = solic.adjuntos || [];
                             amparosDetalleExcel, primaCumplimiento: 0, gastosCumplimiento: 0, ivaCumplimiento: 0, valorTotalCumplimiento: "$ 0", 
                             primaRCE: 0, gastosRCE: 0, ivaRCE: 0, valorTotalRCE: "$ 0", granTotal: 0, valorGranTotal: "$ 0",
                             polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
-                            adjuntos: attachments
+                            adjuntos: metadatosSubidos
                         };
                         try {
                             const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
@@ -1193,7 +1184,7 @@ const adjuntosGuardados = solic.adjuntos || [];
                         }
                     }
                     
-                    setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { cumplimientoEstatales: false, cumplimientoParticulares: false, disposicionLegal: false, prorroga: false, responsabilidadCivil: false, seriedadOferta: false, otros: false }, archivos: [] });
+                    setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { cumplimientoEstatales: false, cumplimientoParticulares: false, disposicionLegal: false, prorroga: false, responsibilityCivil: false, seriedadOferta: false, otros: false }, archivos: [] });
                     setTomador({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
                     setAsegurado({ nombre: '', nit: '' });
                     setContrato({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '', cierreLicitacion: '' });
@@ -1201,31 +1192,20 @@ const adjuntosGuardados = solic.adjuntos || [];
                     setAmparos(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault ? a.tasaDefault.toFixed(2) : '0.18', prima: 0 })));
                     setConsecutivo(generarConsecutivoLocal());
                     setEstadoSolicitud('Nueva');
-                    setNumeroPoliza('');
-                    setAseguradora('');
-                    setRamoPoliza('');
-                    setProrrogaRef(null);
+                    setNumeroPoliza(''); setAseguradora(''); setRamoPoliza(''); setProrrogaRef(null);
                     document.querySelectorAll('input[type="file"]').forEach(input => input.value = '');
-
                 } catch (error) {
                     showAlert('Error', "❌ Error guardando: " + error.message);
-                } finally {
-                    setIsSubmitting(false);
-                }
+                } canvas: { setIsSubmitting(false); }
             };
 
             const enviarOrdenFinal = async () => {
                 if (!interno.solicitante || !tomador.nombre) return showAlert('Faltan Datos', "Faltan datos base.");
                 setIsSubmitting(true);
-
                 const cortina = mostrarCortina("Enviando Orden de Servicio a Make...");
 
                 try {
-                    let polizaReferencia = '';
-                    let anexoReferencia = '';
-                    let ramoReferencia = '';
-                    let aseguradoraReferencia = '';
-
+                    let polizaReferencia = ''; let anexoReferencia = ''; let ramoReferencia = ''; let aseguradoraReferencia = '';
                     if (interno.tipos.prorroga && prorrogaRef) {
                         const parts = (prorrogaRef.numeroPoliza || '').split('-');
                         polizaReferencia = parts[0] ? parts[0].trim() : '';
@@ -1253,39 +1233,24 @@ const adjuntosGuardados = solic.adjuntos || [];
                     if (WEBHOOK_URL) {
                         const payload = {
                             asunto_correo: `${consecutivo} - ${asegurado.nombre}`,
-                            etiqueta_proceso: 'ORDEN FINAL',
-                            tipo_flujo: 'ORDEN-SERVICIO',
-                            flujo: 'ORDEN-FINAL',
-                            fechaTramiteDirector: new Date().toLocaleString('es-CO'),
-                            consecutivo,
-                            solicitanteNombre: interno.solicitante,
-                            solicitanteEmail: interno.solicitanteEmail,
-                            asunto: interno.asunto,
+                            etiqueta_proceso: 'ORDEN FINAL', tipo_flujo: 'ORDEN-SERVICIO', flujo: 'ORDEN-FINAL',
+                            fechaTramiteDirector: new Date().toLocaleString('es-CO'), consecutivo,
+                            solicitanteNombre: interno.solicitante, solicitanteEmail: interno.solicitanteEmail, asunto: interno.asunto,
                             tiposSolicitud: Object.keys(interno.tipos).filter(k => interno.tipos[k]).join(', '),
-                            tomadorNombre: tomador.nombre, tomadorNit: tomador.nit,
-                            tomadorDireccion: tomador.direccion, tomadorTelefono: tomador.telefono, tomadorEmail: tomador.email,
+                            tomadorNombre: tomador.nombre, tomadorNit: tomador.nit, tomadorDireccion: tomador.direccion, tomadorTelefono: tomador.telefono, tomadorEmail: tomador.email,
                             aseguradoNombre: asegurado.nombre, aseguradoNit: asegurado.nit,
-                            contratoObjeto: contrato.objeto, contratoNumero: contrato.numero,
-                            cierreLicitacion: contrato.cierreLicitacion ? new Date(contrato.cierreLicitacion).toLocaleString('es-CO') : 'No aplica',
+                            contratoObjeto: contrato.objeto, contratoNumero: contrato.numero, cierreLicitacion: contrato.cierreLicitacion ? new Date(contrato.cierreLicitacion).toLocaleString('es-CO') : 'No aplica',
                             contratoValorSinIva: valorSinIva, contratoValorConIva: valorConIva,
-                            contratoValorSinIvaFormateado: formatCurrency(valorSinIva),
-                            contratoValorConIvaFormateado: formatCurrency(valorConIva),
-                            contratoDuracionDias: contrato.duracion || 0,
-                            amparosDetalleExcel,
-                            primaCumplimiento, gastosCumplimiento: gastosCalculadosCump,
-                            ivaCumplimiento: ivaCump,
-                            valorTotalCumplimiento: formatCurrency(totalCump),
-                            primaRCE, gastosRCE: gastosCalculadosRCE, ivaRCE,
-                            valorTotalRCE: formatCurrency(totalRCE),
+                            contratoValorSinIvaFormateado: formatCurrency(valorSinIva), contratoValorConIvaFormateado: formatCurrency(valorConIva), contratoDuracionDias: contrato.duracion || 0,
+                            amparosDetalleExcel, primaCumplimiento, gastosCumplimiento: gastosCalculadosCump, ivaCumplimiento: ivaCump, valorTotalCumplimiento: formatCurrency(totalCump),
+                            primaRCE, gastosRCE: gastosCalculadosRCE, ivaRCE, valorTotalRCE: formatCurrency(totalRCE),
                             granTotal: totalGeneral, valorGranTotal: formatCurrency(totalGeneral),
                             polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
-                            ordenHtml: ordenHtmlString,
-                            nombreArchivoPDF: `${consecutivo} - Orden de Servicio.pdf`
+                            ordenHtml: ordenHtmlString, nombreArchivoPDF: `${consecutivo} - Orden de Servicio.pdf`
                         };
                         const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                         if (!res.ok) throw new Error(res.status);
                     }
-
                     showAlert('Éxito', "✅ ¡Orden enviada al cliente con éxito!");
                 } catch (e) {
                     showAlert('Error', "❌ Error: " + e.message);
@@ -1295,7 +1260,6 @@ const adjuntosGuardados = solic.adjuntos || [];
                 }
             };
 
-            // EVOLUTIVO V2.17.0: Integración completa de Storage para Póliza Final
             const enviarPolizaFinal = async () => {
                 if (!numeroPoliza || !aseguradora || !ramoPoliza) return showAlert('Faltan Datos', "⚠️ Complete # de póliza, aseguradora y ramo antes de enviar.");
                 if (archivosPoliza.length === 0) return showAlert('Atención', "⚠️ Debe adjuntar al menos un documento PDF de la póliza.");
@@ -1303,8 +1267,6 @@ const adjuntosGuardados = solic.adjuntos || [];
                 
                 try {
                     const timestampEntrega = new Date().toISOString();
-                    
-                    // Carga masiva hacia Storage con el helper v2.17.0
                     const metadatosSubidos = await Promise.all(
                         archivosPoliza.map(file => uploadToStorage(file, consecutivo))
                     );
@@ -1313,9 +1275,8 @@ const adjuntosGuardados = solic.adjuntos || [];
                         const formCompleto = JSON.stringify({ interno, tomador, asegurado, contrato, amparos, costos, consecutivo, numeroPoliza, aseguradora, ramoPoliza, prorrogaRef });
                         const dataToSave = { 
                             estado: 'Emitida-Entregada', 
-                            fechaEntregaPoliza: timestampEntrega,
-                            numeroPoliza, aseguradora, ramoPoliza, 
-                            formularioCompleto: formCompleto,
+                            fechaEntregaPoliza: timestampEntrega, 
+                            numeroPoliza, aseguradora, ramoPoliza, formularioCompleto: formCompleto,
                             metadatosPoliza: metadatosSubidos
                         };
                         await db.collection("solicitudes").doc(consecutivo).set(dataToSave, { merge: true });
@@ -1325,26 +1286,18 @@ const adjuntosGuardados = solic.adjuntos || [];
                     if (WEBHOOK_URL) {
                         const payload = {
                             asunto_correo: `${consecutivo} - ${asegurado.nombre}`,
-                            etiqueta_proceso: 'EMISIÓN PÓLIZA',
-                            tipo_flujo: 'EMISION-FINAL',
-                            flujo: 'ENTREGA-POLIZA', 
-                            consecutivo, 
-                            solicitanteNombre: interno.solicitante, 
-                            solicitanteEmail: interno.solicitanteEmail,
-                            tomadorNombre: tomador.nombre,
+                            etiqueta_proceso: 'EMISIÓN PÓLIZA', tipo_flujo: 'EMISION-FINAL', flujo: 'ENTREGA-POLIZA', 
+                            consecutivo, solicitanteNombre: interno.solicitante, solicitanteEmail: interno.solicitanteEmail, tomadorNombre: tomador.nombre,
                             observaciones: observacionesPoliza || "Sin observaciones.",
                             message: observacionesPoliza || `Adjuntamos la póliza definitiva ${numeroPoliza} para el contrato ${contrato.numero || ''}.`,
                             link_poliza: metadatosSubidos.length > 0 ? metadatosSubidos[0].downloadURL : '',
                             fechaEntregaPoliza: new Date().toLocaleString('es-CO'),
-                            numeroPoliza,
-                            aseguradora,
-                            ramoPoliza,
-                            adjuntos: metadatosSubidos // Entrega en array con metadatos para Make.com HTTP Get file
+                            numeroPoliza, aseguradora, ramoPoliza,
+                            adjuntos: metadatosSubidos
                         };
                         const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                         if (!res.ok) throw new Error(res.status);
                     }
-
                     showAlert('Éxito', "✅ ¡Póliza enviada al cliente con éxito!");
                 } catch (e) { 
                     showAlert('Error', "❌ Error enviando póliza: " + e.message); 
@@ -1453,7 +1406,6 @@ const adjuntosGuardados = solic.adjuntos || [];
                             <p className="px-2 text-xs font-semibold text-gray-400 uppercase tracking-wider mb-4">Menú Principal</p>
                             {menuItems.map(item => {
                                 const isActive = activeMenu === item.id;
-                                
                                 return (
                                     <button 
                                         key={item.id}
@@ -1499,7 +1451,6 @@ const adjuntosGuardados = solic.adjuntos || [];
                                 <div className="w-px h-6 bg-gray-300 hidden md:block"></div>
                                 <button className="relative p-2 text-gray-400 hover:text-[#163f73] transition-colors rounded-full hover:bg-gray-100"><Bell size={20} /></button>
                                 
-                                {/* CANDADO O SELECTOR DE ROL */}
                                 {isDirectorUnlocked ? (
                                     <div className="flex items-center bg-gray-100 p-1 rounded-full shadow-inner border border-gray-200 ml-2">
                                         <button onClick={() => setRolActivo('cliente')} className={`px-3 py-1 rounded-full text-[10px] font-bold transition-all ${rolActivo === 'cliente' ? 'bg-[#58C9E8] text-[#12334F]' : 'text-gray-400'}`}>CLIENTE</button>
@@ -1519,7 +1470,7 @@ const adjuntosGuardados = solic.adjuntos || [];
                             {/* VISTA 0: DASHBOARD / INICIO                               */}
                             {/* ========================================================= */}
                             {activeMenu === 'inicio' && (
-                                <div className="p-4 md:p-8 pb-20 space-y-6 animate-fade-in max-w-[1600px] mx-auto">
+                                <div className="p-4 md:p-8 pb-20 space-y-6 max-w-[1600px] mx-auto">
                                     <h1 className="text-2xl font-bold text-[#163f73] mb-6">Dashboard de Operaciones AEGIS</h1>
                                     <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                                         <div className="bg-white p-6 rounded-xl shadow-sm border border-gray-100 transition-all hover:shadow-md">
@@ -1544,7 +1495,8 @@ const adjuntosGuardados = solic.adjuntos || [];
                                     <div className="mt-8 bg-white p-8 rounded-xl shadow-sm border border-gray-200">
                                         <h2 className="text-xl font-bold text-[#163f73] mb-4">Bienvenido al entorno de Operaciones</h2>
                                         <p className="text-gray-600 text-sm leading-relaxed">
-                                            Usted se encuentra en el espacio de trabajo central de la SPA WEB-AEGIS (Versión 2.17.0). Utilice el menú lateral para acceder rápidamente al Cotizador Principal, o para visualizar los reportes unificados de Producción y Cartera, extraídos de manera dinámica y en tiempo real desde la Base de Datos central (Google Firestore).
+                                            Usted se encuentra en el espacio de trabajo central de la SPA WEB-AEGIS (Versión 2.18.0).
+                                            Utilice el menú lateral para acceder rápidamente al Cotizador Principal, o para visualizar los reportes unificados de Producción y Cartera, extraídos de manera dinámica y en tiempo real desde la Base de Datos central (Google Firestore).
                                         </p>
                                         <button onClick={() => setActiveMenu('cotizador')} className="mt-6 px-6 py-3 bg-[#163f73] text-white rounded-lg font-bold shadow-md hover:bg-[#12334F] transition-colors">
                                             Ir al Cotizador
@@ -1557,8 +1509,6 @@ const adjuntosGuardados = solic.adjuntos || [];
                             {/* VISTA 1: COTIZADOR                                        */}
                             {/* ========================================================= */}
                             <div className={activeMenu === 'cotizador' ? 'block p-4 md:p-8 pb-20' : 'hidden'}>
-                                
-                                {/* Header Cotizador */}
                                 <div className="bg-[#163f73] text-white py-6 px-8 shadow-sm rounded-xl flex justify-between items-center mb-6 relative overflow-hidden">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#58C9E8] opacity-10 rounded-full -translate-y-1/2 translate-x-1/4"></div>
                                     <div className="flex items-center gap-3 z-10">
@@ -1580,7 +1530,7 @@ const adjuntosGuardados = solic.adjuntos || [];
                                 </div>
 
                                 <div className="max-w-[1600px] mx-auto space-y-6">
-                                    {/* Bloque 0: Solicitante */}
+                                    {/* Bloque 0: Datos del Solicitante */}
                                     <div className={sectionCls}>
                                         {isDirector && <div className="absolute top-0 right-0 p-3"><Lock size={20} className="text-gray-300" /></div>}
                                         <h3 className="flex items-center gap-2 font-bold text-[#163f73] mb-4 border-b border-[#dce4ec] pb-2"><User size={20} className="text-[#58C9E8]" /> 0. Datos del Solicitante</h3>
@@ -1590,7 +1540,6 @@ const adjuntosGuardados = solic.adjuntos || [];
                                             <div className="md:col-span-2"><label className={labelCls}>Asunto / Proyecto</label><input type="text" className={inputCls} disabled={isDirector} value={interno.asunto} onChange={e => setInterno({...interno, asunto: e.target.value})} /></div>
                                         </div>
                                         
-                                        {/* TIPO DE SOLICITUD (ALFABÉTICO) */}
                                         <div className="mt-4 mb-4">
                                             <label className={labelCls}>Tipo de Solicitud</label>
                                             <div className="flex flex-wrap gap-4 mt-2">
@@ -1613,19 +1562,19 @@ const adjuntosGuardados = solic.adjuntos || [];
                                         
                                         {!isDirector && (
                                             <div className="bg-[#eef3f8] p-4 rounded-lg border border-[#cdd7e0]">
-                                                <label className={labelCls}>Soportes y Contratos (PDF)</label>
+                                                <label className={labelCls}>Soportes y Contratos (PDF) *</label>
                                                 <div className="flex items-center gap-3 mt-2">
                                                     <label className="cursor-pointer bg-white px-4 py-2 border border-[#cdd7e0] rounded-md text-sm font-medium hover:bg-gray-50 flex items-center gap-2 shadow-sm">
                                                         <Paperclip size={16} className="text-[#5c7792]" /> Seleccionar Archivos
                                                         <input type="file" multiple className="sr-only" onChange={handleFileChange} />
                                                     </label>
-                                                    <span className="text-sm text-[#5c7792]">{interno.archivos.length === 0 ? "Ningún archivo" : `${interno.archivos.length} archivo(s) listo para subir`}</span>
+                                                    <span className="text-sm text-[#5c7792] font-semibold">{interno.archivos.length === 0 ? "Ningún archivo cargado (Requerido)" : `✅ ${interno.archivos.length} archivo(s) listos para respaldo seguro`}</span>
                                                 </div>
                                             </div>
                                         )}
                                     </div>
 
-                                    {/* Bloque 1: Tomador */}
+                                    {/* Bloque 1: Tomador y Asegurado */}
                                     <div className={sectionCls}>
                                         {isDirector && <div className="absolute top-0 right-0 p-3"><Lock size={20} className="text-gray-300" /></div>}
                                         <h3 className="flex items-center gap-2 font-bold text-[#163f73] mb-4 border-b border-[#dce4ec] pb-2"><Building size={20} className="text-[#58C9E8]" /> 1. Tomador y Asegurado</h3>
@@ -1642,11 +1591,10 @@ const adjuntosGuardados = solic.adjuntos || [];
                                         </div>
                                     </div>
 
-                                    {/* Bloque 2: Contrato y Prórroga */}
+                                    {/* Bloque 2: Datos del Contrato */}
                                     <div className={sectionCls}>
                                         <h3 className="flex items-center gap-2 font-bold text-[#163f73] mb-4 border-b border-[#dce4ec] pb-2"><FileText size={20} className="text-[#58C9E8]" /> 2. Datos del Contrato</h3>
                                         
-                                        {/* NUEVO BLOQUE DE BÚSQUEDA DE PRÓRROGA */}
                                         {interno.tipos.prorroga && (
                                             <div className="bg-yellow-50 p-5 rounded-xl border border-yellow-200 mb-6 shadow-sm transition-all">
                                                 <h4 className="font-bold text-yellow-800 mb-3 flex items-center gap-2">
@@ -1708,11 +1656,7 @@ const adjuntosGuardados = solic.adjuntos || [];
                                                 <textarea maxLength="5000" className={`${inputCls} h-24`} value={contrato.objeto} onChange={e => setContrato({...contrato, objeto: e.target.value})}></textarea>
                                             </div>
                                             <div className="md:col-span-3"><label className={labelCls}>Número de Contrato</label><input type="text" className={inputCls} disabled={isDirector} value={contrato.numero} onChange={e => setContrato({...contrato, numero: e.target.value})} /></div>
-                                            
-                                            <div className="md:col-span-3">
-                                                <label className={labelCls}>Cierre Licitación *</label>
-                                                <input type="datetime-local" className={inputCls} disabled={isDirector} value={contrato.cierreLicitacion} onChange={e => setContrato({...contrato, cierreLicitacion: e.target.value})} />
-                                            </div>
+                                            <div className="md:col-span-3"><label className={labelCls}>Cierre Licitación *</label><input type="datetime-local" className={inputCls} disabled={isDirector} value={contrato.cierreLicitacion} onChange={e => setContrato({...contrato, cierreLicitacion: e.target.value})} /></div>
 
                                             <div className="md:col-span-2">
                                                 <label className={labelCls}>Valor CON IVA *</label>
@@ -1744,7 +1688,7 @@ const adjuntosGuardados = solic.adjuntos || [];
                                         </div>
                                     </div>
 
-                                    {/* BLOQUES EXCLUSIVOS DEL DIRECTOR (Amparos y Totales) */}
+                                    {/* BLOQUES EXCLUSIVOS DEL DIRECTOR (ZONA LIQUIDACIÓN) */}
                                     {(isDirector && (estadoSolicitud === 'Pre-Orden' || estadoSolicitud === 'Nueva')) && (
                                         <div className="space-y-6 mt-8 border-t-4 border-[#58C9E8] pt-8 max-w-[1600px] mx-auto">
                                             <div className="bg-[#e8f7fb] text-[#163f73] px-6 py-4 rounded-xl border border-[#58C9E8]/30 flex items-center justify-between">
@@ -1791,7 +1735,7 @@ const adjuntosGuardados = solic.adjuntos || [];
                                                                     <td className="p-3">
                                                                         <div className="relative flex items-center">
                                                                             <span className={`absolute left-2 text-[#5c7792] font-bold text-sm pointer-events-none ${!a.activo && 'opacity-50'}`}>$</span>
-                                                                            <input type="text" className="w-full pl-6 text-right p-1 border border-[#cdd7e0] rounded bg-white/50 font-medium focus:outline-none focus:ring-1 focus:ring-[#58C9E8] disabled:opacity-50" disabled={!a.activo} value={a.valorAseguradoStr !== undefined ? a.valorAseguradoStr : (a.valorAsegurado ? a.valorAsegurado.toLocaleString('es-CO',{minimumFractionDigits:0, maximumFractionDigits:2}) : '')} onChange={e => handleAmparoField(a.id, 'valorAsegurado', e.target.value)} />
+                                                                            <input type="text" className="w-full pl-6 text-right p-1 border border-[#cdd7e0] rounded bg-white/50 font-medium focus:outline-none focus:ring-1 focus:ring-[#58C9E8] disabled:opacity-50" disabled={!a.activo} value={a.valorAseguradoStr !== undefined ? a.valorAseguradoStr : (a.valorAsegurado ? a.valorAsegurado.toLocaleString('es-CO') : '')} onChange={e => handleAmparoField(a.id, 'valorAsegurado', e.target.value)} />
                                                                         </div>
                                                                     </td>
                                                                     <td className="p-3">
@@ -1833,7 +1777,7 @@ const adjuntosGuardados = solic.adjuntos || [];
                                                         <div className="space-y-1 text-sm text-gray-300">
                                                             <div className="flex justify-between"><span>Prima:</span> <span>{formatCurrency(primaCumplimiento)}</span></div>
                                                             <div className="flex justify-between"><span>Gastos de Expedición:</span> <span>{formatCurrency(gastosCalculadosCump)}</span></div>
-                                                            <div className="flex justify-between"><span>IVA ({costos.tasaIva}%):</span> <span>{formatCurrency(ivaCump)}</span></div>
+                                                            <div className="flex justify-between"><span>IVA (${costos.tasaIva}%):</span> <span>{formatCurrency(ivaCump)}</span></div>
                                                             <div className="flex justify-between font-bold text-[#58C9E8] pt-1 border-t border-[#12334F] mt-1">
                                                                 <span>Total Cumplimiento:</span> <span>{formatCurrency(totalCump)}</span>
                                                             </div>
@@ -1845,7 +1789,7 @@ const adjuntosGuardados = solic.adjuntos || [];
                                                         <div className="space-y-1 text-sm text-gray-300">
                                                             <div className="flex justify-between"><span>Prima:</span> <span>{formatCurrency(primaRCE)}</span></div>
                                                             <div className="flex justify-between"><span>Gastos de Expedición:</span> <span>{formatCurrency(gastosCalculadosRCE)}</span></div>
-                                                            <div className="flex justify-between"><span>IVA ({costos.tasaIva}%):</span> <span>{formatCurrency(ivaRCE)}</span></div>
+                                                            <div className="flex justify-between"><span>IVA (${costos.tasaIva}%):</span> <span>{formatCurrency(ivaRCE)}</span></div>
                                                             <div className="flex justify-between font-bold text-[#58C9E8] pt-1 border-t border-[#12334F] mt-1">
                                                                 <span>Total RCE:</span> <span>{formatCurrency(totalRCE)}</span>
                                                             </div>
@@ -1856,7 +1800,7 @@ const adjuntosGuardados = solic.adjuntos || [];
                                         </div>
                                     )}
 
-                                    {/* FASE 3: ENTREGA DE PÓLIZA (Para Directores en estados avanzados) */}
+                                    {/* FASE 3: ENTREGA DE PÓLIZA DEFINITIVA (ROL DIRECTOR) */}
                                     {(isDirector && ['En Trámite', 'Emitida', 'Emitida-Entregada', 'Finalizada'].includes(estadoSolicitud)) && (
                                         <div className="space-y-6 mt-8 border-t-4 border-green-500 pt-8 max-w-[1600px] mx-auto">
                                             <div className="bg-green-50 text-green-800 px-6 py-4 rounded-xl border border-green-200 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
@@ -1879,29 +1823,23 @@ const adjuntosGuardados = solic.adjuntos || [];
                                                             {listaAseguradoras.map(a => <option key={a} value={a} />)}
                                                         </datalist>
                                                     </div>
-                                                    
                                                     <div>
-                                                    <label className={labelCls}>Ramo Principal *</label>
-                                                    <select className={`${inputCls} bg-white`} value={ramoPoliza} onChange={e => setRamoPoliza(e.target.value)}>
-                                                        <option value="">SELECCIONE UN RAMO...</option>
-                                                        <option value="CUMPLIMIENTO ESTATALES">CUMPLIMIENTO ESTATALES</option>
-                                                        <option value="CUMPLIMIENTO PARTICULARES">CUMPLIMIENTO PARTICULARES</option>
-                                                        <option value="DISPOSICIÓN LEGAL">DISPOSICIÓN LEGAL</option>
-                                                        <option value="RESPONSABILIDAD CIVIL">RESPONSABILIDAD CIVIL</option>
-                                                        <option value="SERIEDAD DE LA OFERTA">SERIEDAD DE LA OFERTA</option>
-                                                    </select>
+                                                        <label className={labelCls}>Ramo Principal *</label>
+                                                        <select className={`${inputCls} bg-white`} value={ramoPoliza} onChange={e => setRamoPoliza(e.target.value)}>
+                                                            <option value="">SELECCIONE UN RAMO...</option>
+                                                            <option value="CUMPLIMIENTO ESTATALES">CUMPLIMIENTO ESTATALES</option>
+                                                            <option value="CUMPLIMIENTO PARTICULARES">CUMPLIMIENTO PARTICULARES</option>
+                                                            <option value="DISPOSICIÓN LEGAL">DISPOSICIÓN LEGAL</option>
+                                                            <option value="RESPONSABILIDAD CIVIL">RESPONSABILIDAD CIVIL</option>
+                                                            <option value="SERIEDAD DE LA OFERTA">SERIEDAD DE LA OFERTA</option>
+                                                        </select>
+                                                    </div>
                                                 </div>
-                                                      </div>
 
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-6 border-t border-dashed border-gray-200">
                                                     <div>
                                                         <label className={labelCls}>Observaciones / Notas para el cliente</label>
-                                                        <textarea 
-                                                            className={`${inputCls} h-32`} 
-                                                            placeholder="Escriba aquí los detalles, recomendaciones o saludos que irán en el correo de entrega..."
-                                                            value={observacionesPoliza} 
-                                                            onChange={e => setObservacionesPoliza(e.target.value)}
-                                                        ></textarea>
+                                                        <textarea className={`${inputCls} h-32`} placeholder="Escriba aquí los detalles que irán en el correo de entrega..." value={observacionesPoliza} onChange={e => setObservacionesPoliza(e.target.value)}></textarea>
                                                     </div>
                                                     <div className="bg-gray-50 p-6 rounded-lg border border-dashed border-gray-300 flex flex-col items-center justify-center text-center">
                                                         <UploadCloud size={40} className="text-[#58C9E8] mb-3" />
@@ -1910,29 +1848,21 @@ const adjuntosGuardados = solic.adjuntos || [];
                                                             <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png,.xlsx" onChange={(e) => {
                                                                 const files = Array.from(e.target.files);
                                                                 const totalSize = files.reduce((acc, file) => acc + file.size, 0);
-                                                                if (totalSize > 50 * 1024 * 1024) {
-                                                                    showAlert('Límite Excedido', '⚠️ El archivo de la póliza supera los 50MB permitidos.');
-                                                                    e.target.value = '';
-                                                                    return;
-                                                                }
+                                                                if (totalSize > 50 * 1024 * 1024) { showAlert('Límite Excedido', '⚠️ El archivo supera los 50MB.'); return; }
                                                                 setArchivosPoliza(files);
                                                             }} />
                                                         </label>
-                                                        <span className="text-xs text-gray-500 font-bold">
-                                                            {archivosPoliza.length === 0 ? "Ningún archivo seleccionado" : `✅ ${archivosPoliza[0].name} cargado.`}
-                                                        </span>
+                                                        <span className="text-xs text-gray-500 font-bold">{archivosPoliza.length === 0 ? "Ningún archivo seleccionado" : `✅ ${archivosPoliza[0].name} cargado.`}</span>
                                                     </div>
                                                 </div>
                                             </div>
                                         </div>
                                     )}
-
                                 </div>
 
-                                {/* FOOTER ACTION BUTTONS */}
+                                {/* BOTONERA ACCIÓN DE CONTROL INFERIOR */}
                                 <div className="flex flex-col md:flex-row justify-between items-center gap-6 bg-[#12334F] p-8 rounded-3xl text-white shadow-2xl relative overflow-hidden mt-8 max-w-[1600px] mx-auto">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#58C9E8] opacity-10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-                                    
                                     <div className="z-10 text-center md:text-left">
                                         {isDirector ? (
                                             <>
@@ -1948,56 +1878,40 @@ const adjuntosGuardados = solic.adjuntos || [];
                                     </div>
 
                                     <div className="flex flex-wrap justify-center gap-3 z-10">
-                                        <button onClick={limpiarFormularioCotizador} className="px-4 py-3 bg-white/10 hover:bg-red-500/80 text-white rounded-xl font-bold transition-all" title="Limpiar todo"><Trash2 size={18} /></button>
-                                        
+                                        <button onClick={limpiarFormularioCotizador} className="px-4 py-3 bg-white/10 hover:bg-red-500/80 text-white rounded-xl font-bold transition-all"><Trash2 size={18} /></button>
                                         {isDirector && (
                                             <>
-                                                <button onClick={exportarCotizacion} className="px-5 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold flex items-center gap-2 transition-all border border-white/20"><FileText size={18} className="hidden sm:block"/> RESUMEN</button>
-                                                <button onClick={imprimirCotizacion} className="px-5 py-3 bg-[#e8f7fb] text-[#163f73] hover:bg-[#d0f0fa] rounded-xl font-bold flex items-center gap-2 border border-[#58C9E8]"><Printer size={18} className="hidden sm:block"/> PDF</button>
+                                                <button onClick={exportarCotizacion} className="px-5 py-3 bg-white/10 hover:bg-white/20 rounded-xl font-bold flex items-center gap-2 transition-all border border-white/20">RESUMEN</button>
+                                                <button onClick={imprimirCotizacion} className="px-5 py-3 bg-[#e8f7fb] text-[#163f73] hover:bg-[#d0f0fa] rounded-xl font-bold flex items-center gap-2 border border-[#58C9E8]"><Printer size={18} /> PDF</button>
                                             </>
                                         )}
 
                                         {isDirector ? (
                                             ['En Trámite', 'Emitida'].includes(estadoSolicitud) ? (
                                                 <div className="flex flex-wrap justify-center gap-2">
-                                                    <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-4 py-3 bg-[#163f73] text-white hover:bg-[#0e273d] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-[#58C9E8]/30" title="Reenviar Orden Final a Make">
-                                                        <RefreshCw size={18}/>
-                                                    </button>
-                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-500 text-white hover:bg-green-600 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
-                                                        {isSubmitting ? "ENVIANDO PÓLIZA..." : <><Send size={18}/> ENVIAR PÓLIZA A CLIENTE</>}
-                                                    </button>
+                                                    <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-4 py-3 bg-[#163f73] text-white hover:bg-[#0e273d] rounded-xl font-black flex items-center gap-2 border border-[#58C9E8]/30"><RefreshCw size={18}/></button>
+                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-500 text-white hover:bg-green-600 rounded-xl font-black flex items-center gap-2 shadow-xl">ENVIAR PÓLIZA A CLIENTE</button>
                                                 </div>
                                             ) : ['Finalizada', 'Emitida-Entregada'].includes(estadoSolicitud) ? (
-                                                <div className="flex flex-wrap justify-center gap-2">
-                                                    <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-600 text-white hover:bg-green-700 rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all border border-green-400">
-                                                        {isSubmitting ? "REENVIANDO PÓLIZA..." : <><RefreshCw size={18}/> REENVIAR PÓLIZA (CORRECCIÓN)</>}
-                                                    </button>
-                                                </div>
+                                                <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-600 text-white hover:bg-green-700 rounded-xl font-black flex items-center gap-2 border border-green-400"><RefreshCw size={18}/> REENVIAR PÓLIZA (CORRECCIÓN)</button>
                                             ) : (
-                                                <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
-                                                    {isSubmitting ? "PROCESANDO..." : <><Send size={18}/> GENERAR ORDEN FINAL</>}
-                                                </button>
+                                                <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl">GENERAR ORDEN FINAL</button>
                                             )
                                         ) : (
-                                            <button onClick={confirmarGuardarPreOrden} disabled={isSubmitting || isLoadingNube} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl disabled:opacity-50 transition-all">
-                                                {isSubmitting ? "GUARDANDO..." : <><Cloud size={18}/> GUARDAR PRE-ORDEN</>}
-                                            </button>
+                                            <button onClick={confirmarGuardarPreOrden} disabled={isSubmitting || isLoadingNube} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl"><Cloud size={18}/> GUARDAR PRE-ORDEN</button>
                                         )}
                                     </div>
                                 </div>
                             </div>
 
                             {/* ========================================================= */}
-                            {/* VISTA 4: MIS SOLICITUDES (CONECTADA A LA NUBE)            */}
+                            {/* VISTA 4: MIS SOLICITUDES (Firestore en Vivo)            */}
                             {/* ========================================================= */}
                             <div className={activeMenu === 'solicitudes' ? 'block p-4 md:p-8 pb-20' : 'hidden'}>
                                 <div className="bg-[#163f73] text-white py-6 px-8 shadow-sm rounded-xl flex items-center gap-3 mb-6 relative overflow-hidden">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#58C9E8] opacity-10 rounded-full -translate-y-1/2 translate-x-1/4"></div>
                                     <div className="p-2 bg-white/10 rounded-lg z-10"><FileText size={32} className="text-[#58C9E8]" /></div>
-                                    <div className="z-10">
-                                        <h1 className="text-2xl font-bold tracking-wide">Mis Solicitudes</h1>
-                                        <p className="text-[#58C9E8] text-sm font-medium uppercase tracking-wider">HISTORIAL DE TRÁMITES Y ÓRDENES</p>
-                                    </div>
+                                    <div className="z-10"><h1 className="text-2xl font-bold tracking-wide">Mis Solicitudes</h1><p className="text-[#58C9E8] text-sm font-medium uppercase tracking-wider">HISTORIAL DE TRÁMITES</p></div>
                                 </div>
 
                                 <div className="w-full max-w-[1600px] mx-auto">
@@ -2011,126 +1925,68 @@ const adjuntosGuardados = solic.adjuntos || [];
                                                 <thead className="bg-white shadow-sm border-b border-gray-200 sticky top-0 z-10">
                                                     <tr className="text-gray-500 text-xs uppercase tracking-wider">
                                                         <th className="px-4 py-4 font-semibold w-40">
-                                                            <div className="flex flex-col gap-2">
-                                                                <span>ID Solicitud</span>
-                                                                <div className="relative">
-                                                                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/>
-                                                                    <input type="text" placeholder="Filtrar ID" className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosSolicitudes.consecutivo} onChange={(e) => handleFiltroChange(e, 'consecutivo')} />
-                                                                </div>
+                                                            <div className="flex flex-col gap-2"><span>ID Solicitud</span>
+                                                                <div className="relative"><Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/><input type="text" placeholder="Filtrar ID" className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs text-gray-700" value={filtrosSolicitudes.consecutivo} onChange={(e) => handleFiltroChange(e, 'consecutivo')} /></div>
                                                             </div>
                                                         </th>
                                                         <th className="px-4 py-4 font-semibold w-40">
-                                                            <div className="flex flex-col gap-2">
-                                                                <span>Fecha Radicación</span>
-                                                                <input type="date" className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosSolicitudes.fecha} onChange={(e) => handleFiltroChange(e, 'fecha')} />
-                                                            </div>
+                                                            <div className="flex flex-col gap-2"><span>Fecha Radicación</span><input type="date" className="w-full px-2 py-1 border border-gray-300 rounded text-xs text-gray-700" value={filtrosSolicitudes.fecha} onChange={(e) => handleFiltroChange(e, 'fecha')} /></div>
                                                         </th>
                                                         <th className="px-4 py-4 font-semibold w-56">
-                                                            <div className="flex flex-col gap-2">
-                                                                <span>Tomador / Empresa</span>
-                                                                <div className="relative">
-                                                                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/>
-                                                                    <input type="text" placeholder="Buscar tomador..." className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosSolicitudes.tomador} onChange={(e) => handleFiltroChange(e, 'tomador')} />
-                                                                </div>
+                                                            <div className="flex flex-col gap-2"><span>Tomador / Empresa</span>
+                                                                <div className="relative"><Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/><input type="text" placeholder="Buscar tomador..." className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs text-gray-700" value={filtrosSolicitudes.tomador} onChange={(e) => handleFiltroChange(e, 'tomador')} /></div>
                                                             </div>
                                                         </th>
                                                         <th className="px-4 py-4 font-semibold w-48">
-                                                            <div className="flex flex-col gap-2">
-                                                                <span>Solicitante</span>
-                                                                <div className="relative">
-                                                                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/>
-                                                                    <input type="text" placeholder="Buscar solicitante..." className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosSolicitudes.solicitante} onChange={(e) => handleFiltroChange(e, 'solicitante')} />
-                                                                </div>
+                                                            <div className="flex flex-col gap-2"><span>Solicitante</span>
+                                                                <div className="relative"><Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/><input type="text" placeholder="Buscar" className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs text-gray-700" value={filtrosSolicitudes.solicitante} onChange={(e) => handleFiltroChange(e, 'solicitante')} /></div>
                                                             </div>
                                                         </th>
                                                         <th className="px-4 py-4 font-semibold w-40">
-                                                            <div className="flex flex-col gap-2">
-                                                                <span>Valor Contrato (≥)</span>
-                                                                <div className="relative">
-                                                                    <span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span>
-                                                                    <input type="text" placeholder="Ej: 1000000" className="w-full pl-6 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosSolicitudes.valor} onChange={(e) => {
-                                                                        const val = e.target.value.replace(/\D/g, '');
-                                                                        setFiltrosSolicitudes(prev => ({...prev, valor: val ? parseInt(val).toLocaleString('es-CO') : ''}));
-                                                                    }} />
-                                                                </div>
+                                                            <div className="flex flex-col gap-2"><span>Valor Contrato (≥)</span>
+                                                                <div className="relative"><span className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400 font-bold">$</span><input type="text" placeholder="Mínimo" className="w-full pl-6 pr-2 py-1 border border-gray-300 rounded text-xs text-gray-700" value={filtrosSolicitudes.valor} onChange={(e) => { const val = e.target.value.replace(/\D/g, ''); setFiltrosSolicitudes(prev => ({...prev, valor: val ? parseInt(val).toLocaleString('es-CO') : ''})); }} /></div>
                                                             </div>
                                                         </th>
                                                         <th className="px-4 py-4 font-semibold text-center w-40">
-                                                            <div className="flex flex-col gap-2">
-                                                                <span>Estado</span>
-                                                                <select className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700 bg-white" value={filtrosSolicitudes.estado} onChange={(e) => handleFiltroChange(e, 'estado')}>
-                                                                    <option value="">Todos los estados</option>
-                                                                    <option value="Pre-Orden">Pre-Orden</option>
-                                                                    <option value="En Trámite">En Trámite</option>
-                                                                    <option value="Emitida-Entregada">Emitida-Entregada</option>
+                                                            <div className="flex flex-col gap-2"><span>Estado</span>
+                                                                <select className="w-full px-2 py-1 border border-gray-300 rounded text-xs text-gray-700 bg-white" value={filtrosSolicitudes.estado} onChange={(e) => handleFiltroChange(e, 'estado')}>
+                                                                    <option value="">Todos</option><option value="Pre-Orden">Pre-Orden</option><option value="En Trámite">En Trámite</option><option value="Emitida-Entregada">Emitida-Entregada</option>
                                                                 </select>
                                                             </div>
                                                         </th>
-                                                        <th className="px-4 py-4 font-semibold text-center w-32 align-top">
-                                                            <div className="mt-1">Acciones</div>
-                                                        </th>
-                                                        {isDirectorUnlocked && (
-                                                            <th className="px-6 py-4 font-bold text-center border-l border-gray-200">Operaciones</th>
-                                                        )}
+                                                        <th className="px-4 py-4 font-semibold text-center w-32 align-top"><div className="mt-1">Acciones</div></th>
+                                                        {isDirectorUnlocked && <th className="px-6 py-4 font-bold text-center border-l border-gray-200">Operaciones GEMS</th>}
                                                     </tr>
                                                 </thead>
                                                 <tbody className="divide-y divide-gray-100 text-sm">
                                                     {solicitudesFiltradas.length === 0 ? (
                                                         <tr>
-                                                            <td colSpan="7" className="px-6 py-12 text-center text-gray-500">
+                                                            <td colSpan={isDirectorUnlocked ? "8" : "7"} className="px-6 py-12 text-center text-gray-500">
                                                                 <Cloud size={40} className="mx-auto text-gray-300 mb-3" />
-                                                                <p>No se encontraron solicitudes que coincidan con los filtros de búsqueda.</p>
-                                                                <button onClick={() => setFiltrosSolicitudes({consecutivo: '', fecha: '', tomador: '', solicitante: '', valor: '', estado: ''})} className="mt-4 text-[#58C9E8] font-bold hover:underline">Limpiar Filtros</button>
+                                                                <p>No se encontraron solicitudes que coincidan con los filtros.</p>
                                                             </td>
                                                         </tr>
                                                     ) : solicitudesFiltradas.map((sol, i) => (
                                                         <tr key={i} className="hover:bg-blue-50/30 transition-colors">
                                                             <td className="px-4 py-4 font-bold text-[#12334F] text-xs">{sol.consecutivo}</td>
-                                                            <td className="px-4 py-4 text-gray-600 text-xs">
-                                                                {sol.fechaRegistro ? new Date(sol.fechaRegistro).toLocaleDateString('es-CO') : 'N/A'} 
-                                                                <span className="text-[10px] text-gray-400 block">
-                                                                    {sol.fechaRegistro ? new Date(sol.fechaRegistro).toLocaleTimeString('es-CO', {hour: '2-digit', minute:'2-digit'}) : ''}
-                                                                </span>
-                                                            </td>
-                                                            <td className="px-4 py-4 text-[#12334F] font-medium truncate max-w-[200px]" title={unificarNombreEmpresa(sol.tomadorNombre)}>
-                                                                {unificarNombreEmpresa(sol.tomadorNombre)}
-                                                            </td>
-                                                            <td className="px-4 py-4 text-gray-600 truncate max-w-[180px]" title={sol.solicitanteNombre}>
-                                                                {sol.solicitanteNombre || 'N/A'}
-                                                            </td>
-                                                            <td className="px-4 py-4 font-bold text-[#163f73]">
-                                                                {sol.valorConIva ? formatCurrency(sol.valorConIva) : '$ 0'}
-                                                            </td>
+                                                            <td className="px-4 py-4 text-gray-600 text-xs">{sol.fechaRegistro ? new Date(sol.fechaRegistro).toLocaleDateString('es-CO') : 'N/A'}</td>
+                                                            <td className="px-4 py-4 text-[#12334F] font-medium truncate max-w-[200px]">{unificarNombreEmpresa(sol.tomadorNombre)}</td>
+                                                            <td className="px-4 py-4 text-gray-600 truncate max-w-[180px]">{sol.solicitanteNombre || 'N/A'}</td>
+                                                            <td className="px-4 py-4 font-bold text-[#163f73]">{sol.valorConIva ? formatCurrency(sol.valorConIva) : '$ 0'}</td>
                                                             <td className="px-4 py-4 text-center">
                                                                 <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold border ${(sol.estado === 'Finalizada' || sol.estado === 'Emitida-Entregada') ? 'bg-green-50 text-green-700 border-green-200' : (sol.estado === 'Emitida' || sol.estado === 'En Trámite') ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
-                                                                    {(sol.estado === 'Finalizada' || sol.estado === 'Emitida-Entregada') ? <CheckCircle size={12}/> : (sol.estado === 'Emitida' || sol.estado === 'En Trámite') ? <Award size={12}/> : <ClockIcon size={12}/>}
                                                                     {sol.estado || 'Pre-Orden'}
                                                                 </span>
                                                             </td>
                                                             <td className="px-4 py-4 text-center flex justify-center gap-2">
-                                                                <button onClick={() => abrirSolicitud(sol.consecutivo)} className="px-3 py-2 bg-white text-[#163f73] hover:bg-[#163f73] hover:text-white rounded-lg font-bold text-[10px] uppercase tracking-wider transition-colors border border-[#cdd7e0] shadow-sm flex items-center gap-1" title="Abrir para revisar o reenviar datos">
-                                                                    Abrir &rarr;
-                                                                </button>
+                                                                <button onClick={() => abrirSolicitud(sol.consecutivo)} className="px-3 py-2 bg-white text-[#163f73] hover:bg-[#163f73] hover:text-white rounded-lg font-bold text-[10px] border border-[#cdd7e0]">Revisar</button>
                                                                 {sol.webhookStatus === 'pendiente_reintento' && (
-                                                                    <button onClick={() => reintentarWebhook(sol)} className="px-3 py-2 bg-amber-500 text-white hover:bg-amber-600 rounded-lg font-bold text-[10px] uppercase tracking-wider transition-colors shadow-sm flex items-center gap-1" title="Reintentar notificación al sistema central">
-                                                                        <RefreshCw size={12} /> Reintentar
-                                                                    </button>
-                                                                )}
-                                                                {isDirectorUnlocked && (
-                                                                    <button onClick={() => eliminarSolicitud(sol.consecutivo)} className="p-2 text-red-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors border border-transparent hover:border-red-200" title="Eliminar registro de Firebase">
-                                                                        <Trash2 size={16}/>
-                                                                    </button>
+                                                                    <button onClick={() => reintentarWebhook(sol)} className="px-3 py-2 bg-amber-500 text-white hover:bg-amber-600 rounded-lg font-bold text-[10px] shadow-sm flex items-center gap-1"><RefreshCw size={12} /> Auto-Sanar</button>
                                                                 )}
                                                             </td>
                                                             {isDirectorUnlocked && (
                                                                 <td className="px-6 py-3 text-center border-l border-gray-100">
-                                                                    <button
-                                                                        onClick={() => sanearYReprocesar(sol)}
-                                                                        className="inline-flex items-center gap-1.5 text-xs font-bold bg-[#12334F] text-white px-4 py-2 rounded-md hover:bg-[#1a4a70] transition-colors shadow-sm w-full justify-center"
-                                                                        title="Repara los datos estructurales y reintenta la conexión"
-                                                                    >
-                                                                        <RefreshCw size={14} /> Reenviar
-                                                                    </button>
+                                                                    <button onClick={() => sanearYReprocesar(sol)} className="inline-flex items-center gap-1.5 text-xs font-bold bg-[#12334F] text-white px-4 py-2 rounded-md hover:bg-[#1a4a70] w-full justify-center"><RefreshCw size={14} /> Forzar Reenvío</button>
                                                                 </td>
                                                             )}
                                                         </tr>
@@ -2143,173 +1999,60 @@ const adjuntosGuardados = solic.adjuntos || [];
                             </div>
 
                             {/* ========================================================= */}
-                            {/* VISTA 2: REPORTE PRODUCCIÓN (E1: DATOS EN VIVO)           */}
+                            {/* VISTA 2: REPORTE PRODUCCIÓN                               */}
                             {/* ========================================================= */}
                             <div className={activeMenu === 'produccion' ? 'block p-4 md:p-8 pb-20' : 'hidden'}>
                                 <div className="bg-[#163f73] text-white py-6 px-8 shadow-sm mb-6 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4 relative overflow-hidden">
                                     <div className="absolute top-0 right-0 w-32 h-32 bg-[#58C9E8] opacity-10 rounded-full -translate-y-1/2 translate-x-1/4"></div>
                                     <div className="flex items-center gap-3 z-10">
-                                        <div className="p-2 bg-white/10 rounded-lg"><TrendingUp size={32} className="text-[#58C9E8]" strokeWidth={2} /></div>
+                                        <div className="p-2 bg-white/10 rounded-lg"><TrendingUp size={32} className="text-[#58C9E8]" /></div>
                                         <div><h1 className="text-2xl font-bold tracking-wide">Reporte de Producción y ANS</h1><p className="text-[#58C9E8] text-sm font-medium">MÉTRICAS EN TIEMPO REAL</p></div>
-                                    </div>
-                                    <div className="z-10 bg-white/10 px-4 py-2 rounded-lg border border-white/20">
-                                        <p className="text-xs text-[#58C9E8] uppercase tracking-wider font-bold">Datos sincronizados con Firestore</p>
                                     </div>
                                 </div>
 
                                 <div className="w-full max-w-[1600px] mx-auto space-y-8">
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-[#58C9E8]/30 flex items-start gap-4 transition-all hover:shadow-md">
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
                                             <div className="p-3 bg-blue-50 rounded-lg text-[#163f73]"><FileText size={28} /></div>
                                             <div><p className="text-sm text-gray-500 font-medium">Total Solicitudes Base</p><h4 className="text-3xl font-bold text-[#12334F] mt-1">{prodTotal}</h4></div>
                                         </div>
-                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-[#58C9E8]/30 flex items-start gap-4 transition-all hover:shadow-md">
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
                                             <div className="p-3 bg-[#e8f7fb] rounded-lg text-[#58C9E8]"><CheckCircle size={28} /></div>
                                             <div><p className="text-sm text-gray-500 font-medium">Gestión &lt; 24 Horas</p><h4 className="text-3xl font-bold text-[#163f73] mt-1">{prodMenorUnDia} <span className="text-lg text-gray-500 font-normal">({prodPorcentaje}%)</span></h4></div>
                                         </div>
-                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-[#58C9E8]/30 flex items-start gap-4 transition-all hover:shadow-md">
+                                        <div className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 flex items-start gap-4">
                                             <div className="p-3 bg-indigo-50 rounded-lg text-indigo-600"><ClockIcon size={28} /></div>
                                             <div><p className="text-sm text-gray-500 font-medium">Mediana ANS</p><h4 className="text-3xl font-bold text-[#12334F] mt-1">{prodMediana} <span className="text-lg text-gray-500 font-normal">hrs</span></h4></div>
                                         </div>
                                     </div>
 
                                     <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-8">
-                                        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50 flex justify-between items-center">
-                                            <h4 className="text-lg font-bold text-[#163f73] flex items-center gap-2"><PieChart size={18} className="text-[#58C9E8]"/> Resumen Consolidado por Tomador</h4>
-                                        </div>
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-left border-collapse">
+                                        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50"><h4 className="text-lg font-bold text-[#163f73]">Resumen Consolidado por Tomador</h4></div>
+                                        <table className="w-full text-left border-collapse">
                                             <thead className="bg-gray-50 border-b border-gray-200">
                                                 <tr className="text-gray-500 text-xs uppercase tracking-wider">
-                                                <th className="px-6 py-4 font-semibold">Tomador (Cliente)</th>
-                                                <th className="px-6 py-4 font-semibold text-center">Total Órdenes</th>
-                                                <th className="px-6 py-4 font-semibold text-right">Valor Total Asegurado</th>
-                                                <th className="px-6 py-4 font-semibold text-right">Prima Total</th>
-                                                <th className="px-6 py-4 font-semibold text-center">% de Participación</th>
+                                                    <th className="px-6 py-4 font-semibold">Tomador (Cliente)</th>
+                                                    <th className="px-6 py-4 font-semibold text-center">Total Órdenes</th>
+                                                    <th className="px-6 py-4 font-semibold text-right">Valor Total Asegurado</th>
+                                                    <th className="px-6 py-4 font-semibold text-right">Prima Total</th>
+                                                    <th className="px-6 py-4 font-semibold text-center">% de Participación</th>
                                                 </tr>
                                             </thead>
                                             <tbody className="divide-y divide-gray-100 text-sm">
-                                                {prodSummaryArray.length === 0 ? (
-                                                    <tr><td colSpan="5" className="text-center py-8 text-gray-400">No hay datos registrados en Firestore.</td></tr>
-                                                ) : prodSummaryArray.map((item, idx) => {
+                                                {prodSummaryArray.map((item, idx) => {
                                                     const porcentaje = prodTotalValor > 0 ? ((item.totalValor / prodTotalValor) * 100).toFixed(1) : 0;
                                                     return (
                                                         <tr key={idx} className="hover:bg-blue-50/20 transition-colors">
                                                             <td className="px-6 py-4"><div className="font-bold text-[#12334F]">{item.cliente}</div></td>
-                                                            <td className="px-6 py-4 text-center"><span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#e8f7fb] text-[#163f73] font-bold">{item.count}</span></td>
-                                                            <td className="px-6 py-4 text-right"><span className="font-bold text-[#12334F] text-base">{formatCurrency(item.totalValor)}</span></td>
-                                                            <td className="px-6 py-4 text-right"><span className="font-bold text-green-700 text-sm">{formatCurrency(item.totalPrima)}</span></td>
-                                                            <td className="px-6 py-4 text-center">
-                                                                <div className="w-full bg-gray-200 rounded-full h-2 mt-1">
-                                                                    <div className="bg-[#58C9E8] h-2 rounded-full" style={{ width: `${porcentaje}%` }}></div>
-                                                                </div>
-                                                                <span className="text-xs text-gray-500 font-semibold mt-1 inline-block">{porcentaje}%</span>
-                                                            </td>
+                                                            <td className="px-6 py-4 text-center"><span className="w-8 h-8 rounded-full bg-[#e8f7fb] text-[#163f73] font-bold inline-flex items-center justify-center">{item.count}</span></td>
+                                                            <td className="px-6 py-4 text-right"><span className="font-bold text-[#12334F]">{formatCurrency(item.totalValor)}</span></td>
+                                                            <td className="px-6 py-4 text-right"><span className="font-bold text-green-700">{formatCurrency(item.totalPrima)}</span></td>
+                                                            <td className="px-6 py-4 text-center">{porcentaje}%</td>
                                                         </tr>
                                                     );
                                                 })}
                                             </tbody>
-                                            {prodTotal > 0 && (
-                                                <tfoot className="bg-gray-100 font-bold border-t-2 border-[#58C9E8]/30 text-[#12334F]">
-                                                    <tr>
-                                                        <td className="px-6 py-4 text-right uppercase">Total General:</td>
-                                                        <td className="px-6 py-4 text-center text-lg">{prodTotal}</td>
-                                                        <td className="px-6 py-4 text-right text-lg">{formatCurrency(prodTotalValor)}</td>
-                                                        <td className="px-6 py-4 text-right text-lg text-green-700">{formatCurrency(prodTotalPrima)}</td>
-                                                        <td className="px-6 py-4 text-center text-lg">100%</td>
-                                                    </tr>
-                                                </tfoot>
-                                            )}
-                                            </table>
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-                                        <div className="px-6 py-5 border-b bg-gray-50 font-bold text-[#163f73] flex items-center gap-2">
-                                            <ClockIcon size={18} className="text-[#58C9E8]"/> Registro Detallado de Tiempos (SLA)
-                                        </div>
-                                        <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-                                            <table className="w-full text-left border-collapse min-w-[1100px]">
-                                                <thead className="sticky top-0 bg-white z-10 shadow-sm border-b border-gray-200 text-gray-500 text-xs uppercase tracking-wider">
-                                                    <tr>
-                                                        <th className="px-6 py-4 font-semibold w-64">
-                                                            <div className="flex flex-col gap-2">
-                                                                <span>Tomador / Asegurado</span>
-                                                                <div className="relative">
-                                                                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/>
-                                                                    <input type="text" placeholder="Buscar empresa..." className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosProduccion.cliente} onChange={(e) => setFiltrosProduccion({...filtrosProduccion, cliente: e.target.value})} />
-                                                                </div>
-                                                            </div>
-                                                        </th>
-                                                        <th className="px-6 py-4 font-semibold w-48">
-                                                            <div className="flex flex-col gap-2">
-                                                                <span>Póliza / Anexo (ID)</span>
-                                                                <div className="relative">
-                                                                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/>
-                                                                    <input type="text" placeholder="Buscar ID o póliza..." className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosProduccion.poliza} onChange={(e) => setFiltrosProduccion({...filtrosProduccion, poliza: e.target.value})} />
-                                                                </div>
-                                                            </div>
-                                                        </th>
-                                                        <th className="px-6 py-4 font-semibold w-48">
-                                                            <div className="flex flex-col gap-2">
-                                                                <span>Aseguradora / Ramo</span>
-                                                                <div className="relative">
-                                                                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/>
-                                                                    <input type="text" placeholder="Buscar aseguradora..." className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosProduccion.aseguradora} onChange={(e) => setFiltrosProduccion({...filtrosProduccion, aseguradora: e.target.value})} />
-                                                                </div>
-                                                            </div>
-                                                        </th>
-                                                        <th className="px-6 py-4 font-semibold text-center w-32 align-top pt-5">Tiempo ANS</th>
-                                                        <th className="px-6 py-4 font-semibold w-40">
-                                                            <div className="flex flex-col gap-2">
-                                                                <span>Estado Actual</span>
-                                                                <select className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700 bg-white" value={filtrosProduccion.estado} onChange={(e) => setFiltrosProduccion({...filtrosProduccion, estado: e.target.value})}>
-                                                                    <option value="">Todos</option>
-                                                                    <option value="Pre-Orden">Pre-Orden</option>
-                                                                    <option value="En Trámite">En Trámite</option>
-                                                                    <option value="Emitida-Entregada">Emitida-Entregada</option>
-                                                                </select>
-                                                            </div>
-                                                        </th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-gray-100 text-sm">
-                                                    {produccionLiveFiltrada.map((policy, idx) => {
-                                                        const isMenorUnDia = policy.ansHoras <= 24; 
-                                                        const isAnulada = policy.estado === "Anulada" || policy.estado === "Cancelada";
-                                                        return (
-                                                            <tr key={idx} className="hover:bg-blue-50/20 transition-colors">
-                                                                <td className="px-6 py-4">
-                                                                    <div className="font-bold text-[#12334F] truncate max-w-[250px]" title={policy.cliente}>{policy.cliente}</div>
-                                                                    <div className="text-xs text-gray-500 mt-1 truncate max-w-[250px]" title={policy.asegurado}>{policy.asegurado}</div>
-                                                                </td>
-                                                                <td className="px-6 py-4">
-                                                                    <span className="font-mono text-sm font-semibold text-[#5c7792] block">{policy.poliza}</span>
-                                                                    <span className="text-[10px] text-gray-400 mt-0.5 block tracking-wider uppercase">{policy.id}</span>
-                                                                </td>
-                                                                <td className="px-6 py-4">
-                                                                    <div className="text-gray-600 mb-1 truncate max-w-[150px]" title={policy.aseguradora}>{policy.aseguradora}</div>
-                                                                    <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-gray-100 text-gray-700 uppercase">{policy.ramo}</span>
-                                                                </td>
-                                                                <td className="px-6 py-4 text-center">
-                                                                    <div className={`inline-flex flex-col items-center p-2 rounded-lg ${isMenorUnDia ? 'bg-[#e8f7fb]' : 'bg-orange-50'}`}>
-                                                                        <span className={`font-bold ${isMenorUnDia ? 'text-[#163f73]' : 'text-orange-700'}`}>{policy.ansHoras.toFixed(1)} h</span>
-                                                                    </div>
-                                                                </td>
-                                                                <td className="px-6 py-4">
-                                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10px] font-bold border ${isAnulada ? 'bg-red-50 text-red-700 border-red-200' : (policy.estado === 'Finalizada' || policy.estado === 'Emitida-Entregada') ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
-                                                                        {policy.estado}
-                                                                    </span>
-                                                                </td>
-                                                            </tr>
-                                                        )
-                                                    })}
-                                                    {produccionLiveFiltrada.length === 0 && (
-                                                        <tr><td colSpan="5" className="text-center py-8 text-gray-400">Aún no hay solicitudes registradas para medir.</td></tr>
-                                                    )}
-                                                </tbody>
-                                            </table>
-                                        </div>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
@@ -2320,21 +2063,15 @@ const adjuntosGuardados = solic.adjuntos || [];
                             <div className={activeMenu === 'cartera' ? 'block p-4 md:p-8 pb-20' : 'hidden'}>
                                 <div className="bg-[#163f73] text-white py-6 px-8 shadow-sm mb-6 rounded-xl flex flex-col md:flex-row justify-between items-center gap-4">
                                     <div className="flex items-center gap-3">
-                                        <div className="p-2 bg-white/10 rounded-lg"><PieChart size={32} className="text-[#58C9E8]" strokeWidth={2} /></div>
+                                        <div className="p-2 bg-white/10 rounded-lg"><PieChart size={32} className="text-[#58C9E8]" /></div>
                                         <div><h1 className="text-2xl font-bold tracking-wide">Reporte de Cartera</h1><p className="text-[#58C9E8] text-sm font-medium">FINANZAS Y RECAUDO</p></div>
                                     </div>
                                 </div>
 
                                 <div className="w-full max-w-[1600px] mx-auto space-y-8">
                                     <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-                                        <div>
-                                            <h3 className="text-lg font-bold text-[#163f73] flex items-center gap-2"><UploadCloud size={20} className="text-[#58C9E8]"/> Cargar Cartera Contable</h3>
-                                            <p className="text-sm text-gray-500">Actualiza las deudas y edades subiendo un archivo CSV.</p>
-                                        </div>
-                                        <div className="flex flex-wrap gap-3">
-                                            <button className="px-4 py-2.5 text-sm font-medium text-[#163f73] bg-[#e8f7fb] rounded-lg border border-[#58C9E8]/30 hover:bg-[#d0f0fa] flex items-center gap-2"><Download size={16} /> Plantilla CSV</button>
-                                            <label className="cursor-pointer px-4 py-2.5 text-sm font-medium text-white bg-[#163f73] rounded-lg hover:bg-[#12334F] flex items-center gap-2"><DollarSign size={16} /> Cargar Archivo<input type="file" accept=".csv" className="hidden" onChange={(e) => handleCsvUpload(e, 'cartera')} /></label>
-                                        </div>
+                                        <div><h3 className="text-lg font-bold text-[#163f73]">Cargar Cartera Contable</h3><p className="text-sm text-gray-500">Actualiza las deudas subiendo un CSV contable.</p></div>
+                                        <label className="cursor-pointer px-4 py-2.5 text-sm font-medium text-white bg-[#163f73] rounded-lg hover:bg-[#12334F] flex items-center gap-2"><DollarSign size={16} /> Cargar CSV<input type="file" accept=".csv" className="hidden" onChange={(e) => handleCsvUpload(e, 'cartera')} /></label>
                                     </div>
 
                                     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -2351,59 +2088,6 @@ const adjuntosGuardados = solic.adjuntos || [];
                                             <div><p className="text-sm text-gray-500 font-medium">Valor Total Adeudado</p><h4 className="text-2xl font-bold text-[#12334F] mt-1">{formatCurrency(cartSumaTotal)}</h4></div>
                                         </div>
                                     </div>
-
-                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mt-8">
-                                        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50 flex justify-between items-center">
-                                            <h4 className="text-lg font-bold text-[#163f73]">Resumen por Tomador</h4>
-                                        </div>
-                                        <div className="overflow-x-auto">
-                                            <table className="w-full text-left border-collapse">
-                                            <thead className="bg-gray-50 shadow-sm border-b border-gray-200">
-                                                <tr className="text-gray-500 text-xs uppercase tracking-wider">
-                                                <th className="px-6 py-4 font-semibold">Tomador</th>
-                                                <th className="px-6 py-4 font-semibold text-center">Pólizas</th>
-                                                <th className="px-6 py-4 font-semibold text-right">Valor Adeudado</th>
-                                                <th className="px-6 py-4 font-semibold text-center">%</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody className="divide-y divide-gray-100 text-sm">
-                                                {cartSummaryArray.map((item, idx) => (
-                                                    <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                                                        <td className="px-6 py-4 font-bold text-[#12334F]">{item.tomador}</td>
-                                                        <td className="px-6 py-4 text-center"><span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-[#e8f7fb] text-[#163f73] font-bold">{item.count}</span></td>
-                                                        <td className="px-6 py-4 text-right font-bold">{formatCurrency(item.total)}</td>
-                                                        <td className="px-6 py-4 text-center"><div className="w-full bg-gray-200 rounded-full h-2 mt-1"><div className="bg-[#58C9E8] h-2 rounded-full" style={{ width: `${(item.total / cartSumaTotal * 100).toFixed(1)}%` }}></div></div></td>
-                                                    </tr>
-                                                ))}
-                                            </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-
-                                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-                                        <div className="px-6 py-5 border-b border-gray-100 bg-gray-50/50"><h4 className="text-lg font-bold text-[#163f73]">Detalle de Facturación Pendiente</h4></div>
-                                        <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
-                                            <table className="w-full text-left border-collapse min-w-[900px]">
-                                                <thead className="bg-gray-50 shadow-sm border-b border-gray-200 text-gray-500 text-xs uppercase tracking-wider">
-                                                    <tr><th className="px-6 py-4 font-semibold">Tomador / Cliente</th><th className="px-6 py-4 font-semibold">Beneficiario / Ramo</th><th className="px-6 py-4 font-semibold text-center">Nº Póliza</th><th className="px-6 py-4 font-semibold text-center">Días Cartera</th><th className="px-6 py-4 font-semibold text-right">Valor Total</th></tr>
-                                                </thead>
-                                                <tbody className="divide-y divide-gray-100 text-sm">
-                                                    {carteraData.sort((a,b) => b.dias - a.dias).map((policy, idx) => {
-                                                        const isAntigua = policy.dias > 15;
-                                                        return (
-                                                            <tr key={idx} className="hover:bg-gray-50 transition-colors">
-                                                                <td className="px-6 py-4"><div className="font-bold text-[#12334F]">{policy.tomador}</div></td>
-                                                                <td className="px-6 py-4"><div className="text-gray-600 truncate max-w-xs">{policy.beneficiario}</div><div className="text-[10px] uppercase font-bold text-gray-400 mt-1">{policy.ramo}</div></td>
-                                                                <td className="px-6 py-4 text-center"><span className="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-gray-100 text-gray-700">{policy.poliza}</span></td>
-                                                                <td className="px-6 py-4 text-center"><div className={`inline-flex items-center justify-center w-10 h-10 rounded-full font-bold ${isAntigua ? 'bg-orange-100 text-orange-700' : 'bg-[#e8f7fb] text-[#163f73]'}`}>{policy.dias}</div></td>
-                                                                <td className="px-6 py-4 text-right"><span className="font-bold text-[#12334F] text-base">{formatCurrency(policy.total)}</span></td>
-                                                            </tr>
-                                                        )
-                                                    })}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
                                 </div>
                             </div>
 
@@ -2414,26 +2098,12 @@ const adjuntosGuardados = solic.adjuntos || [];
                                 <div className="p-4 md:p-8 pb-20">
                                     <div className="bg-white p-8 rounded-xl shadow-sm border border-gray-200 max-w-3xl mx-auto space-y-6">
                                         <h1 className="text-2xl font-bold text-[#163f73] flex items-center gap-3">
-                                            <LifeBuoy size={32} className="text-[#58C9E8]" /> 
-                                            Centro de Ayuda y Soporte - Portal WEB-AEGIS
+                                            <LifeBuoy size={32} className="text-[#58C9E8]" /> Centro de Ayuda y Soporte - Portal WEB-AEGIS
                                         </h1>
-                                        <p className="text-gray-600 text-sm leading-relaxed">
-                                            Bienvenido al entorno operativo <b>v2.17.0</b>, una Arquitectura SPA Monolítica adaptada para entornos Google Workspace Business Standard y despliegues serverless estáticos en GitHub Pages.
-                                        </p>
-                                        
-                                        <div className="bg-blue-50 p-6 rounded-lg border border-blue-100 space-y-3">
-                                            <h3 className="font-bold text-[#163f73]">Guía Rápida de Operación</h3>
-                                            <ul className="list-disc pl-5 text-sm text-gray-700 space-y-2">
-                                                <li><b>Dashboard Inicial:</b> Supervisión de SLAs y métricas en vivo.</li>
-                                                <li><b>Cotizador Principal:</b> Módulo unificado para cotización de primas prorrata y carga de soportes (Límite 50MB).</li>
-                                                <li><b>Mis Solicitudes:</b> Trazabilidad completa de radicados. Funciones exclusivas para Directores mediante PIN (Master PIN: <b>2025</b>).</li>
-                                            </ul>
-                                        </div>
-
-                                        <div className="border-t pt-6 mt-4 space-y-2 text-sm text-gray-600">
-                                            <p className="flex items-center gap-2"><Shield size={16} className="text-emerald-500"/> <strong>Soporte Técnico Especializado:</strong> soporte@aegis-insurance.com</p>
-                                            <p className="flex items-center gap-2"><FileText size={16} className="text-gray-400"/> <strong>Nomenclatura Estricta de Operaciones:</strong> SANDOR-COT-YYMMDDHHMMSS</p>
-                                            <p className="flex items-center gap-2"><Cloud size={16} className="text-[#58C9E8]"/> <strong>Versión del Núcleo:</strong> v2.17.0 (Mayo 2026) - Build Compilado con Éxito y Conectado a Storage.</p>
+                                        <p className="text-gray-600 text-sm leading-relaxed">Usted se encuentra operando la versión core compilada <b>v2.18.0</b>, optimizada con blindaje inmutable para el resguardo preventivo de archivos adjuntos en Firebase Storage[cite: 15, 21].</p>
+                                        <div className="bg-blue-50 p-6 rounded-lg border border-blue-100">
+                                            <h3 className="font-bold text-[#163f73] mb-2">Canal Técnico de Reingeniería</h3>
+                                            <p className="text-xs text-gray-600">Cualquier error de timeout o caída asíncrona de los servidores centrales de automatización Make.com puede ser resuelto de inmediato usando el botón nativo de <b>Auto-Sanar</b> en la vista de Mis Solicitudes[cite: 17, 21, 35].</p>
                                         </div>
                                     </div>
                                 </div>
