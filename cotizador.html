@@ -509,7 +509,7 @@
                 }
             };
 
-            const cargarSolicitud = (datosGuardados, estadoNube) => {
+           const cargarSolicitud = (datosGuardados, estadoNube) => {
                 const internoSaved = datosGuardados.interno || {};
                 const loadedTipos = internoSaved.tipos || {};
                 
@@ -521,10 +521,14 @@
                 if (loadedTipos.responsabilidadCivil === undefined) loadedTipos.responsabilidadCivil = false;
                 if (loadedTipos.prorroga === undefined) loadedTipos.prorroga = false;
 
-                setInterno({ ...internoSaved, tipos: loadedTipos });
-                setTomador(datosGuardados.tomador);
-                setAsegurado(datosGuardados.asegurado);
-                setContrato({ ...datosGuardados.contrato, cierreLicitacion: datosGuardados.contrato.cierreLicitacion || '' });
+                // PARCHE NULL-SAFETY: Valores por defecto estrictos para evitar pantallas blancas
+                setInterno({ ...internoSaved, tipos: loadedTipos, archivos: internoSaved.archivos || [] });
+                setTomador(datosGuardados.tomador || { nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
+                setAsegurado(datosGuardados.asegurado || { nombre: '', nit: '' });
+                
+                const contratoSaved = datosGuardados.contrato || {};
+                setContrato({ ...contratoSaved, cierreLicitacion: contratoSaved.cierreLicitacion || '' });
+                
                 if (datosGuardados.amparos) setAmparos(datosGuardados.amparos);
                 if (datosGuardados.costos) setCostos(datosGuardados.costos);
                 if (datosGuardados.consecutivo) setConsecutivo(datosGuardados.consecutivo);
