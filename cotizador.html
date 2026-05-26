@@ -1174,29 +1174,36 @@
                             polizaReferencia, anexoReferencia, ramoReferencia, aseguradoraReferencia,
                             adjuntos: metadatosSubidos
                         };
+                        
                         try {
                             const res = await fetch(WEBHOOK_URL, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
                             if (!res.ok) throw new Error(res.status);
+                            
                             showAlert('Éxito', "✅ ¡Pre-Orden guardada! El equipo ha sido notificado para completarla.");
+                            
+                            // MODIFICACIÓN V2.18.1: Los campos SOLO se limpian si el Webhook responde OK (HTTP 200)
+                            setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { cumplimientoEstatales: false, cumplimientoParticulares: false, disposicionLegal: false, prorroga: false, responsabilidadCivil: false, seriedadOferta: false, otros: false }, archivos: [] });
+                            setTomador({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
+                            setAsegurado({ nombre: '', nit: '' });
+                            setContrato({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '', cierreLicitacion: '' });
+                            setCostos({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
+                            setAmparos(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault ? a.tasaDefault.toFixed(2) : '0.18', prima: 0 })));
+                            setConsecutivo(generarConsecutivoLocal()); // Cambia el ID solo en éxito total
+                            setEstadoSolicitud('Nueva');
+                            setNumeroPoliza(''); setAseguradora(''); setRamoPoliza(''); setProrrogaRef(null);
+                            document.querySelectorAll('input[type="file"]').forEach(input => input.value = '');
+
                         } catch (webhookError) {
+                            // Si Make.com falla, marcamos en Firestore pero dejamos la data intacta en pantalla
                             if (db) await db.collection('solicitudes').doc(consecutivo).update({ webhookStatus: 'pendiente_reintento' });
-                            showAlert('Guardado Parcial', "⚠️ Los datos se guardaron, pero hubo un error al notificar al sistema central. Use 'Reintentar' en Mis Solicitudes.");
+                            showAlert('Guardado Parcial', "⚠️ Los datos y soportes se respaldaron de forma segura en la nube, pero el servidor central reportó intermitencia. Puede presionar 'GUARDAR PRE-ORDEN' nuevamente para reintentar el envío inmediato sin perder sus datos.");
                         }
                     }
-                    
-                    setInterno({ solicitante: '', solicitanteEmail: '', asunto: '', tipos: { cumplimientoEstatales: false, cumplimientoParticulares: false, disposicionLegal: false, prorroga: false, responsibilityCivil: false, seriedadOferta: false, otros: false }, archivos: [] });
-                    setTomador({ nombre: '', nit: '', direccion: '', telefono: '', email: '', celular: '' });
-                    setAsegurado({ nombre: '', nit: '' });
-                    setContrato({ objeto: '', numero: '', valorConIva: 0, desde: '', hasta: '', duracion: '', cierreLicitacion: '' });
-                    setCostos({ gastosCump: 5000, gastosRCE: 5000, tasaIva: 19 });
-                    setAmparos(AMPAROS_BASE.map(a => ({ ...a, activo: false, desde: '', hasta: '', dias: 0, porcentaje: '', valorAsegurado: 0, valorAseguradoStr: '', tasa: a.tasaDefault ? a.tasaDefault.toFixed(2) : '0.18', prima: 0 })));
-                    setConsecutivo(generarConsecutivoLocal());
-                    setEstadoSolicitud('Nueva');
-                    setNumeroPoliza(''); setAseguradora(''); setRamoPoliza(''); setProrrogaRef(null);
-                    document.querySelectorAll('input[type="file"]').forEach(input => input.value = '');
                 } catch (error) {
                     showAlert('Error', "❌ Error guardando: " + error.message);
-                } canvas: { setIsSubmitting(false); }
+                } finally {
+                    setIsSubmitting(false); // Corrección del cierre del bloque de carga anterior
+                }
             };
 
             const enviarOrdenFinal = async () => {
