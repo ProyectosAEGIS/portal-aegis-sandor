@@ -2034,6 +2034,94 @@
                                         </table>
                                     </div>
                                 </div>
+                                                                    <div className="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-8">
+                                        <div className="px-6 py-5 border-b bg-gray-50 font-bold text-[#163f73] flex items-center gap-2">
+                                            <ClockIcon size={18} className="text-[#58C9E8]"/> Registro Detallado de Tiempos (SLA)
+                                        </div>
+                                        <div className="overflow-x-auto max-h-[500px] overflow-y-auto">
+                                            <table className="w-full text-left border-collapse min-w-[1100px]">
+                                                <thead className="sticky top-0 bg-white z-10 shadow-sm border-b border-gray-200 text-gray-500 text-xs uppercase tracking-wider">
+                                                    <tr>
+                                                        <th className="px-6 py-4 font-semibold w-64">
+                                                            <div className="flex flex-col gap-2">
+                                                                <span>Tomador / Asegurado</span>
+                                                                <div className="relative">
+                                                                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/>
+                                                                    <input type="text" placeholder="Buscar empresa..." className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosProduccion.cliente} onChange={(e) => setFiltrosProduccion({...filtrosProduccion, cliente: e.target.value})} />
+                                                                </div>
+                                                            </div>
+                                                        </th>
+                                                        <th className="px-6 py-4 font-semibold w-48">
+                                                            <div className="flex flex-col gap-2">
+                                                                <span>Póliza / Anexo (ID)</span>
+                                                                <div className="relative">
+                                                                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/>
+                                                                    <input type="text" placeholder="Buscar ID o póliza..." className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosProduccion.poliza} onChange={(e) => setFiltrosProduccion({...filtrosProduccion, poliza: e.target.value})} />
+                                                                </div>
+                                                            </div>
+                                                        </th>
+                                                        <th className="px-6 py-4 font-semibold w-48">
+                                                            <div className="flex flex-col gap-2">
+                                                                <span>Aseguradora / Ramo</span>
+                                                                <div className="relative">
+                                                                    <Search size={14} className="absolute left-2 top-1/2 -translate-y-1/2 text-gray-400"/>
+                                                                    <input type="text" placeholder="Buscar aseguradora..." className="w-full pl-7 pr-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700" value={filtrosProduccion.aseguradora} onChange={(e) => setFiltrosProduccion({...filtrosProduccion, aseguradora: e.target.value})} />
+                                                                </div>
+                                                            </div>
+                                                        </th>
+                                                        <th className="px-6 py-4 font-semibold text-center w-32 align-top pt-5">Tiempo ANS</th>
+                                                        <th className="px-6 py-4 font-semibold w-40">
+                                                            <div className="flex flex-col gap-2">
+                                                                <span>Estado Actual</span>
+                                                                <select className="w-full px-2 py-1 border border-gray-300 rounded text-xs focus:outline-none focus:border-[#58C9E8] font-normal normal-case text-gray-700 bg-white" value={filtrosProduccion.estado} onChange={(e) => setFiltrosProduccion({...filtrosProduccion, estado: e.target.value})}>
+                                                                    <option value="">Todos</option>
+                                                                    <option value="Pre-Orden">Pre-Orden</option>
+                                                                    <option value="En Trámite">En Trámite</option>
+                                                                    <option value="Emitida-Entregada">Emitida-Entregada</option>
+                                                                </select>
+                                                            </div>
+                                                        </th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody className="divide-y divide-gray-100 text-sm">
+                                                    {produccionLiveFiltrada.map((policy, idx) => {
+                                                        const isMenorUnDia = policy.ansHoras <= 24; 
+                                                        const isAnulada = policy.estado === "Anulada" || policy.estado === "Cancelada";
+                                                        return (
+                                                            <tr key={idx} className="hover:bg-blue-50/20 transition-colors">
+                                                                <td className="px-6 py-4">
+                                                                    <div className="font-bold text-[#12334F] truncate max-w-[250px]" title={policy.cliente}>{policy.cliente}</div>
+                                                                    <div className="text-xs text-gray-500 mt-1 truncate max-w-[250px]" title={policy.asegurado}>{policy.asegurado}</div>
+                                                                </td>
+                                                                <td className="px-6 py-4">
+                                                                    <span className="font-mono text-sm font-semibold text-[#5c7792] block">{policy.poliza}</span>
+                                                                    <span className="text-[10px] text-gray-400 mt-0.5 block tracking-wider uppercase">{policy.id}</span>
+                                                                </td>
+                                                                <td className="px-6 py-4">
+                                                                    <div className="text-gray-600 mb-1 truncate max-w-[150px]" title={policy.aseguradora}>{policy.aseguradora}</div>
+                                                                    <span className="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-gray-100 text-gray-700 uppercase">{policy.ramo}</span>
+                                                                </td>
+                                                                <td className="px-6 py-4 text-center">
+                                                                    <div className={`inline-flex flex-col items-center p-2 rounded-lg ${isMenorUnDia ? 'bg-[#e8f7fb]' : 'bg-orange-50'}`}>
+                                                                        <span className={`font-bold ${isMenorUnDia ? 'text-[#163f73]' : 'text-orange-700'}`}>{policy.ansHoras.toFixed(1)} h</span>
+                                                                    </div>
+                                                                </td>
+                                                                <td className="px-6 py-4">
+                                                                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-[10px] font-bold border ${isAnulada ? 'bg-red-50 text-red-700 border-red-200' : (policy.estado === 'Finalizada' || policy.estado === 'Emitida-Entregada') ? 'bg-green-50 text-green-700 border-green-200' : 'bg-yellow-50 text-yellow-700 border-yellow-200'}`}>
+                                                                        {policy.estado}
+                                                                    </span>
+                                                                </td>
+                                                            </tr>
+                                                        )
+                                                    })}
+                                                    {produccionLiveFiltrada.length === 0 && (
+                                                        <tr><td colSpan="5" className="text-center py-8 text-gray-400">Aún no hay solicitudes registradas para medir.</td></tr>
+                                                    )}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                
                             </div>
 
                             {/* ========================================================= */}
