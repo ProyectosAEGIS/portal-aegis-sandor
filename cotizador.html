@@ -276,7 +276,7 @@
                         ansHoras: ansHoras,
                         estado: sol.estado || 'Pre-Orden',
                         valor: sol.valorConIva || 0,
-                        primaTotal: primaTotal
+                        primaTotal: primaTotal,
                                                 fechaSolicitud: fechaSolicitud // NUEVO DATO INYECTADO
                     };
                 });
@@ -1873,7 +1873,7 @@
                                             ) : ['Finalizada', 'Emitida-Entregada'].includes(estadoSolicitud) ? (
                                                 <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-green-600 text-white hover:bg-green-700 rounded-xl font-black flex items-center gap-2 border border-green-400"><RefreshCw size={18}/> REENVIAR PÓLIZA (CORRECCIÓN)</button>
                                             ) : (
-                                                <button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl">GENERAR ORDEN FINAL                                     </button>                                     <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-red-500 text-white hover:bg-red-600 rounded-xl font-black flex items-center gap-2 shadow-xl border border-red-400 transition-all" title="Cerrar el ANS directamente y emitir la póliza saltando flujos intermedios">                                         <CheckCircle size={18}/> FORZAR CIERRE PÓLIZA                                     </button>
+                                                <><button onClick={enviarOrdenFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl">GENERAR ORDEN FINAL                                     </button>                                     <button onClick={enviarPolizaFinal} disabled={isSubmitting} className="px-6 md:px-8 py-3 bg-red-500 text-white hover:bg-red-600 rounded-xl font-black flex items-center gap-2 shadow-xl border border-red-400 transition-all" title="Cerrar el ANS directamente y emitir la póliza saltando flujos intermedios">                                         <CheckCircle size={18}/> FORZAR CIERRE PÓLIZA                                     </button></>
                                             )
                                         ) : (
                                             <button onClick={confirmarGuardarPreOrden} disabled={isSubmitting || isLoadingNube} className="px-6 md:px-8 py-3 bg-[#58C9E8] text-[#12334F] hover:bg-[#4dbddb] rounded-xl font-black flex items-center gap-2 shadow-xl"><Cloud size={18}/> GUARDAR PRE-ORDEN</button>
