@@ -240,7 +240,7 @@
                                         let fechaSolicitud = 'N/A';
                     if (sol.fechaRegistro) {
                         const inicio = new Date(sol.fechaRegistro);
-                                                fechaSolicitud = inicio.toLocaleDateString('es-CO');
+                                                if (!isNaN(inicio.getTime())) {                             fechaSolicitud = inicio.toLocaleDateString('es-CO');                         } else {                             fechaSolicitud = String(sol.fechaRegistro).split(',')[0].split(' ')[0];                         }
                         let fin;
                         if (sol.fechaEntregaPoliza) {
                             fin = new Date(sol.fechaEntregaPoliza);
@@ -249,7 +249,7 @@
                         } else {
                             fin = new Date();
                         }
-                        ansHoras = calcularHorasHabiles(inicio, fin);
+                        if (!isNaN(inicio.getTime()) && !isNaN(fin.getTime())) {                             ansHoras = calcularHorasHabiles(inicio, fin);                         }
                     }
 
                     let primaTotal = 0;
